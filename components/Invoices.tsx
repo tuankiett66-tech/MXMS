@@ -69,45 +69,63 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-        {/* Phiếu thu giấy - SỬA LỖI MÀU CHỮ TÀNG HÌNH */}
-        <div className="bg-white rounded-lg p-10 shadow-2xl border border-slate-200 relative text-black" id="invoice-print" style={{ color: '#000' }}>
+        {/* Phiếu thu giấy - Tối ưu in 1/2 trang A4 */}
+        <div className="bg-white rounded-lg p-8 shadow-2xl border border-slate-200 relative text-black" id="invoice-print" style={{ color: '#000' }}>
           <style>{`
             @media print {
-              @page { margin: 1cm; }
+              @page { 
+                size: A4 portrait;
+                margin: 0; 
+              }
               body * { visibility: hidden; }
               #invoice-print, #invoice-print * { visibility: visible; }
               #invoice-print { 
                 position: absolute; 
                 left: 0; 
                 top: 0; 
-                width: 100%; 
+                width: 210mm; 
+                height: 148.5mm; /* Chính xác 1/2 trang A4 */
+                padding: 15mm 20mm;
                 border: none; 
                 box-shadow: none; 
                 font-family: 'Times New Roman', Times, serif; 
                 color: #000 !important;
                 background: white !important;
+                overflow: hidden;
               }
               .no-print { display: none !important; }
+              .cut-line { 
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                border-bottom: 1px dashed #ccc;
+                text-align: center;
+                font-size: 8pt;
+                color: #999;
+                padding-bottom: 2px;
+              }
             }
             .invoice-line { 
               display: flex;
               align-items: flex-end;
               gap: 4px;
-              margin-bottom: 8px;
+              margin-bottom: 4px;
               width: 100%;
               color: #000 !important;
+              font-size: 13pt;
             }
-            .invoice-label { flex-grow: 1; border-bottom: 1px dotted #000; padding-bottom: 2px; }
-            .invoice-dots { border-bottom: 1px dotted #000; flex-grow: 0; padding-bottom: 2px; font-weight: bold; }
-            .invoice-value { font-weight: bold; min-width: 140px; text-align: right; border-bottom: 1px dotted #000; padding-bottom: 2px; }
+            .invoice-label { flex-grow: 1; border-bottom: 1px dotted #000; padding-bottom: 1px; }
+            .invoice-dots { border-bottom: 1px dotted #000; flex-grow: 0; padding-bottom: 1px; font-weight: bold; }
+            .invoice-value { font-weight: bold; min-width: 120px; text-align: right; border-bottom: 1px dotted #000; padding-bottom: 1px; }
           `}</style>
           
-          <div className="text-center mb-10">
-            <h1 className="text-2xl font-bold uppercase underline text-black">GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG {currentMonth} NĂM {currentYear}.</h1>
+          <div className="text-center mb-6">
+            <h1 className="text-xl font-bold uppercase underline text-black">GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG {currentMonth} NĂM {currentYear}.</h1>
           </div>
 
-          <div className="space-y-4 text-[16px] mb-8 font-medium text-black">
-            <p className="mb-6">- Họ và tên trẻ : <span className="font-bold uppercase">{selectedStudent.name}</span> SN {formattedDOB}-{inv.calculationInfo.ageInMonths} tháng.</p>
+          <div className="space-y-2 mb-4 font-medium text-black">
+            <p className="mb-4 text-[13pt]">- Họ và tên trẻ : <span className="font-bold uppercase">{selectedStudent.name}</span> SN {formattedDOB}-{inv.calculationInfo.ageInMonths} tháng.</p>
             
             <div className="invoice-line">
               <span className="invoice-label">- Tiền học phí trong tháng {inv.discountType === '100%' ? '(Miễn 100%)' : inv.discountType === '50%' ? '(Giảm 50% - Nửa tháng)' : ''}</span>
@@ -161,25 +179,30 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
             </div>
           </div>
 
-          <div className="text-center py-6 border-y-2 border-black my-8">
-            <h2 className="text-3xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} đồng.</h2>
+          <div className="text-center py-4 border-y-2 border-black my-4">
+            <h2 className="text-2xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} đồng.</h2>
           </div>
 
-          <div className="mt-8 space-y-3 text-[15px] italic text-black">
+          <div className="mt-4 space-y-1 text-[11pt] italic text-black leading-tight">
             <p>Thông tin chuyển khoản: <span className="font-bold uppercase not-italic">TRẦN THỊ TRÚC GIANG</span></p>
             <p>Số tài khoản: <span className="font-bold not-italic">6350205 014046</span> Agribank Phước Kiển</p>
             <p>Nội dung: {selectedStudent.name}, {selectedStudent.className}.</p>
-            <div className="pt-12 text-center">
-              <p className="font-bold text-xl not-italic uppercase underline">Xin chân thành cảm ơn!</p>
+            <div className="pt-4 text-center">
+              <p className="font-bold text-lg not-italic uppercase underline">Xin chân thành cảm ơn!</p>
             </div>
           </div>
 
-          <button onClick={() => window.print()} className="mt-12 w-full py-5 bg-slate-900 text-white rounded-3xl font-black uppercase text-sm no-print shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3">
+          {/* Đường hướng dẫn cắt chỉ hiện khi in */}
+          <div className="cut-line hidden print:block">
+            ----------------------- Đường cắt giấy 1/2 A4 -----------------------
+          </div>
+
+          <button onClick={() => window.print()} className="mt-8 w-full py-4 bg-slate-900 text-white rounded-3xl font-black uppercase text-sm no-print shadow-xl hover:bg-black transition-all flex items-center justify-center gap-3">
             <Printer size={20} /> Xác nhận & In Phiếu
           </button>
         </div>
 
-        {/* Cột Zalo Message - KHÔI PHỤC Ô NHẬP SỐ ĐIỆN THOẠI */}
+        {/* Cột Zalo Message */}
         <div className="space-y-6 no-print">
           <Card className="border-t-4 border-t-blue-600 sticky top-24">
              <div className="flex items-center justify-between mb-4">
