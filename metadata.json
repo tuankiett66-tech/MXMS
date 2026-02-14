@@ -1,0 +1,7 @@
+{
+  "name": "MXMS - Quản Lý Mầm Xanh",
+  "description": "Hệ thống quản lý mầm non chuyên nghiệp với tính năng tự động tính học phí, điểm danh và gửi thông báo Zalo.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
