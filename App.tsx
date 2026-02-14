@@ -1,18 +1,16 @@
 
-import React, { useState, useEffect } from 'react';
-import { Bell } from 'lucide-react';
-import { Student, GlobalConfig, Attendance, GiftedSubjects } from './types';
-import { DEFAULT_CONFIG } from './constants';
-import { Sidebar } from './components/Sidebar';
-import { Dashboard } from './components/Dashboard';
-import { AttendanceTable } from './components/Attendance';
-import { Invoices } from './components/Invoices';
-import { Students } from './components/Students';
-import { Settings } from './components/Settings';
+import React, { useState } from 'react';
+import { Student, GlobalConfig, Attendance, GiftedSubjects } from './types.ts';
+import { DEFAULT_CONFIG } from './constants.tsx';
+import { Sidebar } from './components/Sidebar.tsx';
+import { Dashboard } from './components/Dashboard.tsx';
+import { AttendanceTable } from './components/Attendance.tsx';
+import { Invoices } from './components/Invoices.tsx';
+import { Students } from './components/Students.tsx';
+import { Settings } from './components/Settings.tsx';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
-  // KHỞI TẠO RỖNG: Tránh việc nạp file mà vẫn hiện 2 bé mặc định
   const [students, setStudents] = useState<Student[]>([]);
   const [attendance, setAttendance] = useState<Attendance[]>([]);
   const [config, setConfig] = useState<GlobalConfig>(DEFAULT_CONFIG);
@@ -75,7 +73,6 @@ export default function App() {
   const deleteStudent = (id: string) => setStudents(prev => prev.filter(s => s.id !== id));
   const clearAllStudents = () => { setStudents([]); setAttendance([]); setSelectedStudent(null); };
   
-  // LOGIC NẠP GỘP: Không ghi đè, chỉ thêm mới dựa trên ID
   const importStudents = (newStudents: Student[]) => {
     setStudents(prev => {
       const existingIds = new Set(prev.map(s => s.id));
