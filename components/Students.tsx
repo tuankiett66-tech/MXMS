@@ -1,10 +1,9 @@
 
 import React, { useState, useRef } from 'react';
-import { Plus, Search, Trash2, Edit2, X, Upload, Info, AlertCircle, FileSpreadsheet, FileUp, CheckCircle2, RefreshCw, Layers } from 'lucide-react';
+import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Card, Badge } from './Common';
 import { Student } from '../types';
-import { calculateAgeInMonths } from '../utils/calculations';
 
 interface StudentsProps {
   students: Student[];
@@ -21,41 +20,91 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
-  const [importLoading, setImportLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState<Partial<Student>>({
     name: '',
     dob: '',
-    className: 'Lớp Mầm 1',
+    className: 'Lớp Mẫu giáo',
     giftedSubjects: { english: false, drawing: false, rhythm: false },
     isNewStudent: false,
     admissionDate: new Date().toISOString().split('T')[0],
     phoneNumber: ''
   });
 
+  // Ham chuyen doi ngay tu moi dinh dang sang YYYY-MM-DD
+  const formatToInputDate = (dateStr: any) => {
+    if (!dateStr) return '';
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      return d.toISOString().split('T')[0];
+    } catch {
+      return '';
+    }
+  };
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      const bstr = evt.target?.result;
+      const wb = XLSX.read(bstr, { type: 'binary', cellDates: true });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws) as any[];
+
+      const importedStudents: Student[] = data.map((row, index) => ({
+        id: String(row.ID || row['Mã HS'] || `HS${Date.now()}${index}`),
+        name: String(row.Name || row['Họ tên'] || row['Tên'] || 'Không rõ tên'),
+        // Xu ly ngay sinh tu Excel (Excel date object hoac string)
+        dob: formatToInputDate(row.DOB || row['Ngày sinh']),
+        className: String(row.Class || row['Lớp'] || 'Lớp Mẫu giáo'),
+        giftedSubjects: {
+          english: row.English === true || row['Anh văn'] === true || String(row.English).toUpperCase() === 'TRUE',
+          drawing: row.Drawing === true || row['Vẽ'] === true || String(row.Drawing).toUpperCase() === 'TRUE',
+          rhythm: row.Rhythm === true || row['Nhịp điệu'] === true || String(row.Rhythm).toUpperCase() === 'TRUE'
+        },
+        isNewStudent: row.IsNewStudent === true || row['Mới'] === true || String(row.IsNewStudent).toUpperCase() === 'TRUE',
+        admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || new Date().toISOString().split('T')[0],
+        phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || '')
+      }));
+
+      onImport(importedStudents);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+      alert(`Da nap thanh cong ${importedStudents.length} be vao danh sach!`);
+    };
+    reader.readAsBinaryString(file);
+  };
+
   const filteredStudents = students.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          s.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const ageMonths = calculateAgeInMonths(s.dob);
-    if (activeClassTab === 'nursery') return matchesSearch && ageMonths < 36;
-    if (activeClassTab === 'preschool') return matchesSearch && ageMonths >= 36;
+    // Loc theo chu trong ten lop (Mau giao / Nha tre)
+    const classNameLower = s.className.toLowerCase();
+    if (activeClassTab === 'nursery') return matchesSearch && classNameLower.includes('nhà trẻ');
+    if (activeClassTab === 'preschool') return matchesSearch && classNameLower.includes('mẫu giáo');
     return matchesSearch;
   });
 
   const handleOpenModal = (student?: Student) => {
     if (student) {
       setEditingStudent(student);
-      setFormData(student);
+      setFormData({
+        ...student,
+        dob: formatToInputDate(student.dob) // Dam bao ngay hien dung trong o input
+      });
     } else {
       setEditingStudent(null);
       setFormData({
         id: `HS${Date.now()}`,
         name: '',
         dob: '',
-        className: 'Lớp Mầm 1',
+        className: 'Lớp Mẫu giáo',
         giftedSubjects: { english: false, drawing: false, rhythm: false },
         isNewStudent: false,
         admissionDate: new Date().toISOString().split('T')[0],
@@ -67,7 +116,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
 
   const handleSave = () => {
     if (!formData.name || !formData.dob) {
-      alert("Vui lòng nhập đầy đủ Tên và Ngày sinh!");
+      alert("Vui long nhap ho ten va ngay sinh!");
       return;
     }
     if (editingStudent) {
@@ -78,80 +127,10 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     setShowModal(false);
   };
 
-  const formatExcelDate = (value: any): string => {
-    if (!value) return new Date().toISOString().split('T')[0];
-    if (typeof value === 'number') {
-      const date = new Date((value - 25569) * 86400 * 1000);
-      return date.toISOString().split('T')[0];
+  const handleDelete = (id: string, name: string) => {
+    if (window.confirm(`Xac nhan xoa be ${name.toUpperCase()} khoi danh sach?`)) {
+      onDelete(id);
     }
-    const d = new Date(value);
-    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
-    const parts = String(value).split(/[/-]/);
-    if (parts.length === 3) {
-      if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
-    }
-    return String(value);
-  };
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setImportLoading(true);
-    const reader = new FileReader();
-
-    reader.onload = (e) => {
-      try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const json: any[] = XLSX.utils.sheet_to_json(worksheet);
-
-        const importedData: Student[] = json.map((row) => {
-          const name = String(row['Họ và tên'] || row['Họ tên'] || row['Tên'] || row['Name'] || row['name'] || 'Không tên');
-          const dob = formatExcelDate(row['Ngày sinh'] || row['NS'] || row['DOB'] || row['dob']);
-          const className = String(row['Lớp'] || row['Lớp học'] || row['Class'] || row['class'] || 'Lớp Nhà trẻ');
-          const phone = String(row['Số điện thoại'] || row['SĐT'] || row['Phone'] || row['PhoneNumber'] || '');
-          const admission = formatExcelDate(row['Ngày nhập học'] || row['Ngày vào'] || row['AdmissionDate'] || new Date().toISOString().split('T')[0]);
-          
-          const statusRaw = String(row['Bé mới'] || row['Trạng thái'] || row['IsNewStudent'] || 'Cũ').toLowerCase();
-          const isNew = statusRaw.includes('mới') || statusRaw === 'true';
-
-          const rawId = row['ID'] || row['Mã số'];
-          const generatedId = rawId ? String(rawId) : `HS-${name.replace(/\s+/g, '')}-${dob.replace(/-/g, '')}`;
-
-          return {
-            id: generatedId,
-            name,
-            dob,
-            className,
-            giftedSubjects: {
-              english: String(row['Anh văn'] || row['English'] || '').toUpperCase() === 'TRUE',
-              drawing: String(row['Vẽ'] || row['Drawing'] || '').toUpperCase() === 'TRUE',
-              rhythm: String(row['Nhịp điệu'] || row['Rhythm'] || '').toUpperCase() === 'TRUE',
-            },
-            isNewStudent: isNew,
-            admissionDate: admission,
-            phoneNumber: phone
-          };
-        });
-
-        if (importedData.length > 0) {
-          onImport(importedData);
-          alert(`Đã nạp gộp thành công ${importedData.length} bé vào danh sách!`);
-        } else {
-          alert('Không tìm thấy dữ liệu học sinh trong file!');
-        }
-      } catch (err) {
-        alert('Lỗi khi đọc file Excel. Hãy kiểm tra các cột: Họ tên, Ngày sinh, Lớp...');
-      } finally {
-        setImportLoading(false);
-        if (fileInputRef.current) fileInputRef.current.value = '';
-      }
-    };
-
-    reader.readAsBinaryString(file);
   };
 
   return (
@@ -169,65 +148,35 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
             />
           </div>
           
-          <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
-            <button 
-              onClick={() => setActiveClassTab('all')}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${activeClassTab === 'all' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
-            >Tất cả ({students.length})</button>
-            <button 
-              onClick={() => setActiveClassTab('preschool')}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${activeClassTab === 'preschool' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
-            >Khối Mẫu Giáo</button>
-            <button 
-              onClick={() => setActiveClassTab('nursery')}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${activeClassTab === 'nursery' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
-            >Khối Nhà Trẻ</button>
+          <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+            <button onClick={() => setActiveClassTab('all')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap ${activeClassTab === 'all' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Tất cả ({students.length})</button>
+            <button onClick={() => setActiveClassTab('preschool')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap ${activeClassTab === 'preschool' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Khối Mẫu Giáo</button>
+            <button onClick={() => setActiveClassTab('nursery')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap ${activeClassTab === 'nursery' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Khối Nhà Trẻ</button>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="relative">
-            {isConfirmingClear ? (
-              <div className="flex items-center gap-1 bg-red-600 rounded-2xl p-1 animate-in zoom-in duration-200">
-                <button 
-                  onClick={() => { onClearAll(); setIsConfirmingClear(false); }}
-                  className="px-4 py-2 bg-white text-red-600 rounded-xl font-black text-[10px] uppercase shadow-lg"
-                >BẤM ĐỂ XÓA HẾT!</button>
-                <button 
-                  onClick={() => setIsConfirmingClear(false)}
-                  className="p-2 text-white hover:bg-red-700 rounded-xl"
-                ><X size={16} /></button>
-              </div>
-            ) : (
-              <button 
-                onClick={() => setIsConfirmingClear(true)}
-                className="flex items-center gap-2 px-4 py-3 bg-red-50 text-red-600 border border-red-100 rounded-2xl font-bold text-xs uppercase hover:bg-red-100 transition-all shadow-sm"
-              >
-                <Trash2 size={18} />
-                Làm sạch
-              </button>
-            )}
-          </div>
-
-          <input 
-            type="file" 
-            ref={fileInputRef} 
-            onChange={handleFileUpload} 
-            className="hidden" 
-            accept=".xlsx, .xls, .csv"
-          />
-          <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importLoading}
-            className={`flex items-center gap-2 px-4 py-3 bg-white border-2 border-emerald-100 text-emerald-600 rounded-2xl font-bold text-xs uppercase hover:bg-emerald-50 transition-all shadow-sm ${importLoading ? 'opacity-50 cursor-wait' : ''}`}
-          >
-            {importLoading ? <RefreshCw className="animate-spin" size={18} /> : (students.length > 0 ? <Layers size={18} /> : <FileUp size={18} />)}
-            {importLoading ? 'Đang đọc...' : (students.length > 0 ? 'Nạp thêm file (Gộp)' : 'Nạp từ PC')}
-          </button>
+        <div className="flex items-center gap-3 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+          <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xlsx, .xls" className="hidden" />
           
           <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-3 bg-blue-50 text-blue-600 border border-blue-100 rounded-2xl font-bold text-xs uppercase hover:bg-blue-100 transition-all shadow-sm whitespace-nowrap"
+          >
+            <FileUp size={18} />
+            Nạp file Excel
+          </button>
+
+          <button 
+            onClick={() => setIsConfirmingClear(true)}
+            className="flex items-center gap-2 px-4 py-3 bg-red-50 text-red-600 border border-red-100 rounded-2xl font-bold text-xs uppercase hover:bg-red-100 transition-all shadow-sm whitespace-nowrap"
+          >
+            <Trash2 size={18} />
+            Làm sạch
+          </button>
+
+          <button 
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold text-xs uppercase shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95"
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold text-xs uppercase shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"
           >
             <Plus size={18} />
             Tiếp nhận bé
@@ -237,14 +186,11 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
 
       {students.length === 0 ? (
         <div className="py-32 flex flex-col items-center justify-center bg-white rounded-[40px] border-4 border-dashed border-slate-100 text-slate-300">
-           <FileSpreadsheet size={80} className="mb-6 opacity-10" />
-           <p className="font-black uppercase text-xl tracking-widest opacity-30 italic">Chưa có dữ liệu học sinh</p>
-           <div className="mt-4 flex flex-col items-center gap-2 text-center max-w-sm px-6">
-             <p className="text-xs font-bold text-slate-400 uppercase leading-relaxed">
-               Hệ thống sẽ mặc định là "Bé cũ". 
-               Nếu muốn đánh dấu bé mới, hãy thêm cột "Trạng thái" và ghi chữ "Mới".
-             </p>
-             <button onClick={() => fileInputRef.current?.click()} className="mt-6 px-8 py-3 bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase shadow-lg hover:bg-emerald-700">Bắt đầu nạp file</button>
+           <FileUp size={80} className="mb-6 opacity-10" />
+           <p className="font-black uppercase text-xl tracking-widest opacity-30 italic">Chưa có dữ liệu</p>
+           <div className="flex gap-4 mt-6">
+              <button onClick={() => fileInputRef.current?.click()} className="px-8 py-3 bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase shadow-lg">Nạp Excel</button>
+              <button onClick={() => handleOpenModal()} className="px-8 py-3 bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase shadow-lg">Thêm thủ công</button>
            </div>
         </div>
       ) : (
@@ -255,22 +201,16 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 <div className="w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden shadow-inner border border-slate-50">
                   <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`} alt="Avatar" className="w-full h-full object-cover" />
                 </div>
-                <div className="flex flex-col items-end gap-1">
-                  <Badge color={student.isNewStudent ? 'emerald' : 'slate'}>{student.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
-                </div>
+                <Badge color={student.isNewStudent ? 'emerald' : 'slate'}>{student.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
               </div>
               
               <h5 className="font-black text-slate-900 text-lg uppercase mb-0.5 truncate tracking-tight">{student.name}</h5>
-              <p className="text-slate-400 text-[10px] font-bold uppercase mb-3">{student.className} • {student.id}</p>
+              <p className="text-slate-400 text-[10px] font-bold uppercase mb-3">{student.className}</p>
               
               <div className="space-y-2 mb-6">
                  <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
                     <CheckCircle2 size={12} className="text-emerald-500" />
-                    <span>NS: {new Date(student.dob).toLocaleDateString('vi-VN')}</span>
-                 </div>
-                 <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
-                    <Info size={12} className="text-slate-300" />
-                    <span>Nhập học: {student.admissionDate}</span>
+                    <span>NS: {student.dob ? new Date(student.dob).toLocaleDateString('vi-VN') : 'N/A'}</span>
                  </div>
                  <div className="flex flex-wrap gap-1 mt-2">
                   {student.giftedSubjects.english && <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-black rounded-md border border-blue-100 uppercase">Anh văn</span>}
@@ -283,11 +223,28 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 <span className="text-[10px] font-black text-slate-400">{student.phoneNumber || 'N/A'}</span>
                 <div className="flex gap-1">
                   <button onClick={() => handleOpenModal(student)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"><Edit2 size={16} /></button>
-                  <button onClick={() => window.confirm(`Xóa bé ${student.name.toUpperCase()}?`) && onDelete(student.id)} className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={16} /></button>
+                  <button onClick={() => handleDelete(student.id, student.name)} className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={16} /></button>
                 </div>
               </div>
             </Card>
           ))}
+        </div>
+      )}
+
+      {/* Confirmation Overlay for Clear All */}
+      {isConfirmingClear && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200">
+           <div className="bg-white p-8 rounded-[40px] max-w-sm text-center shadow-2xl">
+              <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                 <Trash2 size={40} />
+              </div>
+              <h4 className="text-xl font-black text-slate-800 uppercase italic mb-2">Xoa sach du lieu?</h4>
+              <p className="text-sm text-slate-500 mb-8">Hanh dong nay se xoa toan bo danh sach hoc sinh va diem danh hien tai.</p>
+              <div className="flex gap-4">
+                 <button onClick={() => setIsConfirmingClear(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-xs">Huy</button>
+                 <button onClick={() => { onClearAll(); setIsConfirmingClear(false); }} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-red-200">Xoa het!</button>
+              </div>
+           </div>
         </div>
       )}
 
@@ -311,11 +268,11 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Lớp học</label>
-                  <input type="text" value={formData.className} onChange={(e) => setFormData({...formData, className: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none" />
+                  <input type="text" value={formData.className} onChange={(e) => setFormData({...formData, className: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Số điện thoại</label>
-                  <input type="text" value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none" />
+                  <input type="text" value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500" />
                 </div>
               </div>
 

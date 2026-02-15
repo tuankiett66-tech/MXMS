@@ -1,22 +1,21 @@
 
-# Hướng dẫn Cập nhật & Sử dụng [09/02/2024]
+# Huong dan Su dung - Cap nhat [13/02/2024]
 
-## 🛑 QUY TẮC KỶ LUẬT KỸ SƯ
-Mọi kỹ sư khi tiếp nhận dự án **PHẢI** thực hiện các bước sau:
-- **Bước 1**: Mở thư mục `docs/`, đọc file `feature_summary.md`.
-- **Bước 2**: Xác nhận các tính năng quan trọng hiện có.
-- **Bước 3**: Tiến hành sửa lỗi/nâng cấp mà không làm hỏng tính năng cũ.
-- **Bước 4**: Cập nhật ngày tháng và nội dung vào Nhật ký công việc tại file này.
+## 1. Luu y ve file Excel nap vao
+- File Excel cua ban can co cac cot ten la: "Name" (hoac "Ho ten"), "DOB" (hoac "Ngay sinh"), "Class" (hoac "Lop").
+- De he thong phan loai dung: Ten lop phai co chu "Mau giao" hoac "Nha tre".
+- Cot English, Drawing, Rhythm: Neu be hoc mon nao thi de gia tri la "TRUE" hoac tich vao o trong Excel.
 
-## 1. Quản lý trạng thái "Bé mới" vs "Bé cũ"
-- **Nạp từ Excel**: Hệ thống mặc định 100% học sinh trong file là **Bé cũ** (không tính tiền CSVC/Học phẩm niên học).
-- **Để đánh dấu là Bé mới trong Excel**: Bạn hãy thêm một cột có tên là **Trạng thái** (hoặc "Bé mới") và ghi giá trị là **"Mới"** cho bé đó.
-- **Sửa thủ công**: Bạn luôn có thể bấm vào nút "Bút chì" trên thẻ học sinh để tích/bỏ tích ô "Bé mới" bất cứ lúc nào.
+## 2. Sua thong tin be
+- Bam vao icon chiec viet (Edit) tren moi the hoc sinh.
+- Ngay sinh se duoc hien thi dung dinh dang dd/mm/yyyy trong o chon ngay.
+- Sau khi sua, bam "Luu ho so" de cap nhat.
 
-## 2. Quy trình nạp gộp
-- Bạn có thể nạp file lớp MG, sau đó nạp tiếp file lớp NT. Hệ thống sẽ giữ nguyên danh sách và cộng dồn vào.
+## 3. Xoa hoc sinh
+- Bam icon thung rac (Delete) tren the hoc sinh.
+- He thong se hoi xac nhan, bam OK de xoa.
+- Dung nut "Lam sach" o tren cung neu muon xoa tat ca hoc sinh de nap lai tu dau.
 
-## 3. Nhật ký công việc (Ghi sau khi cập nhật)
-- **09/02/2024**: Sửa mặc định nạp Excel là 'Bé cũ' tại `components/Students.tsx`.
-- **08/02/2024**: Nâng cấp logic gộp file.
-- **07/02/2024**: Hỗ trợ Excel tiếng Việt.
+## 4. In an & Zalo
+- Tai tab Phieu thu: Dung nut In tren may tinh de co ban in 1/2 A4.
+- Tren dien thoai: Bam "Sao chep & Mo Zalo" de gui nhanh thong bao hoc phi cho phu huynh.
