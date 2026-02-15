@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, Users, CalendarCheck, FileText, Settings, Calendar } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarCheck, FileText, Settings, Calendar, Save } from 'lucide-react';
 import { GlobalConfig } from '../types';
 import { calculateMonthsRemaining } from '../utils/calculations';
 
@@ -13,6 +13,7 @@ interface SidebarProps {
   setCurrentYear: (y: number) => void;
   config: GlobalConfig;
   setConfig: (c: GlobalConfig) => void;
+  onManualSave: () => void;
 }
 
 const SidebarItem = ({ icon: Icon, label, active, onClick }: any) => (
@@ -28,7 +29,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: any) => (
 );
 
 export const Sidebar = ({ 
-  activeTab, setActiveTab, currentMonth, setCurrentMonth, currentYear, setCurrentYear, config, setConfig 
+  activeTab, setActiveTab, currentMonth, setCurrentMonth, currentYear, setCurrentYear, config, setConfig, onManualSave 
 }: SidebarProps) => {
   return (
     <div className="w-72 bg-white border-r border-slate-100 flex flex-col p-6 space-y-6 no-print overflow-y-auto shrink-0">
@@ -42,7 +43,6 @@ export const Sidebar = ({
         </div>
       </div>
 
-      {/* Quick Config Section - Clear & Visible inputs */}
       <div className="bg-slate-50 rounded-2xl p-4 space-y-4 border border-slate-100 shadow-inner">
         <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Thời gian & Phí nhanh</p>
         
@@ -102,10 +102,16 @@ export const Sidebar = ({
         </div>
 
         <div className="pt-2 border-t border-slate-200">
-           <div className="flex justify-between text-[10px]">
+           <div className="flex justify-between text-[10px] mb-3">
              <span className="text-slate-500 font-bold uppercase">Niên học còn:</span>
              <span className="text-emerald-700 font-black">{calculateMonthsRemaining(currentMonth)} tháng</span>
            </div>
+           <button 
+            onClick={onManualSave}
+            className="w-full py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-md shadow-emerald-100"
+           >
+             <Save size={14} /> Lưu lại (Save)
+           </button>
         </div>
       </div>
 

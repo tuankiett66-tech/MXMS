@@ -7,9 +7,10 @@ import { GlobalConfig } from '../types';
 interface SettingsProps {
   config: GlobalConfig;
   setConfig: (c: GlobalConfig) => void;
+  onManualSave: () => void;
 }
 
-export const Settings = ({ config, setConfig }: SettingsProps) => {
+export const Settings = ({ config, setConfig, onManualSave }: SettingsProps) => {
   const handleChange = (field: string, value: any) => {
     setConfig({ ...config, [field]: value });
   };
@@ -157,7 +158,10 @@ export const Settings = ({ config, setConfig }: SettingsProps) => {
       </div>
 
       <div className="flex justify-center">
-        <button className="px-12 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200 flex items-center gap-3">
+        <button 
+          onClick={onManualSave}
+          className="px-12 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl shadow-slate-200 flex items-center gap-3"
+        >
           <Save size={20} />
           Lưu toàn bộ cấu hình
         </button>
