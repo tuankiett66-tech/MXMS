@@ -32,7 +32,6 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     phoneNumber: ''
   });
 
-  // Ham chuyen doi ngay tu moi dinh dang sang YYYY-MM-DD
   const formatToInputDate = (dateStr: any) => {
     if (!dateStr) return '';
     try {
@@ -59,7 +58,6 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
       const importedStudents: Student[] = data.map((row, index) => ({
         id: String(row.ID || row['Mã HS'] || `HS${Date.now()}${index}`),
         name: String(row.Name || row['Họ tên'] || row['Tên'] || 'Không rõ tên'),
-        // Xu ly ngay sinh tu Excel (Excel date object hoac string)
         dob: formatToInputDate(row.DOB || row['Ngày sinh']),
         className: String(row.Class || row['Lớp'] || 'Lớp Mẫu giáo'),
         giftedSubjects: {
@@ -74,7 +72,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
 
       onImport(importedStudents);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      alert(`Da nap thanh cong ${importedStudents.length} be vao danh sach!`);
+      alert(`Đã nạp thành công ${importedStudents.length} bé vào danh sách!`);
     };
     reader.readAsBinaryString(file);
   };
@@ -84,7 +82,6 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                          s.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Loc theo chu trong ten lop (Mau giao / Nha tre)
     const classNameLower = s.className.toLowerCase();
     if (activeClassTab === 'nursery') return matchesSearch && classNameLower.includes('nhà trẻ');
     if (activeClassTab === 'preschool') return matchesSearch && classNameLower.includes('mẫu giáo');
@@ -96,7 +93,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
       setEditingStudent(student);
       setFormData({
         ...student,
-        dob: formatToInputDate(student.dob) // Dam bao ngay hien dung trong o input
+        dob: formatToInputDate(student.dob)
       });
     } else {
       setEditingStudent(null);
@@ -116,7 +113,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
 
   const handleSave = () => {
     if (!formData.name || !formData.dob) {
-      alert("Vui long nhap ho ten va ngay sinh!");
+      alert("Vui lòng nhập họ tên và ngày sinh!");
       return;
     }
     if (editingStudent) {
@@ -128,7 +125,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
   };
 
   const handleDelete = (id: string, name: string) => {
-    if (window.confirm(`Xac nhan xoa be ${name.toUpperCase()} khoi danh sach?`)) {
+    if (window.confirm(`Xác nhận xóa bé ${name.toUpperCase()} khỏi danh sách?`)) {
       onDelete(id);
     }
   };
@@ -195,11 +192,16 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredStudents.map(student => (
+          {filteredStudents.map((student, index) => (
             <Card key={student.id} className="group hover:border-emerald-500 transition-all flex flex-col h-full relative overflow-hidden shadow-sm hover:shadow-xl border-2 border-slate-50">
               <div className="flex justify-between items-start mb-4">
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 overflow-hidden shadow-inner border border-slate-50">
-                  <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`} alt="Avatar" className="w-full h-full object-cover" />
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-xs border border-emerald-100 shadow-sm">
+                    {index + 1}
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden border border-slate-50">
+                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`} alt="Avatar" className="w-full h-full object-cover" />
+                  </div>
                 </div>
                 <Badge color={student.isNewStudent ? 'emerald' : 'slate'}>{student.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
               </div>
@@ -231,18 +233,16 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         </div>
       )}
 
-      {/* Confirmation Overlay for Clear All */}
       {isConfirmingClear && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-900/80 backdrop-blur-md animate-in fade-in duration-200">
            <div className="bg-white p-8 rounded-[40px] max-w-sm text-center shadow-2xl">
               <div className="w-20 h-20 bg-red-100 text-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
                  <Trash2 size={40} />
               </div>
-              <h4 className="text-xl font-black text-slate-800 uppercase italic mb-2">Xoa sach du lieu?</h4>
-              <p className="text-sm text-slate-500 mb-8">Hanh dong nay se xoa toan bo danh sach hoc sinh va diem danh hien tai.</p>
+              <h4 className="text-xl font-black text-slate-800 uppercase italic mb-2">Xóa sạch dữ liệu?</h4>
               <div className="flex gap-4">
-                 <button onClick={() => setIsConfirmingClear(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-xs">Huy</button>
-                 <button onClick={() => { onClearAll(); setIsConfirmingClear(false); }} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-red-200">Xoa het!</button>
+                 <button onClick={() => setIsConfirmingClear(false)} className="flex-1 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase text-xs">Hủy</button>
+                 <button onClick={() => { onClearAll(); setIsConfirmingClear(false); }} className="flex-1 py-4 bg-red-600 text-white rounded-2xl font-black uppercase text-xs shadow-lg shadow-red-200">Xóa hết!</button>
               </div>
            </div>
         </div>

@@ -6,10 +6,10 @@
 - Chuyen doi ngay sinh tu Excel MM/DD/YYYY sang YYYY-MM-DD chuẩn de hien thi khi sua.
 - Khong con du lieu mau, moi du lieu do nguoi dung nap vao.
 
-## 2. Phan loai khoi theo ten lop
-- Tu dong phan loai be vao "Khoi Mau Giao" neu ten lop co chu "Mau giao".
-- Tu dong phan loai be vao "Khoi Nha Tre" neu ten lop co chu "Nha tre".
-- Giup quan ly danh sach 2 khoi rieng biet ma khong can tinh so thang tuoi phuc tap.
+## 2. Phan loai khoi & So thu tu (STT)
+- Tu dong phan loai be vao "Khoi Mau Giao" (neu lop co chu "Mau giao") va "Khoi Nha Tre" (neu lop co chu "Nha tre").
+- **STT tu dong**: Danh so 1, 2, 3... cho tung be trong danh sach va tung khoi lop rieng biet.
+- Giup quan ly, doi chieu va kiem tra danh sach hoc sinh nhanh chong hon.
 
 ## 3. Quan ly Ho so
 - Nut Sua (Edit) hien thi dung ngay sinh de chinh sua nhanh.

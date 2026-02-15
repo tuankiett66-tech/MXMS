@@ -2,7 +2,6 @@
 import React, { useState } from 'react';
 import { Card } from './Common';
 import { Student, Attendance, GiftedSubjects } from '../types';
-import { calculateAgeInMonths } from '../utils/calculations';
 
 interface AttendanceProps {
   students: Student[];
@@ -22,9 +21,9 @@ export const AttendanceTable = ({
   const [activeClassTab, setActiveClassTab] = useState<'all' | 'nursery' | 'preschool'>('all');
 
   const filteredStudents = students.filter(s => {
-    const ageMonths = calculateAgeInMonths(s.dob);
-    if (activeClassTab === 'nursery') return ageMonths < 36;
-    if (activeClassTab === 'preschool') return ageMonths >= 36;
+    const classNameLower = s.className.toLowerCase();
+    if (activeClassTab === 'nursery') return classNameLower.includes('nhà trẻ');
+    if (activeClassTab === 'preschool') return classNameLower.includes('mẫu giáo');
     return true;
   });
 
@@ -50,7 +49,8 @@ export const AttendanceTable = ({
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-100 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-              <th className="pb-4 pl-2 min-w-[150px]">Học sinh</th>
+              <th className="pb-4 pl-2 w-12">STT</th>
+              <th className="pb-4 min-w-[150px]">Học sinh</th>
               <th className="pb-4 text-center">Anh văn</th>
               <th className="pb-4 text-center">Vẽ</th>
               <th className="pb-4 text-center">N.Điệu</th>
@@ -61,21 +61,24 @@ export const AttendanceTable = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
-            {filteredStudents.map((student) => {
+            {filteredStudents.map((student, index) => {
               const att = attendance.find(a => a.studentId === student.id && a.month === currentMonth && a.year === currentYear);
               return (
                 <tr key={student.id} className="group hover:bg-slate-50/50 transition-colors">
                   <td className="py-4 pl-2">
+                    <span className="w-7 h-7 flex items-center justify-center bg-slate-100 text-slate-500 rounded-lg font-black text-[10px]">
+                      {index + 1}
+                    </span>
+                  </td>
+                  <td className="py-4">
                     <p className="text-sm font-black text-slate-800 uppercase leading-none">{student.name}</p>
                     <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">{student.className}</p>
                   </td>
                   
-                  {/* 3 môn năng khiếu */}
                   <td className="py-4"><div className="flex justify-center"><input type="checkbox" checked={student.giftedSubjects.english} onChange={() => onToggleGifted(student.id, 'english')} className="w-6 h-6 accent-blue-600 rounded-lg cursor-pointer border-2" /></div></td>
                   <td className="py-4"><div className="flex justify-center"><input type="checkbox" checked={student.giftedSubjects.drawing} onChange={() => onToggleGifted(student.id, 'drawing')} className="w-6 h-6 accent-pink-600 rounded-lg cursor-pointer border-2" /></div></td>
                   <td className="py-4"><div className="flex justify-center"><input type="checkbox" checked={student.giftedSubjects.rhythm} onChange={() => onToggleGifted(student.id, 'rhythm')} className="w-6 h-6 accent-purple-600 rounded-lg cursor-pointer border-2" /></div></td>
 
-                  {/* 2 mức giảm học phí */}
                   <td className="py-4 bg-orange-50/30">
                     <div className="flex justify-center">
                       <input 
@@ -113,13 +116,6 @@ export const AttendanceTable = ({
             })}
           </tbody>
         </table>
-      </div>
-      
-      <div className="mt-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
-         <div className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce"></div>
-         <p className="text-[10px] font-black text-emerald-800 uppercase tracking-tight">
-           Hướng dẫn: Ô <span className="underline italic">Giảm HP 100% / 50%</span> chỉ áp dụng cho tiền học phí chính. <span className="text-red-600">Các môn năng khiếu luôn được tính phí 100%</span> nếu bé có tham gia học.
-         </p>
       </div>
     </Card>
   );
