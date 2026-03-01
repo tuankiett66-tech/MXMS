@@ -46,13 +46,8 @@ export const calculateInvoice = (
     discountType = '50%';
   }
 
-  // Tiền ăn tính theo tháng trước
-  const lastMonth = currentMonth === 1 ? 12 : currentMonth - 1;
-  const lastYear = currentMonth === 1 ? currentYear - 1 : currentYear;
-  const lastMonthAttendance = attendanceData.find(
-    a => a.studentId === student.id && a.month === lastMonth && a.year === lastYear
-  );
-  const absentDays = lastMonthAttendance ? lastMonthAttendance.absentDays : 0;
+  // Tiền ăn tính theo tháng hiện tại
+  const absentDays = currentAttendance ? currentAttendance.absentDays : 0;
   const mealFee = (config.standardDays * config.mealFeePerDay) - (absentDays * config.mealFeePerDay);
 
   let giftedTotal = 0;
@@ -97,7 +92,7 @@ export const calculateInvoice = (
     discountType,
     calculationInfo: {
       ageInMonths: ageMonths,
-      absentDaysLastMonth: absentDays,
+      absentDays: absentDays,
       monthsRemaining,
       giftedBreakdown
     }
@@ -108,7 +103,7 @@ export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year:
   const { student, total, tuition, extraFee, csvcFee, materialFee, calculationInfo, discountType } = invoice;
   const formattedDOB = new Date(student.dob).toLocaleDateString('vi-VN');
   const fullMealFee = config.standardDays * config.mealFeePerDay;
-  const absentDeduction = calculationInfo.absentDaysLastMonth * config.mealFeePerDay;
+  const absentDeduction = calculationInfo.absentDays * config.mealFeePerDay;
 
   let msg = `GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG ${month} NĂM ${year}.\n\n`;
   msg += `- Họ và tên trẻ : ${student.name.toUpperCase()} SN ${formattedDOB}-${calculationInfo.ageInMonths} tháng.\n`;
@@ -129,7 +124,7 @@ export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year:
   if (csvcFee > 0) msg += `- Cơ sở vật chất (${calculationInfo.monthsRemaining} tháng) : ${formatCurrency(csvcFee)} đồng.\n`;
   if (materialFee > 0) msg += `- Học phẩm (${calculationInfo.monthsRemaining} tháng) : ${formatCurrency(materialFee)} đồng.\n`;
 
-  msg += `- Số ngày nghỉ có phép trong tháng : ${calculationInfo.absentDaysLastMonth} ngày . Trừ lại : ${formatCurrency(absentDeduction)} đồng.\n\n`;
+  msg += `- Số ngày nghỉ có phép trong tháng : ${calculationInfo.absentDays} ngày . Trừ lại : ${formatCurrency(absentDeduction)} đồng.\n\n`;
   
   msg += `TỔNG CỘNG : ${formatCurrency(total)} đồng.\n\n`;
   msg += `Thông tin chuyển khoản: Tên thụ hưởng: TRẦN THỊ TRÚC GIANG\n`;

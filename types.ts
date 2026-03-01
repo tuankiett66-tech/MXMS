@@ -53,7 +53,7 @@ export interface InvoiceDetail {
   discountType: 'none' | '50%' | '100%'; 
   calculationInfo: {
     ageInMonths: number;
-    absentDaysLastMonth: number;
+    absentDays: number;
     monthsRemaining: number;
     giftedBreakdown: string[];
   };
