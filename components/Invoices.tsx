@@ -85,7 +85,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                 top: 0; 
                 width: 210mm; 
                 height: 148.5mm; /* Chính xác 1/2 trang A4 */
-                padding: 15mm 20mm;
+                padding: 10mm 15mm;
                 border: none; 
                 box-shadow: none; 
                 font-family: 'Times New Roman', Times, serif; 
@@ -99,22 +99,22 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               display: flex;
               align-items: flex-end;
               gap: 4px;
-              margin-bottom: 4px;
+              margin-bottom: 2px;
               width: 100%;
               color: #000 !important;
-              font-size: 13pt;
+              font-size: 12pt;
             }
             .invoice-label { flex-grow: 1; border-bottom: 1px dotted #000; padding-bottom: 1px; }
             .invoice-dots { border-bottom: 1px dotted #000; flex-grow: 0; padding-bottom: 1px; font-weight: bold; }
             .invoice-value { font-weight: bold; min-width: 120px; text-align: right; border-bottom: 1px dotted #000; padding-bottom: 1px; }
           `}</style>
           
-          <div className="text-center mb-8">
-            <h1 className="text-xl font-bold uppercase underline text-black">GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG {currentMonth} NĂM {currentYear}.</h1>
+          <div className="text-center mb-4">
+            <h1 className="text-lg font-bold uppercase underline text-black">GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG {currentMonth} NĂM {currentYear}.</h1>
           </div>
 
-          <div className="space-y-2 mb-4 font-medium text-black">
-            <p className="mb-4 text-[13pt]">- Họ và tên trẻ : <span className="font-bold uppercase">{selectedStudent.name}</span> SN {formattedDOB}-{inv.calculationInfo.ageInMonths} tháng.</p>
+          <div className="space-y-1 mb-2 font-medium text-black">
+            <p className="mb-2 text-[12pt]">- Họ và tên trẻ : <span className="font-bold uppercase">{selectedStudent.name}</span> SN {formattedDOB}-{inv.calculationInfo.ageInMonths} tháng.</p>
             
             <div className="invoice-line">
               <span className="invoice-label">- Tiền học phí trong tháng {inv.discountType === '100%' ? '(Miễn 100%)' : inv.discountType === '50%' ? '(Giảm 50% - Nửa tháng)' : ''}</span>
@@ -168,16 +168,16 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
             </div>
           </div>
 
-          <div className="text-center py-4 border-y-2 border-black my-4">
-            <h2 className="text-2xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} ĐỒNG.</h2>
+          <div className="text-center py-2 border-y-2 border-black my-2">
+            <h2 className="text-xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} ĐỒNG.</h2>
           </div>
 
-          <div className="mt-6 space-y-1 text-[11pt] italic text-black leading-tight">
+          <div className="mt-2 space-y-0.5 text-[10.5pt] italic text-black leading-tight">
             <p>Thông tin chuyển khoản: <span className="font-bold uppercase not-italic">TRẦN THỊ TRÚC GIANG</span></p>
             <p>Số tài khoản: <span className="font-bold not-italic">6350205 014046</span> Agribank Phước Kiển</p>
             <p>Nội dung: {selectedStudent.name}, {selectedStudent.className}.</p>
-            <div className="pt-6 text-center">
-              <p className="font-bold text-lg not-italic uppercase underline decoration-2 underline-offset-8">Xin chân thành cảm ơn!</p>
+            <div className="pt-2 text-center">
+              <p className="font-bold text-base not-italic uppercase underline decoration-2 underline-offset-4">Xin chân thành cảm ơn!</p>
             </div>
           </div>
 
