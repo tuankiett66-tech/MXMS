@@ -35,14 +35,17 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
   const exportClassExcel = () => {
     const wb = XLSX.utils.book_new();
     
-    // Group students by class and normalize names
-    const classes = Array.from(new Set(students.map(s => (s.className || "Chưa phân lớp").trim())));
+    // Group students by class and normalize names for grouping
+    const classGroups = students.reduce((acc, s) => {
+      const cls = (s.className || "Chưa phân lớp").trim();
+      if (!acc[cls]) acc[cls] = [];
+      acc[cls].push(s);
+      return acc;
+    }, {} as Record<string, Student[]>);
+
     const usedSheetNames = new Set<string>();
     
-    classes.forEach(className => {
-      const classStudents = students.filter(s => (s.className || "Chưa phân lớp").trim() === className);
-      if (classStudents.length === 0) return;
-
+    Object.entries(classGroups).forEach(([className, classStudents]) => {
       const data = classStudents.map((s, index) => {
         const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
         return {
@@ -59,29 +62,31 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
       const ws = XLSX.utils.json_to_sheet(data);
       
       // Set column widths
-      const wscols = [
-        { wch: 5 },  // STT
-        { wch: 30 }, // Họ và tên
-        { wch: 15 }, // Lớp
-        { wch: 20 }, // Tổng cộng
-        { wch: 15 }, // Hình thức
-        { wch: 15 }, // Ngày đóng
-        { wch: 25 }, // Ký tên
+      ws['!cols'] = [
+        { wch: 5 }, { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 25 }
       ];
-      ws['!cols'] = wscols;
 
-      // Sanitize sheet name: remove invalid chars \ / ? * [ ] : and limit to 31 chars
-      let sheetName = className.replace(/[\\/?*\[\]:]/g, '_').substring(0, 31);
+      // Sanitize sheet name: 
+      // 1. Remove invalid chars: \ / ? * [ ] :
+      // 2. Excel sheet names cannot exceed 31 chars
+      // 3. Excel sheet names are case-insensitive
+      let sheetName = className.replace(/[\\/?*\[\]:]/g, '_').trim();
       if (!sheetName) sheetName = "Sheet";
       
-      let finalSheetName = sheetName;
+      // Remove leading/trailing single quotes (Excel restriction)
+      sheetName = sheetName.replace(/^'|'$/g, '');
+      
+      let finalSheetName = sheetName.substring(0, 31);
       let counter = 1;
-      while (usedSheetNames.has(finalSheetName)) {
-        finalSheetName = sheetName.substring(0, 28) + "_" + counter;
+      
+      // Check for duplicates case-insensitively
+      while (Array.from(usedSheetNames).some(n => n.toLowerCase() === finalSheetName.toLowerCase())) {
+        const suffix = `_${counter}`;
+        finalSheetName = sheetName.substring(0, 31 - suffix.length) + suffix;
         counter++;
       }
+      
       usedSheetNames.add(finalSheetName);
-
       XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
     });
 
