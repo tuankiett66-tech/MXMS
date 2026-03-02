@@ -18,23 +18,41 @@ interface InvoicesProps {
 export const Invoices = ({ students, config, attendance, currentMonth, currentYear, selectedStudent, setSelectedStudent }: InvoicesProps) => {
   const [targetPhone, setTargetPhone] = useState('');
   const [selectionMode, setSelectionMode] = useState<'grid' | 'list'>('grid');
+  const [bulkPrintClass, setBulkPrintClass] = useState<string | null>(null);
 
   useEffect(() => {
     if (selectedStudent) setTargetPhone(selectedStudent.phoneNumber || '');
   }, [selectedStudent]);
 
+  const classes = useMemo(() => Array.from(new Set(students.map(s => s.className.trim() || "Chưa phân lớp"))), [students]);
+
   const currentIndex = useMemo(() => selectedStudent ? students.findIndex(s => s.id === selectedStudent.id) : -1, [selectedStudent, students]);
   const goToNext = () => currentIndex < students.length - 1 && setSelectedStudent(students[currentIndex + 1]);
   const goToPrev = () => currentIndex > 0 && setSelectedStudent(students[currentIndex - 1]);
 
-  if (!selectedStudent) {
+  if (!selectedStudent && !bulkPrintClass) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-2">
            <h3 className="text-xl font-black text-slate-800 uppercase italic">Chọn bé lập phiếu</h3>
-           <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm no-print">
-            <button onClick={() => setSelectionMode('grid')} className={`p-2 rounded-xl transition-all flex items-center gap-2 px-4 ${selectionMode === 'grid' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400'}`}><LayoutGrid size={18} /></button>
-            <button onClick={() => setSelectionMode('list')} className={`p-2 rounded-xl transition-all flex items-center gap-2 px-4 ${selectionMode === 'list' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400'}`}><List size={18} /></button>
+           <div className="flex flex-wrap gap-2 no-print">
+             {classes.map(cls => (
+               <button 
+                key={cls}
+                onClick={() => {
+                  setBulkPrintClass(cls);
+                  setTimeout(() => window.print(), 500);
+                }}
+                className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-600 hover:border-emerald-500 hover:text-emerald-600 transition-all shadow-sm"
+               >
+                 <Printer size={14} /> In cả lớp {cls}
+               </button>
+             ))}
+             <div className="w-px h-8 bg-slate-200 mx-2 hidden md:block"></div>
+             <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm">
+              <button onClick={() => setSelectionMode('grid')} className={`p-2 rounded-xl transition-all flex items-center gap-2 px-4 ${selectionMode === 'grid' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400'}`}><LayoutGrid size={18} /></button>
+              <button onClick={() => setSelectionMode('list')} className={`p-2 rounded-xl transition-all flex items-center gap-2 px-4 ${selectionMode === 'list' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400'}`}><List size={18} /></button>
+            </div>
           </div>
         </div>
         <div className={selectionMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "space-y-2"}>
@@ -49,6 +67,115 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
       </div>
     );
   }
+
+  if (bulkPrintClass) {
+    const classStudents = students.filter(s => (s.className.trim() || "Chưa phân lớp") === bulkPrintClass);
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between no-print bg-white p-4 rounded-2xl border border-slate-200">
+          <button onClick={() => setBulkPrintClass(null)} className="flex items-center gap-2 px-5 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl font-black text-[11px] uppercase tracking-wider"><ArrowLeft size={18} /> Quay lại</button>
+          <h3 className="text-sm font-black text-emerald-700 uppercase">Đang chuẩn bị in lớp: {bulkPrintClass}</h3>
+          <button onClick={() => window.print()} className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-black text-[11px] uppercase flex items-center gap-2"><Printer size={18} /> In lại</button>
+        </div>
+        
+        <div className="space-y-8">
+          {classStudents.map((student) => {
+            const inv = calculateInvoice(student, config, attendance, currentMonth, currentYear);
+            const dob = new Date(student.dob).toLocaleDateString('vi-VN');
+            return (
+              <div key={student.id} className="bg-white p-8 border border-slate-200 rounded-lg relative print:m-0 print:p-[10mm_15mm] print:border-none print:shadow-none print:h-[148.5mm] print:overflow-hidden print:page-break-after-always">
+                <style>{`
+                  @media print {
+                    @page { size: A4 portrait; margin: 0; }
+                    body * { visibility: hidden; }
+                    .print-container, .print-container * { visibility: visible; }
+                    .print-container { position: absolute; left: 0; top: 0; width: 100%; }
+                    .invoice-page { 
+                      height: 148.5mm; 
+                      width: 210mm; 
+                      padding: 10mm 15mm; 
+                      position: relative; 
+                      overflow: hidden;
+                      page-break-after: always;
+                      background: white !important;
+                      color: black !important;
+                    }
+                  }
+                `}</style>
+                <div className="print-container">
+                  <div className="invoice-page">
+                    <div className="text-center mb-4">
+                      <h1 className="text-lg font-bold uppercase underline text-black">GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG {currentMonth} NĂM {currentYear}.</h1>
+                    </div>
+                    <div className="space-y-1 mb-2 font-medium text-black">
+                      <p className="mb-2 text-[12pt]">- Họ và tên trẻ : <span className="font-bold uppercase">{student.name}</span> SN {dob}-{inv.calculationInfo.ageInMonths} tháng.</p>
+                      <div className="invoice-line">
+                        <span className="invoice-label">- Tiền học phí trong tháng {inv.discountType === '100%' ? '(Miễn 100%)' : inv.discountType === '50%' ? '(Giảm 50% - Nửa tháng)' : ''}</span>
+                        <span className="invoice-dots">:</span>
+                        <span className="invoice-value">{formatCurrency(inv.tuition)} đồng.</span>
+                      </div>
+                      <div className="invoice-line">
+                        <span className="invoice-label">- Tiền ăn trong tháng ({config.standardDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
+                        <span className="invoice-dots">:</span>
+                        <span className="invoice-value">{formatCurrency(config.standardDays * config.mealFeePerDay)} đồng.</span>
+                      </div>
+                      {inv.calculationInfo.giftedBreakdown.map((b, i) => {
+                        const parts = b.split(':');
+                        return (
+                          <div key={i} className="invoice-line">
+                            <span className="invoice-label">- {parts[0].trim().replace('-', '')}</span>
+                            <span className="invoice-dots">:</span>
+                            <span className="invoice-value">{parts[1].trim()}</span>
+                          </div>
+                        );
+                      })}
+                      <div className="invoice-line">
+                        <span className="invoice-label">- Các khoản phụ thu (Vệ sinh phí, Gaz, Điện, Nước bình...)</span>
+                        <span className="invoice-dots">:</span>
+                        <span className="invoice-value">{formatCurrency(inv.extraFee)} đồng.</span>
+                      </div>
+                      {inv.csvcFee > 0 && (
+                        <div className="invoice-line">
+                          <span className="invoice-label">- Cơ sở vật chất ({inv.calculationInfo.monthsRemaining} tháng)</span>
+                          <span className="invoice-dots">:</span>
+                          <span className="invoice-value">{formatCurrency(inv.csvcFee)} đồng.</span>
+                        </div>
+                      )}
+                      {inv.materialFee > 0 && (
+                        <div className="invoice-line">
+                          <span className="invoice-label">- Học phẩm ({inv.calculationInfo.monthsRemaining} tháng)</span>
+                          <span className="invoice-dots">:</span>
+                          <span className="invoice-value">{formatCurrency(inv.materialFee)} đồng.</span>
+                        </div>
+                      )}
+                      <div className="invoice-line">
+                        <span className="invoice-label">- Số ngày nghỉ có phép : {inv.calculationInfo.absentDays} ngày. Trừ lại</span>
+                        <span className="invoice-dots">:</span>
+                        <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
+                      </div>
+                    </div>
+                    <div className="text-center py-2 border-y-2 border-black my-2">
+                      <h2 className="text-xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} ĐỒNG.</h2>
+                    </div>
+                    <div className="mt-2 space-y-0.5 text-[10.5pt] italic text-black leading-tight">
+                      <p>Thông tin chuyển khoản: <span className="font-bold uppercase not-italic">TRẦN THỊ TRÚC GIANG</span></p>
+                      <p>Số tài khoản: <span className="font-bold not-italic">6350205 014046</span> Agribank Phước Kiển</p>
+                      <p>Nội dung: {student.name}, {student.className}.</p>
+                      <div className="pt-2 text-center">
+                        <p className="font-bold text-base not-italic uppercase underline decoration-2 underline-offset-4">Xin chân thành cảm ơn!</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  if (!selectedStudent) return null;
 
   const inv = calculateInvoice(selectedStudent, config, attendance, currentMonth, currentYear);
   const zaloMsg = generateZaloMessage(inv, currentMonth, currentYear, config);

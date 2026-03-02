@@ -35,11 +35,14 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
   const exportClassExcel = () => {
     const wb = XLSX.utils.book_new();
     
-    // Group students by class
-    const classes = Array.from(new Set(students.map(s => s.className)));
+    // Group students by class and normalize names
+    const classes = Array.from(new Set(students.map(s => (s.className || "Chưa phân lớp").trim())));
+    const usedSheetNames = new Set<string>();
     
     classes.forEach(className => {
-      const classStudents = students.filter(s => s.className === className);
+      const classStudents = students.filter(s => (s.className || "Chưa phân lớp").trim() === className);
+      if (classStudents.length === 0) return;
+
       const data = classStudents.map((s, index) => {
         const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
         return {
@@ -67,7 +70,19 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
       ];
       ws['!cols'] = wscols;
 
-      XLSX.utils.book_append_sheet(wb, ws, className.substring(0, 31)); // Sheet name max 31 chars
+      // Sanitize sheet name: remove invalid chars \ / ? * [ ] : and limit to 31 chars
+      let sheetName = className.replace(/[\\/?*\[\]:]/g, '_').substring(0, 31);
+      if (!sheetName) sheetName = "Sheet";
+      
+      let finalSheetName = sheetName;
+      let counter = 1;
+      while (usedSheetNames.has(finalSheetName)) {
+        finalSheetName = sheetName.substring(0, 28) + "_" + counter;
+        counter++;
+      }
+      usedSheetNames.add(finalSheetName);
+
+      XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
     });
 
     XLSX.writeFile(wb, `Theo_doi_thu_phi_T${currentMonth}_${currentYear}.xlsx`);
