@@ -48,7 +48,25 @@ export const calculateInvoice = (
 
   // Tiền ăn tính theo tháng hiện tại
   const absentDays = currentAttendance ? currentAttendance.absentDays : 0;
-  const mealFee = (config.standardDays * config.mealFeePerDay) - (absentDays * config.mealFeePerDay);
+  
+  // LOGIC MỚI: Nếu là bé mới và nhập học trong tháng này, tính lại số ngày ăn tiêu chuẩn
+  let effectiveStandardDays = config.standardDays;
+  const admission = new Date(student.admissionDate);
+  if (admission.getMonth() + 1 === currentMonth && admission.getFullYear() === currentYear) {
+    // Đếm số ngày làm việc (Thứ 2 - Thứ 6) TRƯỚC ngày nhập học trong tháng
+    let missedDays = 0;
+    const tempDate = new Date(currentYear, currentMonth - 1, 1);
+    while (tempDate < admission) {
+      const dayOfWeek = tempDate.getDay();
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Không phải CN (0) hoặc T7 (6)
+        missedDays++;
+      }
+      tempDate.setDate(tempDate.getDate() + 1);
+    }
+    effectiveStandardDays = Math.max(0, config.standardDays - missedDays);
+  }
+
+  const mealFee = (effectiveStandardDays * config.mealFeePerDay) - (absentDays * config.mealFeePerDay);
 
   let giftedTotal = 0;
   const giftedBreakdown: string[] = [];
@@ -93,6 +111,7 @@ export const calculateInvoice = (
     calculationInfo: {
       ageInMonths: ageMonths,
       absentDays: absentDays,
+      effectiveStandardDays,
       monthsRemaining,
       giftedBreakdown
     }
@@ -102,7 +121,7 @@ export const calculateInvoice = (
 export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year: number, config: GlobalConfig): string => {
   const { student, total, tuition, extraFee, csvcFee, materialFee, calculationInfo, discountType } = invoice;
   const formattedDOB = new Date(student.dob).toLocaleDateString('vi-VN');
-  const fullMealFee = config.standardDays * config.mealFeePerDay;
+  const fullMealFee = calculationInfo.effectiveStandardDays * config.mealFeePerDay;
   const absentDeduction = calculationInfo.absentDays * config.mealFeePerDay;
 
   let msg = `GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG ${month} NĂM ${year}.\n\n`;
@@ -113,7 +132,7 @@ export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year:
   if (discountType === '50%') tuitionLabel += ` (Giảm 50% - Nửa tháng)`;
 
   msg += `- ${tuitionLabel} : ${formatCurrency(tuition)} đồng.\n`;
-  msg += `- Tiền ăn trong tháng (${config.standardDays} ngày x ${formatCurrency(config.mealFeePerDay)}) : ${formatCurrency(fullMealFee)} đồng.\n`;
+  msg += `- Tiền ăn trong tháng (${calculationInfo.effectiveStandardDays} ngày x ${formatCurrency(config.mealFeePerDay)}) : ${formatCurrency(fullMealFee)} đồng.\n`;
   
   calculationInfo.giftedBreakdown.forEach(item => {
     msg += `- ${item}\n`;

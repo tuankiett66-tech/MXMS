@@ -115,9 +115,9 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                         <span className="invoice-value">{formatCurrency(inv.tuition)} đồng.</span>
                       </div>
                       <div className="invoice-line">
-                        <span className="invoice-label">- Tiền ăn trong tháng ({config.standardDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
+                        <span className="invoice-label">- Tiền ăn trong tháng ({inv.calculationInfo.effectiveStandardDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
                         <span className="invoice-dots">:</span>
-                        <span className="invoice-value">{formatCurrency(config.standardDays * config.mealFeePerDay)} đồng.</span>
+                        <span className="invoice-value">{formatCurrency(inv.calculationInfo.effectiveStandardDays * config.mealFeePerDay)} đồng.</span>
                       </div>
                       {inv.calculationInfo.giftedBreakdown.map((b, i) => {
                         const parts = b.split(':');
@@ -250,9 +250,9 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
             </div>
 
             <div className="invoice-line">
-              <span className="invoice-label">- Tiền ăn trong tháng ({config.standardDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
+              <span className="invoice-label">- Tiền ăn trong tháng ({inv.calculationInfo.effectiveStandardDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
               <span className="invoice-dots">:</span>
-              <span className="invoice-value">{formatCurrency(config.standardDays * config.mealFeePerDay)} đồng.</span>
+              <span className="invoice-value">{formatCurrency(inv.calculationInfo.effectiveStandardDays * config.mealFeePerDay)} đồng.</span>
             </div>
 
             {inv.calculationInfo.giftedBreakdown.map((b, i) => {

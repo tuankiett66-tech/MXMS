@@ -54,6 +54,7 @@ export interface InvoiceDetail {
   calculationInfo: {
     ageInMonths: number;
     absentDays: number;
+    effectiveStandardDays: number;
     monthsRemaining: number;
     giftedBreakdown: string[];
   };

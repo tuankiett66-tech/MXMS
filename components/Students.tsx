@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from 'react';
-import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp } from 'lucide-react';
+import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Card, Badge } from './Common';
 import { Student } from '../types';
@@ -214,6 +214,10 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                     <CheckCircle2 size={12} className="text-emerald-500" />
                     <span>NS: {student.dob ? new Date(student.dob).toLocaleDateString('vi-VN') : 'N/A'}</span>
                  </div>
+                 <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
+                    <Calendar size={12} className="text-blue-500" />
+                    <span>Nhập học: {student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                 </div>
                  <div className="flex flex-wrap gap-1 mt-2">
                   {student.giftedSubjects.english && <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-black rounded-md border border-blue-100 uppercase">Anh văn</span>}
                   {student.giftedSubjects.drawing && <span className="px-2 py-0.5 bg-pink-50 text-pink-600 text-[9px] font-black rounded-md border border-pink-100 uppercase">Vẽ</span>}
@@ -273,6 +277,10 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Số điện thoại</label>
                   <input type="text" value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Ngày nhập học</label>
+                  <input type="date" value={formData.admissionDate} onChange={(e) => setFormData({...formData, admissionDate: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500" />
                 </div>
               </div>
 
