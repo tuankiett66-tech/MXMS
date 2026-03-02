@@ -1,7 +1,8 @@
 
 import React, { useMemo } from 'react';
-import { TrendingUp, Users, Calendar } from 'lucide-react';
+import { TrendingUp, Users, Calendar, FileSpreadsheet, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import * as XLSX from 'xlsx';
 import { Card } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
 import { calculateInvoice, formatCurrency, calculateMonthsRemaining } from '../utils/calculations';
@@ -31,8 +32,59 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
     { name: 'T5', value: 145000000 }, { name: 'T6', value: 125000000 },
   ];
 
+  const exportClassExcel = () => {
+    const wb = XLSX.utils.book_new();
+    
+    // Group students by class
+    const classes = Array.from(new Set(students.map(s => s.className)));
+    
+    classes.forEach(className => {
+      const classStudents = students.filter(s => s.className === className);
+      const data = classStudents.map((s, index) => {
+        const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
+        return {
+          "STT": index + 1,
+          "Họ và tên": s.name.toUpperCase(),
+          "Lớp": s.className,
+          "Tổng cộng (VNĐ)": inv.total,
+          "Hình thức (TM/CK)": "",
+          "Ngày đóng": "",
+          "Ký tên / Ghi chú": ""
+        };
+      });
+
+      const ws = XLSX.utils.json_to_sheet(data);
+      
+      // Set column widths
+      const wscols = [
+        { wch: 5 },  // STT
+        { wch: 30 }, // Họ và tên
+        { wch: 15 }, // Lớp
+        { wch: 20 }, // Tổng cộng
+        { wch: 15 }, // Hình thức
+        { wch: 15 }, // Ngày đóng
+        { wch: 25 }, // Ký tên
+      ];
+      ws['!cols'] = wscols;
+
+      XLSX.utils.book_append_sheet(wb, ws, className.substring(0, 31)); // Sheet name max 31 chars
+    });
+
+    XLSX.writeFile(wb, `Theo_doi_thu_phi_T${currentMonth}_${currentYear}.xlsx`);
+  };
+
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h3 className="text-xl font-black text-slate-800 uppercase italic">Bảng điều khiển</h3>
+        <button 
+          onClick={exportClassExcel}
+          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+        >
+          <FileSpreadsheet size={18} />
+          Xuất file theo dõi lớp
+        </button>
+      </div>
       {/* Stats Cards - Responsive Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         <Card className="flex items-center justify-between border-l-4 border-l-emerald-500 p-4 md:p-6">
