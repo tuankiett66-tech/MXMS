@@ -91,7 +91,6 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
 
     const wsData = [
       [title],
-      [],
       headers,
       ...rows
     ];

@@ -9,7 +9,7 @@ import { Invoices } from './components/Invoices.tsx';
 import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
 import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2 } from 'lucide-react';
-import { calculateInvoice } from './utils/calculations.ts';
+import { calculateInvoice, formatCurrency } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
 
@@ -89,13 +89,15 @@ export default function App() {
         .filter(s => (s.className || "").toLowerCase().includes('mẫu giáo'))
         .map((s, i) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
+          const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";
           return [
-            i + 1, s.name.toUpperCase(), s.dob, inv.tuition, inv.mealFee,
-            s.giftedSubjects.english ? config.giftedFees.english : 0,
-            s.giftedSubjects.drawing ? config.giftedFees.drawing : 0,
-            s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0,
-            inv.extraFee, inv.csvcFee, inv.materialFee,
-            inv.calculationInfo.absentDays, inv.total, ""
+            i + 1, s.name.toUpperCase(), formattedDOB, 
+            formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
+            formatCurrency(s.giftedSubjects.english ? config.giftedFees.english : 0),
+            formatCurrency(s.giftedSubjects.drawing ? config.giftedFees.drawing : 0),
+            formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
+            formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
+            inv.calculationInfo.absentDays, formatCurrency(inv.total), ""
           ];
         });
 
@@ -103,11 +105,13 @@ export default function App() {
         .filter(s => (s.className || "").toLowerCase().includes('nhà trẻ'))
         .map((s, i) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
+          const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";
           return [
-            i + 1, s.name.toUpperCase(), s.dob, inv.tuition, inv.mealFee,
-            s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0,
-            inv.extraFee, inv.csvcFee, inv.materialFee,
-            inv.calculationInfo.absentDays, inv.total, ""
+            i + 1, s.name.toUpperCase(), formattedDOB, 
+            formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
+            formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
+            formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
+            inv.calculationInfo.absentDays, formatCurrency(inv.total), ""
           ];
         });
 
