@@ -32,78 +32,108 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
     { name: 'T5', value: 145000000 }, { name: 'T6', value: 125000000 },
   ];
 
-  const exportClassExcel = () => {
+  const exportGroupExcel = (group: 'preschool' | 'nursery') => {
     const wb = XLSX.utils.book_new();
+    const isPreschool = group === 'preschool';
+    const groupName = isPreschool ? "MẪU GIÁO" : "NHÀ TRẺ";
     
     // Group students by class and normalize names for grouping
-    const classGroups = students.reduce((acc, s) => {
-      const cls = (s.className || "Chưa phân lớp").trim();
-      if (!acc[cls]) acc[cls] = [];
-      acc[cls].push(s);
-      return acc;
-    }, {} as Record<string, Student[]>);
-
-    const usedSheetNames = new Set<string>();
-    
-    Object.entries(classGroups).forEach(([className, classStudents]) => {
-      const data = classStudents.map((s, index) => {
-        const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
-        return {
-          "STT": index + 1,
-          "Họ và tên": s.name.toUpperCase(),
-          "Lớp": s.className,
-          "Tổng cộng (VNĐ)": inv.total,
-          "Hình thức (TM/CK)": "",
-          "Ngày đóng": "",
-          "Ký tên / Ghi chú": ""
-        };
-      });
-
-      const ws = XLSX.utils.json_to_sheet(data);
-      
-      // Set column widths
-      ws['!cols'] = [
-        { wch: 5 }, { wch: 30 }, { wch: 15 }, { wch: 20 }, { wch: 15 }, { wch: 15 }, { wch: 25 }
-      ];
-
-      // Sanitize sheet name: 
-      // 1. Remove invalid chars: \ / ? * [ ] :
-      // 2. Excel sheet names cannot exceed 31 chars
-      // 3. Excel sheet names are case-insensitive
-      let sheetName = className.replace(/[\\/?*\[\]:]/g, '_').trim();
-      if (!sheetName) sheetName = "Sheet";
-      
-      // Remove leading/trailing single quotes (Excel restriction)
-      sheetName = sheetName.replace(/^'|'$/g, '');
-      
-      let finalSheetName = sheetName.substring(0, 31);
-      let counter = 1;
-      
-      // Check for duplicates case-insensitively
-      while (Array.from(usedSheetNames).some(n => n.toLowerCase() === finalSheetName.toLowerCase())) {
-        const suffix = `_${counter}`;
-        finalSheetName = sheetName.substring(0, 31 - suffix.length) + suffix;
-        counter++;
-      }
-      
-      usedSheetNames.add(finalSheetName);
-      XLSX.utils.book_append_sheet(wb, ws, finalSheetName);
+    const filteredStudents = students.filter(s => {
+      const cls = (s.className || "").toLowerCase();
+      return isPreschool ? cls.includes('mẫu giáo') : cls.includes('nhà trẻ');
     });
 
-    XLSX.writeFile(wb, `Theo_doi_thu_phi_T${currentMonth}_${currentYear}.xlsx`);
+    const title = `THU HỌC PHÍ THÁNG ${currentMonth}/${currentYear} LỚP ${groupName}`;
+    
+    // Headers based on the requested format
+    const headers = isPreschool 
+      ? ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "ANH VĂN", "VẼ", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"]
+      : ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"];
+
+    const rows = filteredStudents.map((s, index) => {
+      const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
+      const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";
+      
+      if (isPreschool) {
+        return [
+          index + 1,
+          s.name.toUpperCase(),
+          formattedDOB,
+          formatCurrency(inv.tuition),
+          formatCurrency(inv.mealFee),
+          formatCurrency(s.giftedSubjects.english ? config.giftedFees.english : 0),
+          formatCurrency(s.giftedSubjects.drawing ? config.giftedFees.drawing : 0),
+          formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
+          formatCurrency(inv.extraFee),
+          formatCurrency(inv.csvcFee),
+          formatCurrency(inv.materialFee),
+          inv.calculationInfo.absentDays,
+          formatCurrency(inv.total),
+          ""
+        ];
+      } else {
+        return [
+          index + 1,
+          s.name.toUpperCase(),
+          formattedDOB,
+          formatCurrency(inv.tuition),
+          formatCurrency(inv.mealFee),
+          formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
+          formatCurrency(inv.extraFee),
+          formatCurrency(inv.csvcFee),
+          formatCurrency(inv.materialFee),
+          inv.calculationInfo.absentDays,
+          formatCurrency(inv.total),
+          ""
+        ];
+      }
+    });
+
+    const wsData = [
+      [title],
+      [],
+      headers,
+      ...rows
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+
+    // Merge title cells
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
+    ];
+
+    // Set column widths
+    ws['!cols'] = headers.map((h, i) => {
+      if (i === 1) return { wch: 30 }; // Name column
+      if (i === 0) return { wch: 5 };  // STT
+      return { wch: 12 };
+    });
+
+    XLSX.utils.book_append_sheet(wb, ws, groupName);
+    XLSX.writeFile(wb, `Thu_Hoc_Phi_${groupName.replace(/\s+/g, '_')}_T${currentMonth}_${currentYear}.xlsx`);
   };
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h3 className="text-xl font-black text-slate-800 uppercase italic">Bảng điều khiển</h3>
-        <button 
-          onClick={exportClassExcel}
-          className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
-        >
-          <FileSpreadsheet size={18} />
-          Xuất file theo dõi lớp
-        </button>
+        <div className="flex flex-wrap gap-3">
+          <button 
+            onClick={() => exportGroupExcel('preschool')}
+            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+          >
+            <FileSpreadsheet size={18} />
+            Xuất Excel Mẫu Giáo
+          </button>
+          <button 
+            onClick={() => exportGroupExcel('nursery')}
+            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
+          >
+            <FileSpreadsheet size={18} />
+            Xuất Excel Nhà Trẻ
+          </button>
+        </div>
       </div>
       {/* Stats Cards - Responsive Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">

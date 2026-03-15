@@ -8,7 +8,8 @@ import { AttendanceTable } from './components/Attendance.tsx';
 import { Invoices } from './components/Invoices.tsx';
 import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
-import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2 } from 'lucide-react';
+import { calculateInvoice } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
 
@@ -42,8 +43,104 @@ export default function App() {
   });
 
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [syncing, setSyncing] = useState(false);
 
-  // Tự động lưu khi có thay đổi (Auto-save)
+  // Tải dữ liệu từ Google Sheets khi mở app
+  useEffect(() => {
+    if (config.scriptUrl) {
+      loadData();
+    }
+  }, []);
+
+  const loadData = async () => {
+    if (!config.scriptUrl) return;
+    setSyncing(true);
+    try {
+      const response = await fetch(config.scriptUrl);
+      const data = await response.json();
+      if (data.students) setStudents(data.students);
+      if (data.attendance) setAttendance(data.attendance);
+      if (data.config) setConfig(data.config);
+      console.log("Dữ liệu đã được tải từ Google Sheets");
+    } catch (error) {
+      console.error("Lỗi khi tải dữ liệu từ Google Sheets:", error);
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const saveData = async () => {
+    // Lưu vào LocalStorage trước
+    localStorage.setItem(`${STORAGE_KEY}_STUDENTS`, JSON.stringify(students));
+    localStorage.setItem(`${STORAGE_KEY}_ATTENDANCE`, JSON.stringify(attendance));
+    localStorage.setItem(`${STORAGE_KEY}_CONFIG`, JSON.stringify(config));
+    localStorage.setItem(`${STORAGE_KEY}_MONTH`, currentMonth.toString());
+    localStorage.setItem(`${STORAGE_KEY}_YEAR`, currentYear.toString());
+
+    if (!config.scriptUrl) {
+      alert("Đã lưu vào bộ nhớ trình duyệt!");
+      return;
+    }
+
+    setSyncing(true);
+    try {
+      // Chuẩn bị dữ liệu định dạng cho các Sheet
+      const preschoolRows = students
+        .filter(s => (s.className || "").toLowerCase().includes('mẫu giáo'))
+        .map((s, i) => {
+          const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
+          return [
+            i + 1, s.name.toUpperCase(), s.dob, inv.tuition, inv.mealFee,
+            s.giftedSubjects.english ? config.giftedFees.english : 0,
+            s.giftedSubjects.drawing ? config.giftedFees.drawing : 0,
+            s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0,
+            inv.extraFee, inv.csvcFee, inv.materialFee,
+            inv.calculationInfo.absentDays, inv.total, ""
+          ];
+        });
+
+      const nurseryRows = students
+        .filter(s => (s.className || "").toLowerCase().includes('nhà trẻ'))
+        .map((s, i) => {
+          const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
+          return [
+            i + 1, s.name.toUpperCase(), s.dob, inv.tuition, inv.mealFee,
+            s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0,
+            inv.extraFee, inv.csvcFee, inv.materialFee,
+            inv.calculationInfo.absentDays, inv.total, ""
+          ];
+        });
+
+      const payload = {
+        students,
+        attendance,
+        config,
+        formattedPreschool: preschoolRows,
+        formattedNursery: nurseryRows,
+        month: currentMonth,
+        year: currentYear
+      };
+
+      // Sử dụng fetch POST lên Apps Script
+      // Lưu ý: Apps Script yêu cầu redirect, fetch sẽ tự xử lý nếu không dùng no-cors
+      // Nhưng để tránh lỗi CORS phức tạp, ta dùng no-cors nếu chỉ cần gửi đi
+      await fetch(config.scriptUrl, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      
+      alert("Đã đồng bộ dữ liệu lên Google Sheets thành công!");
+    } catch (error) {
+      console.error("Lỗi khi đồng bộ:", error);
+      alert("Lỗi khi đồng bộ lên Google Sheets.");
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  // Tự động lưu khi có thay đổi (Auto-save vào LocalStorage)
   useEffect(() => {
     localStorage.setItem(`${STORAGE_KEY}_STUDENTS`, JSON.stringify(students));
   }, [students]);
@@ -65,12 +162,7 @@ export default function App() {
   }, [currentYear]);
 
   const handleManualSave = () => {
-    localStorage.setItem(`${STORAGE_KEY}_STUDENTS`, JSON.stringify(students));
-    localStorage.setItem(`${STORAGE_KEY}_ATTENDANCE`, JSON.stringify(attendance));
-    localStorage.setItem(`${STORAGE_KEY}_CONFIG`, JSON.stringify(config));
-    localStorage.setItem(`${STORAGE_KEY}_MONTH`, currentMonth.toString());
-    localStorage.setItem(`${STORAGE_KEY}_YEAR`, currentYear.toString());
-    alert("Đã lưu toàn bộ dữ liệu vào bộ nhớ trình duyệt!");
+    saveData();
   };
 
   const handleAttendanceChange = (studentId: string, change: number) => {
@@ -170,10 +262,22 @@ export default function App() {
             <span className="hidden sm:inline">Tháng {currentMonth}/{currentYear}</span>
             <button 
               onClick={handleManualSave}
-              className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition-all md:mr-2"
+              disabled={syncing}
+              className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition-all md:mr-2 flex items-center gap-2 disabled:opacity-50"
             >
+              {syncing ? <Loader2 size={14} className="animate-spin" /> : null}
               Lưu dữ liệu
             </button>
+            {config.scriptUrl && (
+              <button 
+                onClick={loadData}
+                disabled={syncing}
+                className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg hover:bg-blue-100 transition-all md:mr-2 flex items-center gap-2 disabled:opacity-50"
+              >
+                {syncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
+                Tải lại
+              </button>
+            )}
             <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center border-2 border-white shadow-sm">AD</div>
           </div>
         </header>

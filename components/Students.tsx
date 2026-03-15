@@ -53,22 +53,51 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
       const wb = XLSX.read(bstr, { type: 'binary', cellDates: true });
       const wsname = wb.SheetNames[0];
       const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws) as any[];
+      
+      // Kiểm tra xem có phải định dạng báo cáo (Dòng 1 tiêu đề, Dòng 3 tiêu đề cột)
+      const cellA1 = ws['A1'] ? String(ws['A1'].v).toUpperCase() : '';
+      const isReportFormat = cellA1.includes('THU HỌC PHÍ');
+      
+      // Nếu là định dạng báo cáo, bỏ qua 2 dòng đầu (range: 2)
+      const data = XLSX.utils.sheet_to_json(ws, { range: isReportFormat ? 2 : 0 }) as any[];
 
-      const importedStudents: Student[] = data.map((row, index) => ({
-        id: String(row.ID || row['Mã HS'] || `HS${Date.now()}${index}`),
-        name: String(row.Name || row['Họ tên'] || row['Tên'] || 'Không rõ tên'),
-        dob: formatToInputDate(row.DOB || row['Ngày sinh']),
-        className: String(row.Class || row['Lớp'] || 'Lớp Mẫu giáo'),
-        giftedSubjects: {
-          english: row.English === true || row['Anh văn'] === true || String(row.English).toUpperCase() === 'TRUE',
-          drawing: row.Drawing === true || row['Vẽ'] === true || String(row.Drawing).toUpperCase() === 'TRUE',
-          rhythm: row.Rhythm === true || row['Nhịp điệu'] === true || String(row.Rhythm).toUpperCase() === 'TRUE'
-        },
-        isNewStudent: row.IsNewStudent === true || row['Mới'] === true || String(row.IsNewStudent).toUpperCase() === 'TRUE',
-        admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || new Date().toISOString().split('T')[0],
-        phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || '')
-      }));
+      const importedStudents: Student[] = data.map((row, index) => {
+        // Ánh xạ tên
+        const name = String(row['HỌ VÀ TÊN'] || row.Name || row['Họ tên'] || row['Tên'] || 'Không rõ tên');
+        
+        // Ánh xạ ngày sinh / năm sinh
+        let dob = '';
+        const dobValue = row['NGÀY SINH'] || row['NĂM SINH'];
+        if (dobValue) {
+          if (typeof dobValue === 'number' && dobValue > 1900 && dobValue < 2100) {
+            dob = `${dobValue}-01-01`; // Mặc định ngày 1/1 nếu chỉ có năm
+          } else {
+            dob = formatToInputDate(dobValue);
+          }
+        } else {
+          dob = formatToInputDate(row.DOB || row['Ngày sinh']);
+        }
+
+        // Ánh xạ môn năng khiếu (Nếu có số tiền > 0 hoặc đánh dấu true)
+        const english = (row['ANH VĂN'] && Number(row['ANH VĂN']) > 0) || row.English === true || row['Anh văn'] === true;
+        const drawing = (row['VẼ'] && Number(row['VẼ']) > 0) || row.Drawing === true || row['Vẽ'] === true;
+        const rhythm = (row['NHỊP ĐIỆU'] && Number(row['NHỊP ĐIỆU']) > 0) || row.Rhythm === true || row['Nhịp điệu'] === true;
+
+        // Kiểm tra bé mới (Nếu có phí CSVC hoặc Học phẩm)
+        const isNewStudent = (Number(row['CSVC']) > 0 || Number(row['HỌC PHẨM']) > 0) || 
+                            (row.IsNewStudent === true || row['Mới'] === true);
+
+        return {
+          id: String(row.ID || row['Mã HS'] || `HS${Date.now()}${index}`),
+          name,
+          dob,
+          className: String(row.Class || row['Lớp'] || (activeClassTab === 'nursery' ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo')),
+          giftedSubjects: { english, drawing, rhythm },
+          isNewStudent,
+          admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || new Date().toISOString().split('T')[0],
+          phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || '')
+        };
+      });
 
       onImport(importedStudents);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -284,9 +313,23 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                <input type="checkbox" id="isNew" checked={formData.isNewStudent} onChange={(e) => setFormData({...formData, isNewStudent: e.target.checked})} className="w-5 h-5 accent-emerald-600" />
-                <label htmlFor="isNew" className="text-xs font-bold text-emerald-800">Bé Mới (Tính phí CSVC & Học phẩm)</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
+                  <input type="checkbox" id="isNew" checked={formData.isNewStudent} onChange={(e) => setFormData({...formData, isNewStudent: e.target.checked})} className="w-5 h-5 accent-emerald-600" />
+                  <label htmlFor="isNew" className="text-xs font-bold text-emerald-800">Bé Mới (Tính phí CSVC & Học phẩm)</label>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                  <input type="checkbox" id="isEnglish" checked={formData.giftedSubjects?.english} onChange={(e) => setFormData({...formData, giftedSubjects: {...formData.giftedSubjects!, english: e.target.checked}})} className="w-5 h-5 accent-blue-600" />
+                  <label htmlFor="isEnglish" className="text-xs font-bold text-blue-800">Học Anh Văn</label>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-pink-50 rounded-2xl border border-pink-100">
+                  <input type="checkbox" id="isDrawing" checked={formData.giftedSubjects?.drawing} onChange={(e) => setFormData({...formData, giftedSubjects: {...formData.giftedSubjects!, drawing: e.target.checked}})} className="w-5 h-5 accent-pink-600" />
+                  <label htmlFor="isDrawing" className="text-xs font-bold text-pink-800">Học Vẽ</label>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-2xl border border-purple-100">
+                  <input type="checkbox" id="isRhythm" checked={formData.giftedSubjects?.rhythm} onChange={(e) => setFormData({...formData, giftedSubjects: {...formData.giftedSubjects!, rhythm: e.target.checked}})} className="w-5 h-5 accent-purple-600" />
+                  <label htmlFor="isRhythm" className="text-xs font-bold text-purple-800">Học Nhịp Điệu</label>
+                </div>
               </div>
             </div>
 

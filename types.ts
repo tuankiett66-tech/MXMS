@@ -39,6 +39,7 @@ export interface GlobalConfig {
   unitMaterialLon: number;
   unitMaterialNho: number;
   standardDays: number;
+  scriptUrl?: string;
 }
 
 export interface InvoiceDetail {
