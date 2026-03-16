@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Save, RefreshCw, DollarSign, Calendar, BookOpen, Link } from 'lucide-react';
+import { Save, RefreshCw, DollarSign, Calendar, BookOpen, Link, ArrowRightCircle } from 'lucide-react';
 import { Card } from './Common';
 import { GlobalConfig } from '../types';
 import { formatCurrency } from '../utils/calculations';
@@ -9,9 +9,10 @@ interface SettingsProps {
   config: GlobalConfig;
   setConfig: (c: GlobalConfig) => void;
   onManualSave: () => void;
+  onNextMonth: () => void;
 }
 
-export const Settings = ({ config, setConfig, onManualSave }: SettingsProps) => {
+export const Settings = ({ config, setConfig, onManualSave, onNextMonth }: SettingsProps) => {
   const handleChange = (field: string, value: any) => {
     setConfig({ ...config, [field]: value });
   };
@@ -28,10 +29,19 @@ export const Settings = ({ config, setConfig, onManualSave }: SettingsProps) => 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         {/* Google Script Sync */}
         <Card className="border-t-4 border-t-purple-600 md:col-span-2">
-          <h5 className="font-black text-slate-800 text-sm uppercase mb-6 flex items-center gap-2">
-            <Link size={18} className="text-purple-600" />
-            Đồng bộ Google Sheets
-          </h5>
+          <div className="flex items-center justify-between mb-6">
+            <h5 className="font-black text-slate-800 text-sm uppercase flex items-center gap-2">
+              <Link size={18} className="text-purple-600" />
+              Đồng bộ Google Sheets
+            </h5>
+            <button 
+              onClick={onNextMonth}
+              className="px-4 py-2 bg-purple-50 text-purple-700 border border-purple-100 rounded-xl font-bold text-[10px] uppercase tracking-wider hover:bg-purple-100 transition-all flex items-center gap-2"
+            >
+              <ArrowRightCircle size={16} />
+              Chuyển tháng nhanh
+            </button>
+          </div>
           <div className="space-y-4">
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">Google Apps Script URL</label>

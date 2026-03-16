@@ -169,6 +169,27 @@ export default function App() {
     saveData();
   };
 
+  const handleNextMonth = () => {
+    if (window.confirm(`Bạn có chắc chắn muốn CHUYỂN SANG THÁNG MỚI? \n\nLưu ý: \n1. Hệ thống sẽ tự động tắt trạng thái "Bé mới" cho tất cả học sinh. \n2. Dữ liệu sẽ được đồng bộ lên Google Sheets.`)) {
+      // 1. Tắt trạng thái bé mới
+      setStudents(prev => prev.map(s => ({ ...s, isNewStudent: false })));
+      
+      // 2. Tăng tháng
+      let nextMonth = currentMonth + 1;
+      let nextYear = currentYear;
+      if (nextMonth > 12) {
+        nextMonth = 1;
+        nextYear += 1;
+      }
+      
+      setCurrentMonth(nextMonth);
+      setCurrentYear(nextYear);
+      
+      // 3. Thông báo thành công (saveData sẽ được gọi qua useEffect hoặc thủ công)
+      alert(`Đã chuyển sang Tháng ${nextMonth}/${nextYear} thành công!`);
+    }
+  };
+
   const handleAttendanceChange = (studentId: string, change: number) => {
     setAttendance(prev => {
       const existing = prev.find(a => a.studentId === studentId && a.month === currentMonth && a.year === currentYear);
@@ -301,7 +322,7 @@ export default function App() {
           )}
           {activeTab === 'invoices' && <Invoices students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent} />}
           {activeTab === 'students' && <Students students={students} onAdd={addStudent} onUpdate={updateStudent} onDelete={deleteStudent} onImport={importStudents} onClearAll={clearAllStudents} />}
-          {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} onManualSave={handleManualSave} />}
+          {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} onManualSave={handleManualSave} onNextMonth={handleNextMonth} />}
         </main>
 
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-2 py-2 flex items-center justify-around z-50 no-print shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
