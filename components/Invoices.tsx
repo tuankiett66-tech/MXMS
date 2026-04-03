@@ -78,114 +78,98 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
           <button onClick={() => window.print()} className="px-6 py-2.5 bg-emerald-600 text-white rounded-xl font-black text-[11px] uppercase flex items-center gap-2"><Printer size={18} /> In lại</button>
         </div>
         
-        <div className="space-y-8 print:space-y-0">
-          <style>{`
-            @media print {
-              @page { 
-                size: A5 portrait; 
-                margin: 0; 
-              }
-              body { 
-                margin: 0; 
-                padding: 0; 
-                background: white;
-              }
-              .no-print { display: none !important; }
-              body * { visibility: hidden; }
-              .print-bulk-container, .print-bulk-container * { visibility: visible; }
-              .print-bulk-container { 
-                position: absolute; 
-                left: 0; 
-                top: 0; 
-                width: 148.5mm; 
-              }
-              .invoice-page { 
-                height: 210mm; 
-                width: 148.5mm; 
-                padding: 10mm 10mm; 
-                position: relative; 
-                overflow: hidden;
-                page-break-after: always;
-                break-after: page;
-                background: white !important;
-                color: black !important;
-                box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
-              }
-            }
-          `}</style>
-          <div className="print-bulk-container">
-            {classStudents.map((student, index) => {
-              const inv = calculateInvoice(student, config, attendance, currentMonth, currentYear);
-              const dob = new Date(student.dob).toLocaleDateString('vi-VN');
-              return (
-                <div key={student.id} className={`invoice-page bg-white p-8 border border-slate-200 rounded-lg ${index !== classStudents.length - 1 ? 'mb-8' : ''} print:mb-0 print:border-none print:rounded-none shadow-sm print:shadow-none`}>
-                  <div className="text-center mb-4">
-                    <h1 className="text-lg font-bold uppercase underline text-black">GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG {currentMonth} NĂM {currentYear}.</h1>
-                  </div>
-                  <div className="space-y-1 mb-2 font-medium text-black">
-                    <p className="mb-2 text-[12pt]">- Họ và tên trẻ : <span className="font-bold uppercase">{student.name}</span> SN {dob}-{inv.calculationInfo.ageInMonths} tháng.</p>
-                    <div className="invoice-line">
-                      <span className="invoice-label">- Tiền học phí trong tháng {inv.discountType === '100%' ? '(Miễn 100%)' : inv.discountType === '50%' ? '(Giảm 50% - Nửa tháng)' : ''}</span>
-                      <span className="invoice-dots">:</span>
-                      <span className="invoice-value">{formatCurrency(inv.tuition)} đồng.</span>
+        <div className="space-y-8">
+          {classStudents.map((student) => {
+            const inv = calculateInvoice(student, config, attendance, currentMonth, currentYear);
+            const dob = new Date(student.dob).toLocaleDateString('vi-VN');
+            return (
+              <div key={student.id} className="bg-white p-8 border border-slate-200 rounded-lg relative print:m-0 print:p-[10mm_15mm] print:border-none print:shadow-none print:h-[148.5mm] print:overflow-hidden print:page-break-after-always">
+                <style>{`
+                  @media print {
+                    @page { size: A4 portrait; margin: 0; }
+                    body * { visibility: hidden; }
+                    .print-container, .print-container * { visibility: visible; }
+                    .print-container { position: absolute; left: 0; top: 0; width: 100%; }
+                    .invoice-page { 
+                      height: 148.5mm; 
+                      width: 210mm; 
+                      padding: 10mm 15mm; 
+                      position: relative; 
+                      overflow: hidden;
+                      page-break-after: always;
+                      background: white !important;
+                      color: black !important;
+                    }
+                  }
+                `}</style>
+                <div className="print-container">
+                  <div className="invoice-page">
+                    <div className="text-center mb-4">
+                      <h1 className="text-lg font-bold uppercase underline text-black">GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG {currentMonth} NĂM {currentYear}.</h1>
                     </div>
-                    <div className="invoice-line">
-                      <span className="invoice-label">- Tiền ăn trong tháng ({inv.calculationInfo.effectiveStandardDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
-                      <span className="invoice-dots">:</span>
-                      <span className="invoice-value">{formatCurrency(inv.calculationInfo.effectiveStandardDays * config.mealFeePerDay)} đồng.</span>
-                    </div>
-                    {inv.calculationInfo.giftedBreakdown.map((b, i) => {
-                      const parts = b.split(':');
-                      return (
-                        <div key={i} className="invoice-line">
-                          <span className="invoice-label">- {parts[0].trim().replace('-', '')}</span>
+                    <div className="space-y-1 mb-2 font-medium text-black">
+                      <p className="mb-2 text-[12pt]">- Họ và tên trẻ : <span className="font-bold uppercase">{student.name}</span> SN {dob}-{inv.calculationInfo.ageInMonths} tháng.</p>
+                      <div className="invoice-line">
+                        <span className="invoice-label">- Tiền học phí trong tháng {inv.discountType === '100%' ? '(Miễn 100%)' : inv.discountType === '50%' ? '(Giảm 50% - Nửa tháng)' : ''}</span>
+                        <span className="invoice-dots">:</span>
+                        <span className="invoice-value">{formatCurrency(inv.tuition)} đồng.</span>
+                      </div>
+                      <div className="invoice-line">
+                        <span className="invoice-label">- Tiền ăn trong tháng ({inv.calculationInfo.effectiveStandardDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
+                        <span className="invoice-dots">:</span>
+                        <span className="invoice-value">{formatCurrency(inv.calculationInfo.effectiveStandardDays * config.mealFeePerDay)} đồng.</span>
+                      </div>
+                      {inv.calculationInfo.giftedBreakdown.map((b, i) => {
+                        const parts = b.split(':');
+                        return (
+                          <div key={i} className="invoice-line">
+                            <span className="invoice-label">- {parts[0].trim().replace('-', '')}</span>
+                            <span className="invoice-dots">:</span>
+                            <span className="invoice-value">{parts[1].trim()}</span>
+                          </div>
+                        );
+                      })}
+                      <div className="invoice-line">
+                        <span className="invoice-label">- Các khoản phụ thu (Vệ sinh phí, Gaz, Điện, Nước bình...)</span>
+                        <span className="invoice-dots">:</span>
+                        <span className="invoice-value">{formatCurrency(inv.extraFee)} đồng.</span>
+                      </div>
+                      {inv.csvcFee > 0 && (
+                        <div className="invoice-line">
+                          <span className="invoice-label">- Cơ sở vật chất ({inv.calculationInfo.monthsRemaining} tháng)</span>
                           <span className="invoice-dots">:</span>
-                          <span className="invoice-value">{parts[1].trim()}</span>
+                          <span className="invoice-value">{formatCurrency(inv.csvcFee)} đồng.</span>
                         </div>
-                      );
-                    })}
-                    <div className="invoice-line">
-                      <span className="invoice-label">- Các khoản phụ thu (Vệ sinh phí, Gaz, Điện, Nước bình...)</span>
-                      <span className="invoice-dots">:</span>
-                      <span className="invoice-value">{formatCurrency(inv.extraFee)} đồng.</span>
-                    </div>
-                    {inv.csvcFee > 0 && (
+                      )}
+                      {inv.materialFee > 0 && (
+                        <div className="invoice-line">
+                          <span className="invoice-label">- Học phẩm ({inv.calculationInfo.monthsRemaining} tháng)</span>
+                          <span className="invoice-dots">:</span>
+                          <span className="invoice-value">{formatCurrency(inv.materialFee)} đồng.</span>
+                        </div>
+                      )}
                       <div className="invoice-line">
-                        <span className="invoice-label">- Cơ sở vật chất ({inv.calculationInfo.monthsRemaining} tháng)</span>
+                        <span className="invoice-label">- Số ngày nghỉ có phép : {inv.calculationInfo.absentDays} ngày. Trừ lại</span>
                         <span className="invoice-dots">:</span>
-                        <span className="invoice-value">{formatCurrency(inv.csvcFee)} đồng.</span>
+                        <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
                       </div>
-                    )}
-                    {inv.materialFee > 0 && (
-                      <div className="invoice-line">
-                        <span className="invoice-label">- Học phẩm ({inv.calculationInfo.monthsRemaining} tháng)</span>
-                        <span className="invoice-dots">:</span>
-                        <span className="invoice-value">{formatCurrency(inv.materialFee)} đồng.</span>
-                      </div>
-                    )}
-                    <div className="invoice-line">
-                      <span className="invoice-label">- Số ngày nghỉ có phép : {inv.calculationInfo.absentDays} ngày. Trừ lại</span>
-                      <span className="invoice-dots">:</span>
-                      <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
                     </div>
-                  </div>
-                  <div className="text-center py-2 border-y-2 border-black my-2">
-                    <h2 className="text-xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} ĐỒNG.</h2>
-                  </div>
-                  <div className="mt-2 space-y-0.5 text-[10.5pt] italic text-black leading-tight">
-                    <p>Thông tin chuyển khoản: <span className="font-bold uppercase not-italic">TRẦN THỊ TRÚC GIANG</span></p>
-                    <p>Số tài khoản: <span className="font-bold not-italic">6350205 014046</span> Agribank Phước Kiển</p>
-                    <p>Nội dung: {student.name}, {student.className}.</p>
-                    <div className="pt-2 text-center">
-                      <p className="font-bold text-base not-italic uppercase underline decoration-2 underline-offset-4">Xin chân thành cảm ơn!</p>
+                    <div className="text-center py-2 border-y-2 border-black my-2">
+                      <h2 className="text-xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} ĐỒNG.</h2>
+                    </div>
+                    <div className="mt-2 space-y-0.5 text-[10.5pt] italic text-black leading-tight">
+                      <p>Thông tin chuyển khoản: <span className="font-bold uppercase not-italic">TRẦN THỊ TRÚC GIANG</span></p>
+                      <p>Số tài khoản: <span className="font-bold not-italic">6350205 014046</span> Agribank Phước Kiển</p>
+                      <p>Nội dung: {student.name}, {student.className}.</p>
+                      <div className="pt-2 text-center">
+                        <p className="font-bold text-base not-italic uppercase underline decoration-2 underline-offset-4">Xin chân thành cảm ơn!</p>
+                      </div>
                     </div>
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
@@ -217,13 +201,8 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
           <style>{`
             @media print {
               @page { 
-                size: A5 portrait;
+                size: A4 portrait;
                 margin: 0; 
-              }
-              body {
-                margin: 0;
-                padding: 0;
-                background: white;
               }
               body * { visibility: hidden; }
               #invoice-print, #invoice-print * { visibility: visible; }
@@ -231,18 +210,15 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                 position: absolute; 
                 left: 0; 
                 top: 0; 
-                width: 148.5mm; 
-                height: 210mm;
-                padding: 10mm 10mm;
-                border: none !important; 
-                box-shadow: none !important; 
+                width: 210mm; 
+                height: 148.5mm; /* Chính xác 1/2 trang A4 */
+                padding: 10mm 15mm;
+                border: none; 
+                box-shadow: none; 
                 font-family: 'Times New Roman', Times, serif; 
                 color: #000 !important;
                 background: white !important;
                 overflow: hidden;
-                box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
               }
               .no-print { display: none !important; }
             }
@@ -253,11 +229,11 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               margin-bottom: 2px;
               width: 100%;
               color: #000 !important;
-              font-size: 11pt;
+              font-size: 12pt;
             }
-            .invoice-label { flex-grow: 1; border-bottom: 1px dotted #000; padding-bottom: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+            .invoice-label { flex-grow: 1; border-bottom: 1px dotted #000; padding-bottom: 1px; }
             .invoice-dots { border-bottom: 1px dotted #000; flex-grow: 0; padding-bottom: 1px; font-weight: bold; }
-            .invoice-value { font-weight: bold; min-width: 80px; text-align: right; border-bottom: 1px dotted #000; padding-bottom: 1px; }
+            .invoice-value { font-weight: bold; min-width: 120px; text-align: right; border-bottom: 1px dotted #000; padding-bottom: 1px; }
           `}</style>
           
           <div className="text-center mb-4">
