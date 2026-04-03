@@ -100,9 +100,9 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                 width: 210mm; 
               }
               .invoice-page { 
-                height: 148.5mm; 
+                height: 140mm; /* Giảm xuống 140mm để tránh tràn trang khi có header/footer của trình duyệt */
                 width: 210mm; 
-                padding: 10mm 15mm; 
+                padding: 8mm 15mm; 
                 position: relative; 
                 overflow: hidden;
                 page-break-after: always;
@@ -116,11 +116,11 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
             }
           `}</style>
           <div className="print-bulk-container">
-            {classStudents.map((student) => {
+            {classStudents.map((student, index) => {
               const inv = calculateInvoice(student, config, attendance, currentMonth, currentYear);
               const dob = new Date(student.dob).toLocaleDateString('vi-VN');
               return (
-                <div key={student.id} className="invoice-page bg-white p-8 border border-slate-200 rounded-lg mb-8 print:mb-0 print:border-none print:rounded-none shadow-sm print:shadow-none">
+                <div key={student.id} className={`invoice-page bg-white p-8 border border-slate-200 rounded-lg ${index !== classStudents.length - 1 ? 'mb-8' : ''} print:mb-0 print:border-none print:rounded-none shadow-sm print:shadow-none`}>
                   <div className="text-center mb-4">
                     <h1 className="text-lg font-bold uppercase underline text-black">GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG {currentMonth} NĂM {currentYear}.</h1>
                   </div>
@@ -232,8 +232,8 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                 left: 0; 
                 top: 0; 
                 width: 210mm; 
-                height: 148.5mm;
-                padding: 10mm 15mm;
+                height: 140mm; /* Giảm xuống 140mm để tránh tràn trang */
+                padding: 8mm 15mm;
                 border: none !important; 
                 box-shadow: none !important; 
                 font-family: 'Times New Roman', Times, serif; 
