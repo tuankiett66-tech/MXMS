@@ -82,7 +82,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
           <style>{`
             @media print {
               @page { 
-                size: A5 landscape; 
+                size: A5 portrait; 
                 margin: 0; 
               }
               body { 
@@ -97,12 +97,12 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                 position: absolute; 
                 left: 0; 
                 top: 0; 
-                width: 210mm; 
+                width: 148.5mm; 
               }
               .invoice-page { 
-                height: 140mm; /* Giảm xuống 140mm để tránh tràn trang khi có header/footer của trình duyệt */
-                width: 210mm; 
-                padding: 8mm 15mm; 
+                height: 210mm; 
+                width: 148.5mm; 
+                padding: 10mm 10mm; 
                 position: relative; 
                 overflow: hidden;
                 page-break-after: always;
@@ -217,7 +217,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
           <style>{`
             @media print {
               @page { 
-                size: A5 landscape;
+                size: A5 portrait;
                 margin: 0; 
               }
               body {
@@ -231,9 +231,9 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                 position: absolute; 
                 left: 0; 
                 top: 0; 
-                width: 210mm; 
-                height: 140mm; /* Giảm xuống 140mm để tránh tràn trang */
-                padding: 8mm 15mm;
+                width: 148.5mm; 
+                height: 210mm;
+                padding: 10mm 10mm;
                 border: none !important; 
                 box-shadow: none !important; 
                 font-family: 'Times New Roman', Times, serif; 
@@ -253,11 +253,11 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               margin-bottom: 2px;
               width: 100%;
               color: #000 !important;
-              font-size: 12pt;
+              font-size: 11pt;
             }
-            .invoice-label { flex-grow: 1; border-bottom: 1px dotted #000; padding-bottom: 1px; }
+            .invoice-label { flex-grow: 1; border-bottom: 1px dotted #000; padding-bottom: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
             .invoice-dots { border-bottom: 1px dotted #000; flex-grow: 0; padding-bottom: 1px; font-weight: bold; }
-            .invoice-value { font-weight: bold; min-width: 120px; text-align: right; border-bottom: 1px dotted #000; padding-bottom: 1px; }
+            .invoice-value { font-weight: bold; min-width: 80px; text-align: right; border-bottom: 1px dotted #000; padding-bottom: 1px; }
           `}</style>
           
           <div className="text-center mb-4">
