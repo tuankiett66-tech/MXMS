@@ -35,117 +35,77 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
     { name: 'T5', value: 145000000 }, { name: 'T6', value: 125000000 },
   ];
 
-  const exportGroupExcel = (group: 'preschool' | 'nursery') => {
+  const exportAllExcel = () => {
     const wb = XLSX.utils.book_new();
-    const isPreschool = group === 'preschool';
-    const groupName = isPreschool ? "MẪU GIÁO" : "NHÀ TRẺ";
+    const groups = ['Mẫu giáo', 'Nhà trẻ'];
     
-    // Group students by class and normalize names for grouping
-    const filteredStudents = students.filter(s => {
-      const cls = (s.className || "").toLowerCase();
-      return isPreschool ? cls.includes('mẫu giáo') : cls.includes('nhà trẻ');
-    });
+    groups.forEach(groupName => {
+      const isPreschool = groupName === 'Mẫu giáo';
+      const filteredStudents = students
+        .filter(s => (s.className || "").toLowerCase().includes(groupName.toLowerCase()))
+        .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
 
-    const title = `THU HỌC PHÍ THÁNG ${currentMonth}/${currentYear} LỚP ${groupName}`;
-    
-    // Headers based on the requested format
-    const headers = isPreschool 
-      ? ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "ANH VĂN", "VẼ", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"]
-      : ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"];
+      if (filteredStudents.length === 0) return;
 
-    const rows = filteredStudents.map((s, index) => {
-      const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
-      const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";
-      
-      if (isPreschool) {
-        return [
-          index + 1,
-          s.name.toUpperCase(),
-          formattedDOB,
-          formatCurrency(inv.tuition),
-          formatCurrency(inv.mealFee),
+      const title = `THU HỌC PHÍ THÁNG ${currentMonth}/${currentYear} LỚP ${groupName.toUpperCase()}`;
+      const headers = isPreschool 
+        ? ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "ANH VĂN", "VẼ", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"]
+        : ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"];
+
+      const rows = filteredStudents.map((s, index) => {
+        const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
+        const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";
+        
+        return isPreschool ? [
+          index + 1, s.name.toUpperCase(), formattedDOB, formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
           formatCurrency(s.giftedSubjects.english ? config.giftedFees.english : 0),
           formatCurrency(s.giftedSubjects.drawing ? config.giftedFees.drawing : 0),
           formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
-          formatCurrency(inv.extraFee),
-          formatCurrency(inv.csvcFee),
-          formatCurrency(inv.materialFee),
-          inv.calculationInfo.absentDays,
-          formatCurrency(inv.total),
-          ""
-        ];
-      } else {
-        return [
-          index + 1,
-          s.name.toUpperCase(),
-          formattedDOB,
-          formatCurrency(inv.tuition),
-          formatCurrency(inv.mealFee),
+          formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
+          inv.calculationInfo.absentDays, formatCurrency(inv.total), ""
+        ] : [
+          index + 1, s.name.toUpperCase(), formattedDOB, formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
           formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
-          formatCurrency(inv.extraFee),
-          formatCurrency(inv.csvcFee),
-          formatCurrency(inv.materialFee),
-          inv.calculationInfo.absentDays,
-          formatCurrency(inv.total),
-          ""
+          formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
+          inv.calculationInfo.absentDays, formatCurrency(inv.total), ""
         ];
-      }
+      });
+
+      const wsData = [[title], headers, ...rows];
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
+      ws['!cols'] = headers.map((h, i) => i === 1 ? { wch: 30 } : i === 0 ? { wch: 5 } : { wch: 12 });
+
+      XLSX.utils.book_append_sheet(wb, ws, groupName);
     });
 
-    const wsData = [
-      [title],
-      headers,
-      ...rows
-    ];
-
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-
-    // Merge title cells
-    ws['!merges'] = [
-      { s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }
-    ];
-
-    // Set column widths
-    ws['!cols'] = headers.map((h, i) => {
-      if (i === 1) return { wch: 30 }; // Name column
-      if (i === 0) return { wch: 5 };  // STT
-      return { wch: 12 };
-    });
-
-    XLSX.utils.book_append_sheet(wb, ws, groupName);
-    XLSX.writeFile(wb, `Thu_Hoc_Phi_${groupName.replace(/\s+/g, '_')}_T${currentMonth}_${currentYear}.xlsx`);
+    if (wb.SheetNames.length > 0) {
+      XLSX.writeFile(wb, `Tong_Hop_Hoc_Phi_T${currentMonth}_${currentYear}.xlsx`);
+    } else {
+      alert("Không có dữ liệu học sinh để xuất!");
+    }
   };
 
   return (
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h3 className="text-xl font-black text-slate-800 uppercase italic">Bảng điều khiển</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full sm:w-auto">
-          {/* Excel Exports */}
-          <div className="flex gap-2">
-            <button 
-              onClick={() => exportGroupExcel('preschool')}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-sm"
-            >
-              <FileSpreadsheet size={16} /> Excel Mẫu Giáo
-            </button>
-            <button 
-              onClick={() => exportGroupExcel('nursery')}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-blue-700 transition-all shadow-sm"
-            >
-              <FileSpreadsheet size={16} /> Excel Nhà Trẻ
-            </button>
-          </div>
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+          <button 
+            onClick={exportAllExcel}
+            className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
+          >
+            <FileSpreadsheet size={18} /> Xuất Toàn Bộ Excel
+          </button>
           
-          {/* PDF Exports */}
-          <div className="flex gap-2">
+          <div className="flex gap-2 w-full sm:w-auto">
             {classes.map(cls => (
                <button 
                 key={cls}
                 onClick={() => onBulkPrint(cls)}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-600 hover:border-red-500 hover:text-red-600 transition-all shadow-sm"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase text-slate-600 hover:border-red-500 hover:text-red-600 transition-all shadow-md"
                >
-                 <Download size={16} /> PDF {cls}
+                 <Download size={16} /> Xuất PDF {cls}
                </button>
             ))}
           </div>

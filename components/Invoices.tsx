@@ -59,6 +59,13 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
     }
   };
 
+  const classStudents = useMemo(() => {
+    if (!bulkPrintClass) return [];
+    return students
+      .filter(s => (s.className.trim() || "Chưa phân lớp") === bulkPrintClass)
+      .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+  }, [students, bulkPrintClass]);
+
   if (!selectedStudent && !bulkPrintClass) {
     return (
       <div className="space-y-6 animate-in fade-in duration-500">
@@ -97,7 +104,6 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
   }
 
   if (bulkPrintClass) {
-    const classStudents = students.filter(s => (s.className.trim() || "Chưa phân lớp") === bulkPrintClass);
     return (
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-center justify-between no-print bg-white p-4 rounded-2xl border border-slate-200 gap-4">
