@@ -119,12 +119,23 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
         <div className="space-y-8" ref={printRef}>
           <style>{`
             @media print {
-              @page { size: A4 portrait; margin: 0; }
-              html, body, #root, .flex-col, .flex-1, main {
+              @page { 
+                size: A4 portrait; 
+                margin: 15mm 10mm; 
+              }
+              html, body {
+                height: auto !important;
+                overflow: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+              }
+              #root, .flex-col, .flex-1, main {
                 height: auto !important;
                 overflow: visible !important;
                 display: block !important;
-                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
               }
               .no-print { display: none !important; }
               header, nav, aside { display: none !important; }
@@ -136,18 +147,24 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               
               .invoice-print-item {
                 display: block !important;
-                height: 148.5mm !important;
-                width: 210mm !important;
-                padding: 10mm 15mm !important;
+                width: 100% !important;
+                /* Bỏ height cố định để tránh tràn dòng và mất tiêu đề */
+                min-height: 130mm !important; 
+                padding: 5mm 0 !important;
                 box-sizing: border-box !important;
                 page-break-after: always !important;
                 page-break-inside: avoid !important;
-                position: relative !important;
                 background: white !important;
                 color: black !important;
                 border: none !important;
+                margin-bottom: 0 !important;
               }
-              /* Loại bỏ các lề và padding của container khi in */
+
+              /* Thêm khoảng cách đầu trang cho từ trang 2 trở đi */
+              .invoice-print-item:not(:first-child) {
+                margin-top: 10mm !important;
+              }
+
               .space-y-8, .p-8 { margin: 0 !important; padding: 0 !important; }
             }
           `}</style>
@@ -254,13 +271,21 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
             @media print {
               @page { 
                 size: A4 portrait;
-                margin: 0; 
+                margin: 15mm 10mm; 
               }
-              html, body, #root, .flex-col, .flex-1, main {
+              html, body {
+                height: auto !important;
+                overflow: visible !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                background: white !important;
+              }
+              #root, .flex-col, .flex-1, main {
                 height: auto !important;
                 overflow: visible !important;
                 display: block !important;
-                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
               }
               body * { visibility: hidden; }
               #invoice-print, #invoice-print * { visibility: visible; }
@@ -268,15 +293,15 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                 position: absolute; 
                 left: 0; 
                 top: 0; 
-                width: 210mm; 
-                height: 148.5mm; /* Chính xác 1/2 trang A4 */
-                padding: 10mm 15mm;
+                width: 100%; 
+                min-height: 140mm;
+                padding: 0;
                 border: none; 
                 box-shadow: none; 
                 font-family: 'Times New Roman', Times, serif; 
                 color: #000 !important;
                 background: white !important;
-                overflow: hidden;
+                display: block !important;
               }
               .no-print { display: none !important; }
             }
