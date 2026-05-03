@@ -27,10 +27,18 @@ export const AttendanceTable = ({
     return true;
   });
 
+  const totalAbsentDays = filteredStudents.reduce((acc, student) => {
+    const att = attendance.find(a => a.studentId === student.id && a.month === currentMonth && a.year === currentYear);
+    return acc + (att?.absentDays || 0);
+  }, 0);
+
   return (
     <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
-        <h4 className="font-black text-slate-800 text-xl italic uppercase tracking-tight text-emerald-700 shrink-0">Bảng phí & Điểm danh T{currentMonth}</h4>
+        <div className="flex flex-col gap-1">
+          <h4 className="font-black text-slate-800 text-xl italic uppercase tracking-tight text-emerald-700 shrink-0">Bảng phí & Điểm danh T{currentMonth}</h4>
+          <p className="text-[10px] font-black uppercase text-slate-500">Tổng cộng ngày phép: <span className="text-emerald-700 text-sm">{totalAbsentDays} ngày</span></p>
+        </div>
         
         <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner no-print">
           {['all', 'preschool', 'nursery'].map(tab => (
@@ -103,7 +111,7 @@ export const AttendanceTable = ({
                   <td className="py-4">
                     <div className="flex items-center justify-center space-x-1">
                       <button onClick={() => onAttendanceChange(student.id, -1)} className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center font-black bg-white hover:bg-slate-50 transition-all text-xs">-</button>
-                      <span className="font-black text-slate-800 text-xs w-4 text-center">{att?.absentDays || 0}</span>
+                      <span className="font-black text-slate-900 text-base min-w-[20px] text-center">{att?.absentDays || 0}</span>
                       <button onClick={() => onAttendanceChange(student.id, 1)} className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center font-black bg-white hover:bg-slate-50 transition-all text-xs">+</button>
                     </div>
                   </td>
