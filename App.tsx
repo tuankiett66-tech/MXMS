@@ -43,6 +43,7 @@ export default function App() {
   });
 
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [bulkPrintClass, setBulkPrintClass] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
 
   // Tải dữ liệu từ Google Sheets khi mở app
@@ -51,6 +52,12 @@ export default function App() {
       loadData();
     }
   }, []);
+
+  const handleBulkPrint = (className: string) => {
+    setBulkPrintClass(className);
+    setSelectedStudent(null);
+    setActiveTab('invoices');
+  };
 
   const loadData = async () => {
     if (!config.scriptUrl) return;
@@ -308,7 +315,7 @@ export default function App() {
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8">
-          {activeTab === 'dashboard' && <Dashboard students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} />}
+          {activeTab === 'dashboard' && <Dashboard students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} onBulkPrint={handleBulkPrint} />}
           {activeTab === 'attendance' && (
             <AttendanceTable 
               students={students} attendance={attendance} 
@@ -317,10 +324,10 @@ export default function App() {
               onToggleDiscount={handleToggleDiscount}
               onToggleGifted={toggleGiftedSubject}
               onToggleNew={toggleNewStudent}
-              onViewInvoice={(s) => { setSelectedStudent(s); setActiveTab('invoices'); }}
+              onViewInvoice={(s) => { setSelectedStudent(s); setBulkPrintClass(null); setActiveTab('invoices'); }}
             />
           )}
-          {activeTab === 'invoices' && <Invoices students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent} />}
+          {activeTab === 'invoices' && <Invoices students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent} bulkPrintClass={bulkPrintClass} setBulkPrintClass={setBulkPrintClass} />}
           {activeTab === 'students' && <Students students={students} onAdd={addStudent} onUpdate={updateStudent} onDelete={deleteStudent} onImport={importStudents} onClearAll={clearAllStudents} />}
           {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} onManualSave={handleManualSave} onNextMonth={handleNextMonth} />}
         </main>

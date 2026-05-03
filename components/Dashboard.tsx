@@ -13,9 +13,10 @@ interface DashboardProps {
   attendance: Attendance[];
   currentMonth: number;
   currentYear: number;
+  onBulkPrint: (className: string) => void;
 }
 
-export const Dashboard = ({ students, config, attendance, currentMonth, currentYear }: DashboardProps) => {
+export const Dashboard = ({ students, config, attendance, currentMonth, currentYear, onBulkPrint }: DashboardProps) => {
   const stats = useMemo(() => {
     const invoices = students.map(s => calculateInvoice(s, config, attendance, currentMonth, currentYear));
     const totalRevenue = invoices.reduce((acc, inv) => acc + inv.total, 0);
@@ -25,6 +26,8 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
       newCount: students.filter(s => s.isNewStudent).length
     };
   }, [students, config, attendance, currentMonth, currentYear]);
+
+  const classes = useMemo(() => Array.from(new Set(students.map(s => s.className.trim() || "Chưa phân lớp"))), [students]);
 
   const revenueData = [
     { name: 'T1', value: 125500000 }, { name: 'T2', value: 135000000 },
@@ -117,21 +120,35 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
     <div className="space-y-6 md:space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h3 className="text-xl font-black text-slate-800 uppercase italic">Bảng điều khiển</h3>
-        <div className="flex flex-wrap gap-3">
-          <button 
-            onClick={() => exportGroupExcel('preschool')}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100"
-          >
-            <FileSpreadsheet size={18} />
-            Xuất Excel Mẫu Giáo
-          </button>
-          <button 
-            onClick={() => exportGroupExcel('nursery')}
-            className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-xs uppercase tracking-wider hover:bg-blue-700 transition-all shadow-lg shadow-blue-100"
-          >
-            <FileSpreadsheet size={18} />
-            Xuất Excel Nhà Trẻ
-          </button>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full sm:w-auto">
+          {/* Excel Exports */}
+          <div className="flex gap-2">
+            <button 
+              onClick={() => exportGroupExcel('preschool')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-emerald-700 transition-all shadow-sm"
+            >
+              <FileSpreadsheet size={16} /> Excel Mẫu Giáo
+            </button>
+            <button 
+              onClick={() => exportGroupExcel('nursery')}
+              className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-blue-700 transition-all shadow-sm"
+            >
+              <FileSpreadsheet size={16} /> Excel Nhà Trẻ
+            </button>
+          </div>
+          
+          {/* PDF Exports */}
+          <div className="flex gap-2">
+            {classes.map(cls => (
+               <button 
+                key={cls}
+                onClick={() => onBulkPrint(cls)}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white border-2 border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-600 hover:border-red-500 hover:text-red-600 transition-all shadow-sm"
+               >
+                 <Download size={16} /> PDF {cls}
+               </button>
+            ))}
+          </div>
         </div>
       </div>
       {/* Stats Cards - Responsive Grid */}
