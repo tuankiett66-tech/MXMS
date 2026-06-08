@@ -139,6 +139,262 @@ const DateInput = ({ value, onChange, className = '', placeholder = 'DD/MM/YYYY'
   );
 };
 
+interface StudentRowProps {
+  student: Student;
+  index: number;
+  onUpdate: (s: Student) => void;
+  onDelete: (id: string, name: string) => void;
+  onOpenModal: (s: Student) => void;
+}
+
+const StudentRow = ({ student, index, onUpdate, onDelete, onOpenModal }: StudentRowProps) => {
+  const [localName, setLocalName] = useState(student.name);
+  const [localPhone, setLocalPhone] = useState(student.phoneNumber || '');
+  const [localNotes, setLocalNotes] = useState(student.notes || '');
+
+  // Keep state sync'ed with prop updates
+  useEffect(() => {
+    setLocalName(student.name);
+  }, [student.name]);
+
+  useEffect(() => {
+    setLocalPhone(student.phoneNumber || '');
+  }, [student.phoneNumber]);
+
+  useEffect(() => {
+    setLocalNotes(student.notes || '');
+  }, [student.notes]);
+
+  const handleNameBlur = () => {
+    const trimmed = localName.trim();
+    if (trimmed !== student.name) {
+      if (trimmed === '') {
+        setLocalName(student.name); // revert if empty
+      } else {
+        onUpdate({ ...student, name: trimmed });
+      }
+    }
+  };
+
+  const handlePhoneBlur = () => {
+    const trimmed = localPhone.trim();
+    if (trimmed !== (student.phoneNumber || '')) {
+      onUpdate({ ...student, phoneNumber: trimmed });
+    }
+  };
+
+  const handleNotesBlur = () => {
+    const trimmed = localNotes.trim();
+    if (trimmed !== (student.notes || '')) {
+      onUpdate({ ...student, notes: trimmed });
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.currentTarget.blur();
+    }
+  };
+
+  return (
+    <tr className="hover:bg-slate-50/60 bg-white transition-all text-xs border-b border-slate-200">
+      {/* 1. STT */}
+      <td className="py-2 px-2 text-center text-slate-500 font-bold bg-slate-50/50 w-[55px] font-mono select-none border-r border-slate-200">
+        {index + 1}
+      </td>
+
+      {/* 2. Họ và tên bé */}
+      <td className="py-1 px-2 min-w-[200px] border-r border-slate-200">
+        <input 
+          type="text"
+          value={localName}
+          onChange={(e) => setLocalName(e.target.value)}
+          onBlur={handleNameBlur}
+          onKeyDown={handleKeyDown}
+          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none px-2 py-1.5 rounded-lg text-slate-900 font-extrabold uppercase transition-all text-xs tracking-tight"
+          placeholder="Họ tên của bé..."
+        />
+      </td>
+
+      {/* 3. Ngày sinh */}
+      <td className="py-1 px-2 min-w-[135px] border-r border-slate-200">
+        <DateInput 
+          value={student.dob || ''}
+          onChange={(val) => {
+            if (val !== student.dob) {
+              onUpdate({ ...student, dob: val });
+            }
+          }}
+          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none pl-2 pr-10 py-1.5 rounded-lg text-slate-800 font-bold text-xs text-center transition-all"
+        />
+      </td>
+
+      {/* 4. Lớp học */}
+      <td className="py-1 px-2 min-w-[140px] text-center border-r border-slate-200">
+        <select 
+          value={student.className}
+          onChange={(e) => {
+            const newClass = e.target.value;
+            if (newClass !== student.className) {
+              onUpdate({ ...student, className: newClass });
+            }
+          }}
+          className="bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 outline-none px-2 py-1.5 rounded-lg text-slate-800 font-bold text-xs text-center transition-all cursor-pointer w-full"
+        >
+          <option value="Lớp Mẫu giáo">Lớp Mẫu giáo</option>
+          <option value="Lớp Nhà trẻ">Lớp Nhà trẻ</option>
+        </select>
+      </td>
+
+      {/* 5. Số điện thoại */}
+      <td className="py-1 px-2 min-w-[120px] border-r border-slate-200">
+        <input 
+          type="text"
+          value={localPhone}
+          onChange={(e) => {
+            setLocalPhone(e.target.value.replace(/[^0-9+\s\-()]/g, ''));
+          }}
+          onBlur={handlePhoneBlur}
+          onKeyDown={handleKeyDown}
+          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none px-2 py-1.5 rounded-lg text-slate-800 font-mono font-bold text-xs transition-all"
+          placeholder="SĐT..."
+        />
+      </td>
+
+      {/* 6. Ngày nhập học */}
+      <td className="py-1 px-2 min-w-[145px] border-r border-slate-200">
+        <DateInput 
+          value={student.admissionDate || ''}
+          onChange={(val) => {
+            if (val !== student.admissionDate) {
+              onUpdate({ ...student, admissionDate: val });
+            }
+          }}
+          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none pl-2 pr-10 py-1.5 rounded-lg text-slate-800 font-bold text-xs text-center transition-all"
+        />
+      </td>
+
+      {/* 7. Trạng thái */}
+      <td className="py-1 px-2 min-w-[180px] text-center border-r border-slate-200">
+        <select 
+          value={student.status || 'Đang học'}
+          onChange={(e) => {
+            const newStatus = e.target.value as any;
+            if (newStatus !== (student.status || 'Đang học')) {
+              onUpdate({ ...student, status: newStatus });
+            }
+          }}
+          className="bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 outline-none px-2 py-1.5 rounded-lg text-slate-800 font-bold text-xs transition-all cursor-pointer w-full"
+        >
+          <option value="Đang học">Đang học (Chính thức)</option>
+          <option value="Học hè">Học hè (Chỉ học hè 3 tháng)</option>
+          <option value="Tạm nghỉ">Tạm nghỉ (Lưu hồ sơ)</option>
+        </select>
+      </td>
+
+      {/* 8. Bé Mới */}
+      <td className="py-1 px-2 text-center min-w-[70px] border-r border-slate-200">
+        <div className="flex items-center justify-center py-1">
+          <input 
+            type="checkbox"
+            checked={student.isNewStudent}
+            onChange={(e) => {
+              onUpdate({ ...student, isNewStudent: e.target.checked });
+            }}
+            className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer"
+          />
+        </div>
+      </td>
+
+      {/* 9. Anh Văn */}
+      <td className="py-1 px-2 text-center min-w-[70px] border-r border-slate-200">
+        <div className="flex items-center justify-center py-1">
+          <input 
+            type="checkbox"
+            checked={student.giftedSubjects.english}
+            onChange={(e) => {
+              onUpdate({ 
+                ...student, 
+                giftedSubjects: { ...student.giftedSubjects, english: e.target.checked } 
+              });
+            }}
+            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
+          />
+        </div>
+      </td>
+
+      {/* 10. Vẽ */}
+      <td className="py-1 px-2 text-center min-w-[70px] border-r border-slate-200">
+        <div className="flex items-center justify-center py-1">
+          <input 
+            type="checkbox"
+            checked={student.giftedSubjects.drawing}
+            onChange={(e) => {
+              onUpdate({ 
+                ...student, 
+                giftedSubjects: { ...student.giftedSubjects, drawing: e.target.checked } 
+              });
+            }}
+            className="w-4 h-4 rounded text-pink-600 focus:ring-pink-500 accent-pink-600 cursor-pointer"
+          />
+        </div>
+      </td>
+
+      {/* 11. Nhịp điệu */}
+      <td className="py-1 px-2 text-center min-w-[70px] border-r border-slate-200">
+        <div className="flex items-center justify-center py-1">
+          <input 
+            type="checkbox"
+            checked={student.giftedSubjects.rhythm}
+            onChange={(e) => {
+              onUpdate({ 
+                ...student, 
+                giftedSubjects: { ...student.giftedSubjects, rhythm: e.target.checked } 
+              });
+            }}
+            className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600 cursor-pointer"
+          />
+        </div>
+      </td>
+
+      {/* 12. Ghi chú */}
+      <td className="py-1 px-2 min-w-[220px] border-r border-slate-200">
+        <input 
+          type="text"
+          value={localNotes}
+          onChange={(e) => setLocalNotes(e.target.value)}
+          onBlur={handleNotesBlur}
+          onKeyDown={handleKeyDown}
+          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none px-2 py-1.5 rounded-lg text-slate-800 font-bold text-xs transition-all"
+          placeholder="Ghi chú về bé..."
+        />
+      </td>
+
+      {/* 13. Xóa / Chi tiết */}
+      <td className="py-1 px-2 text-center min-w-[100px] select-none">
+        <div className="flex justify-center items-center gap-1">
+          <button 
+            type="button"
+            onClick={() => onOpenModal(student)} 
+            className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
+            title="Sửa chi tiết"
+          >
+            <Edit2 size={13} />
+          </button>
+          <button 
+            type="button"
+            onClick={() => onDelete(student.id, student.name)} 
+            className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+            title="Xóa bé"
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
+      </td>
+    </tr>
+  );
+};
+
 interface StudentsProps {
   students: Student[];
   onAdd: (s: Student) => void;
@@ -398,68 +654,60 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
            <p className="font-black uppercase text-xl tracking-widest opacity-30 italic">Chưa có dữ liệu</p>
            <div className="flex gap-4 mt-6">
               <button onClick={() => fileInputRef.current?.click()} className="px-8 py-3 bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase shadow-lg">Nạp Excel</button>
-              <button onClick={() => handleOpenModal()} className="px-8 py-3 bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase shadow-lg">Thêm thủ công</button>
+               <button onClick={() => handleOpenModal()} className="px-8 py-3 bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase shadow-lg">Thêm thủ công</button>
            </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredStudents.map((student, index) => (
-            <Card key={student.id} className="group hover:border-emerald-500 transition-all flex flex-col h-full relative overflow-hidden shadow-sm hover:shadow-xl border-2 border-slate-50">
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center font-black text-xs border border-emerald-100 shadow-sm">
-                    {index + 1}
-                  </div>
-                  <div className="w-10 h-10 rounded-xl bg-slate-100 overflow-hidden border border-slate-50">
-                    <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`} alt="Avatar" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <Badge color={student.isNewStudent ? 'emerald' : 'slate'}>{student.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
-                  <Badge color={
-                    student.status === 'Đang học' || !student.status ? 'blue' :
-                    student.status === 'Học hè' ? 'purple' : 'slate'
-                  }>
-                    {student.status || 'Đang học'}
-                  </Badge>
-                </div>
-              </div>
-              
-              <h5 className="font-black text-slate-900 text-lg uppercase mb-0.5 truncate tracking-tight">{student.name}</h5>
-              <p className="text-slate-400 text-[10px] font-bold uppercase mb-3">{student.className}</p>
-              
-              <div className="space-y-2 mb-6">
-                 <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
-                    <CheckCircle2 size={12} className="text-emerald-500" />
-                    <span>NS: {student.dob ? formatDateToDMY(student.dob) : 'N/A'}</span>
-                 </div>
-                 <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
-                    <Calendar size={12} className="text-blue-500" />
-                    <span>Nhập học: {student.admissionDate ? formatDateToDMY(student.admissionDate) : 'N/A'}</span>
-                 </div>
-                 {student.notes && (
-                   <div className="p-2.5 bg-amber-50 border border-amber-200/40 rounded-xl text-[11px] text-amber-950 font-bold leading-relaxed shadow-sm">
-                     <span className="text-amber-600 uppercase text-[9px] font-black tracking-wider block mb-0.5">📝 Ghi chú:</span>
-                     {student.notes}
-                   </div>
-                 )}
-                 <div className="flex flex-wrap gap-1 mt-2">
-                  {student.giftedSubjects.english && <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-black rounded-md border border-blue-100 uppercase">Anh văn</span>}
-                  {student.giftedSubjects.drawing && <span className="px-2 py-0.5 bg-pink-50 text-pink-600 text-[9px] font-black rounded-md border border-pink-100 uppercase">Vẽ</span>}
-                  {student.giftedSubjects.rhythm && <span className="px-2 py-0.5 bg-purple-50 text-purple-600 text-[9px] font-black rounded-md border border-purple-100 uppercase">Nhịp điệu</span>}
-                </div>
-              </div>
+        <div className="space-y-3">
+          <div className="flex items-start md:items-center gap-2.5 px-5 py-3 bg-emerald-50/60 border border-emerald-100 rounded-[20px] text-[11px] text-emerald-800 font-bold shadow-sm animate-in fade-in slide-in-from-top-1 duration-300">
+            <span className="text-sm select-none">💡</span>
+            <span className="leading-snug">
+              <strong>Mẹo dễ thao tác:</strong> Nhấn giữ phím <kbd className="px-1.5 py-0.5 bg-emerald-100/80 border border-emerald-200/60 rounded font-mono text-[10px] select-none text-emerald-900 shadow-sm">Shift</kbd> + cuộn chuột khi di chuột trên bảng để kéo ngang cực nhanh, hoặc dùng thanh cuộn dọc/ngang luôn xuất hiện cố định ở khung bảng mà không cần kéo xuống cuối trang!
+            </span>
+          </div>
 
-              <div className="mt-auto pt-4 border-t border-slate-50 flex items-center justify-between">
-                <span className="text-[10px] font-black text-slate-400">{student.phoneNumber || 'N/A'}</span>
-                <div className="flex gap-1">
-                  <button onClick={() => handleOpenModal(student)} className="p-2 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all"><Edit2 size={16} /></button>
-                  <button onClick={() => handleDelete(student.id, student.name)} className="p-2 text-slate-300 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"><Trash2 size={16} /></button>
-                </div>
-              </div>
-            </Card>
-          ))}
+          <div className="w-full max-h-[calc(100vh-280px)] min-h-[420px] overflow-auto rounded-[30px] border-2 border-slate-200/80 bg-white shadow-md scrollbar-thin">
+            <table className="w-full text-left border-collapse border border-slate-200">
+            <thead className="bg-[#f8fafc] sticky top-0 z-10">
+              <tr className="bg-slate-50/50">
+                <th className="py-3 px-2 border border-slate-200 w-[55px] font-black text-[11px] text-slate-500 uppercase tracking-wider text-center">STT</th>
+                <th className="py-3 px-3 border border-slate-200 min-w-[200px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-left pl-4">Họ và tên bé</th>
+                <th className="py-3 px-3 border border-slate-200 min-w-[135px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Ngày sinh</th>
+                <th className="py-3 px-3 border border-slate-200 min-w-[140px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Lớp học</th>
+                <th className="py-3 px-3 border border-slate-200 min-w-[120px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-left">Số điện thoại</th>
+                <th className="py-3 px-3 border border-slate-200 min-w-[145px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Ngày nhập học</th>
+                <th className="py-3 px-3 border border-slate-200 min-w-[180px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Trạng thái</th>
+                <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Bé Mới</th>
+                <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Anh Văn</th>
+                <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Vẽ</th>
+                <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Nhịp điệu</th>
+                <th className="py-3 px-3 border border-slate-200 min-w-[220px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-left">Ghi chú</th>
+                <th className="py-3 px-3 border border-slate-200 w-[100px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-200">
+              {filteredStudents.length === 0 ? (
+                <tr>
+                  <td colSpan={13} className="py-24 text-center font-black uppercase text-xs tracking-wider text-slate-400 bg-slate-50/20 italic">
+                    Không tìm thấy bé nào khớp với từ khóa tìm kiếm
+                  </td>
+                </tr>
+              ) : (
+                filteredStudents.map((student, index) => (
+                  <StudentRow
+                    key={student.id}
+                    student={student}
+                    index={index}
+                    onUpdate={onUpdate}
+                    onDelete={handleDelete}
+                    onOpenModal={handleOpenModal}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
+      </div>
       )}
 
       {isConfirmingClear && (

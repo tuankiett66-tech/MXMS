@@ -119,7 +119,7 @@ export const Sidebar = ({
         <SidebarItem icon={LayoutDashboard} label="Tổng quan" active={activeTab === 'dashboard'} onClick={() => setActiveTab('dashboard')} />
         <SidebarItem icon={CalendarCheck} label="Điểm danh" active={activeTab === 'attendance'} onClick={() => setActiveTab('attendance')} />
         <SidebarItem icon={FileText} label="Phiếu thu" active={activeTab === 'invoices'} onClick={() => setActiveTab('invoices')} />
-        <SidebarItem icon={Users} label="Học sinh" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
+        <SidebarItem icon={Users} label="Học sinh (Excel)" active={activeTab === 'students'} onClick={() => setActiveTab('students')} />
         <SidebarItem icon={Settings} label="Cấu hình phí" active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} />
       </nav>
 

@@ -426,7 +426,7 @@ export default function App() {
             { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
             { id: 'attendance', icon: CalendarCheck, label: 'Điểm danh' },
             { id: 'invoices', icon: FileText, label: 'Phiếu' },
-            { id: 'students', icon: Users, label: 'Bé' },
+            { id: 'students', icon: Users, label: 'Bé Excel' },
             { id: 'settings', icon: SettingsIcon, label: 'Cấu hình' }
           ].map((item) => (
             <button 
