@@ -25,3 +25,9 @@
 ## 6. In an & Zalo
 - Tai tab Phieu thu: Dung nut In tren may tinh de co ban in 1/2 A4.
 - Tren dien thoai: Bam "Sao chep & Mo Zalo" de gui nhanh thong bao hoc phi cho phu huynh.
+
+## 7. Quan ly & In "Sổ thanh toán tiền ăn"
+- **Xem thong tin**: Bam vao tab mang ten **"Sổ ăn"** (hoac **"Sổ tiền ăn"** tren may tinh). Ban co the click chuyen doi qua lai de xem rieng cho tung Lớp Mẫu Giáo va Lớp Nhà Trẻ.
+- **Tu dong thong ke**: He thong hien thi ro rang Tong so ngay trong thang hiện tại, so ngay du kien di hoc, so ngay be vang mat (phep), so tien theo ngay va tong so tien hoan tra tương ứng tung be.
+- **Phuc vu in an**: Bam nut **"In Sổ Thanh Toán"** de mo giao dien in than thien de in truoc tiep ra giay A4 de dua phu huynh ky nhan va trinh Hieu Truong kiem duyet.
+- **Xuat file bao cao**: Bam nut **"Xuất Excel Sổ"** de luu tru file dinh dang trang tinh .xlsx dep mat can canh ve thiet bi cua ban.

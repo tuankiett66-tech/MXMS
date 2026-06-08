@@ -2,8 +2,8 @@
 import React from 'react';
 
 // Fix: Made children optional and added key to prop types to resolve "Property 'children' is missing" and "Property 'key' does not exist" errors in JSX
-export const Card = ({ children, className = "" }: { children?: React.ReactNode, className?: string, key?: any }) => (
-  <div className={`bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 ${className}`}>
+export const Card = ({ children, className = "", id }: { children?: React.ReactNode, className?: string, id?: string, key?: any }) => (
+  <div id={id} className={`bg-white rounded-[32px] p-6 shadow-sm border border-slate-100 ${className}`}>
     {children}
   </div>
 );

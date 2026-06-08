@@ -8,7 +8,8 @@ import { AttendanceTable } from './components/Attendance.tsx';
 import { Invoices } from './components/Invoices.tsx';
 import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
-import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2 } from 'lucide-react';
+import { MealRefund } from './components/MealRefund.tsx';
+import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2, Utensils } from 'lucide-react';
 import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, ensureClassEntryDates, formatDateToDMY } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
@@ -290,6 +291,20 @@ export default function App() {
     });
   };
 
+  const handleUpdateAbsentDays = (studentId: string, absentDays: number) => {
+    setAttendance(prev => {
+      const existing = prev.find(a => a.studentId === studentId && a.month === currentMonth && a.year === currentYear);
+      if (existing) {
+        return prev.map(a => 
+          a.studentId === studentId && a.month === currentMonth && a.year === currentYear
+          ? { ...a, absentDays: Math.max(0, absentDays) }
+          : a
+        );
+      }
+      return [...prev, { studentId, month: currentMonth, year: currentYear, absentDays: Math.max(0, absentDays) }];
+    });
+  };
+
   const handleToggleDiscount = (studentId: string, type: '50%' | '100%') => {
     // 1. Cập nhật thuộc tính bền vững trên đối tượng Student để lưu giữ khi đổi tháng
     setStudents(prev => prev.map(s => {
@@ -409,7 +424,7 @@ export default function App() {
                <LayoutDashboard size={18} className="text-white" />
             </div>
             <h2 className="text-sm md:text-lg font-black text-slate-800 uppercase italic tracking-tight truncate max-w-[150px] md:max-w-none">
-              {activeTab === 'dashboard' ? 'Tổng quan' : activeTab === 'attendance' ? 'Điểm danh' : activeTab === 'invoices' ? 'Phiếu thu' : 'MXMS'}
+              {activeTab === 'dashboard' ? 'Tổng quan' : activeTab === 'attendance' ? 'Điểm danh' : activeTab === 'invoices' ? 'Phiếu thu' : activeTab === 'mealRefund' ? 'Sổ tiền ăn' : 'MXMS'}
             </h2>
           </div>
           
@@ -451,15 +466,17 @@ export default function App() {
             />
           )}
           {activeTab === 'invoices' && <Invoices students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent} bulkPrintClass={bulkPrintClass} setBulkPrintClass={setBulkPrintClass} />}
+          {activeTab === 'mealRefund' && <MealRefund students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} onUpdateAbsentDays={handleUpdateAbsentDays} />}
           {activeTab === 'students' && <Students students={students} onAdd={addStudent} onUpdate={updateStudent} onDelete={deleteStudent} onImport={importStudents} onClearAll={clearAllStudents} />}
           {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} onManualSave={handleManualSave} onNextMonth={handleNextMonth} />}
         </main>
 
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-2 py-2 flex items-center justify-around z-50 no-print shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-1 py-2 flex items-center justify-around z-50 no-print shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
           {[
             { id: 'dashboard', icon: LayoutDashboard, label: 'Home' },
             { id: 'attendance', icon: CalendarCheck, label: 'Điểm danh' },
             { id: 'invoices', icon: FileText, label: 'Phiếu' },
+            { id: 'mealRefund', icon: Utensils, label: 'Sổ ăn' },
             { id: 'students', icon: Users, label: 'Bé Excel' },
             { id: 'settings', icon: SettingsIcon, label: 'Cấu hình' }
           ].map((item) => (

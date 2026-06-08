@@ -20,3 +20,9 @@
 - Menu duoi cho mobile.
 - Phieu thu in 1/2 A4 tiet kiem giay.
 - Gui Zalo nhanh qua nut bam tren dien thoai.
+
+## 5. So Thanh Toan Tien An Chuan 100%
+- **Giao dien nghiep vu hien dai**: Them Tab "Sổ tiền ăn" de theo doi so ngay nghi hoc, so ngay di hoc va so tien hoan lai cho tung be trong tung khoi lop (Mau giao va Nha tre).
+- **Tinh toan thuc te tu dong**: So ngay di hoc thuc te tu dong tinh theo lich va dieu chinh thong minh cho be cu/moi, thoi gian nghi phep dong bo 100% tu tab Diem danh.
+- **In an giay chuan**: Thiet ke layout in hoa co dong chu ky Nguoi Lap Bang, Hieu Truong Duyet giong nhu ban in thu cong truyen thong.
+- **Xuat Excel nang thuong**: Hieu chinh de file Excel xuat ra co dinh dang dep, gop o tieu de phan chia nghiem tuc va de dang khao cuu luu tru.
