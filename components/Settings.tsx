@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Save, RefreshCw, DollarSign, Calendar, BookOpen, Link, ArrowRightCircle } from 'lucide-react';
+import { Save, RefreshCw, DollarSign, Calendar, BookOpen, Link, ArrowRightCircle, Share2 } from 'lucide-react';
 import { Card } from './Common';
 import { GlobalConfig } from '../types';
 import { formatCurrency } from '../utils/calculations';
@@ -53,6 +53,27 @@ export const Settings = ({ config, setConfig, onManualSave, onNextMonth }: Setti
                 className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-purple-500"
               />
               <p className="mt-2 text-[10px] text-slate-400 italic">Dán link Script URL của bạn vào đây để đồng bộ dữ liệu lên Google Sheets.</p>
+              
+              {config.scriptUrl && (
+                <div className="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="space-y-1">
+                    <p className="text-xs font-bold text-purple-950">Chia sẻ cấu hình sang thiết bị khác</p>
+                    <p className="text-[10px] text-purple-600">Sao chép liên kết này và gửi qua Zalo/Facebook, khi mở trên máy tính khác sẽ tự động điền URL Script và kết nối dữ liệu.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const baseUrl = window.location.origin + window.location.pathname;
+                      const shareLink = `${baseUrl}?scriptUrl=${encodeURIComponent(config.scriptUrl || '')}`;
+                      navigator.clipboard.writeText(shareLink);
+                      alert("📋 Đã sao chép liên kết đồng bộ thông minh!\n\nHãy gửi liên kết này sang máy tính khác và chỉ cần nhấn mở nó để đồng bộ dữ liệu ngay lập tức.");
+                    }}
+                    className="shrink-0 self-start sm:self-center px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-black uppercase hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm shadow-purple-200"
+                  >
+                    <Share2 size={14} /> Sao chép liên kết
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </Card>

@@ -46,9 +46,46 @@ export default function App() {
   const [bulkPrintClass, setBulkPrintClass] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
 
-  // Tải dữ liệu từ Google Sheets khi mở app
+  // Tải dữ liệu từ Google Sheets khi mở app hoặc khi nhận URL tham số
   useEffect(() => {
-    if (config.scriptUrl) {
+    const params = new URLSearchParams(window.location.search);
+    const urlScript = params.get('scriptUrl');
+    
+    if (urlScript) {
+      const decodedUrl = decodeURIComponent(urlScript);
+      const updatedConfig = { ...config, scriptUrl: decodedUrl };
+      setConfig(updatedConfig);
+      localStorage.setItem(`${STORAGE_KEY}_CONFIG`, JSON.stringify(updatedConfig));
+      
+      // Dọn dẹp URL tham số để địa chỉ web trông sạch sẽ hơn
+      window.history.replaceState({}, document.title, window.location.pathname);
+      
+      const autoLoad = async () => {
+        setSyncing(true);
+        try {
+          const response = await fetch(decodedUrl);
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          const data = await response.json();
+          if (data.students) setStudents(data.students);
+          if (data.attendance) setAttendance(data.attendance);
+          if (data.config) setConfig(data.config);
+          if (data.month) setCurrentMonth(data.month);
+          if (data.year) setCurrentYear(data.year);
+          alert("⚡ Tự động liên kết và tải dữ liệu từ Google Sheets thành công!");
+        } catch (error: any) {
+          console.error("Lỗi khi tải dữ liệu tự động:", error);
+          alert(
+            `Phát hiện đường dẫn cấu hình mới nhưng không thể tải dữ liệu!\n\n` +
+            `Chi tiết lỗi: ${error.message || error}`
+          );
+        } finally {
+          setSyncing(false);
+        }
+      };
+      autoLoad();
+    } else if (config.scriptUrl) {
       loadData();
     }
   }, []);
@@ -60,17 +97,36 @@ export default function App() {
   };
 
   const loadData = async () => {
-    if (!config.scriptUrl) return;
+    if (!config.scriptUrl) {
+      alert("Đường dẫn Google Script URL chưa được cấu hình trong mục 'Cấu hình phí'!");
+      return;
+    }
     setSyncing(true);
     try {
       const response = await fetch(config.scriptUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       if (data.students) setStudents(data.students);
       if (data.attendance) setAttendance(data.attendance);
       if (data.config) setConfig(data.config);
-      console.log("Dữ liệu đã được tải từ Google Sheets");
-    } catch (error) {
+      if (data.month) setCurrentMonth(data.month);
+      if (data.year) setCurrentYear(data.year);
+      alert("🎉 Tải toàn bộ dữ liệu từ Google Sheets thành công!");
+    } catch (error: any) {
       console.error("Lỗi khi tải dữ liệu từ Google Sheets:", error);
+      alert(
+        `❌ Không thể tải dữ liệu từ Google Sheets!\n\n` +
+        `Hướng dẫn khắc phục trên thiết bị này:\n\n` +
+        `1. QUAN TRỌNG: Mở Google Apps Script của bạn và chọn Triển khai mới (New Deployment):\n` +
+        `   - Execute as (Thực thi dưới quyền): Chọn "Me" (Tôi)\n` +
+        `   - Who has access (Ai có quyền truy cập): Phải chọn "Anyone" (Bất kỳ ai / Mọi người)\n` +
+        `   => Nếu chọn "Anyone with Google account" hoặc "Only me", các thiết bị khác hoặc khi không đăng nhập Google sẽ bị chặn tải do bảo mật CORS.\n\n` +
+        `2. Hãy thử copy đường dán Script URL dán trực tiếp lên trình duyệt tab mới xem có hiện ra dữ liệu JSON không.\n` +
+        `3. Hãy thử tắt Trình chặn quảng cáo (Adblock / Brave shield) nếu có.\n\n` +
+        `Chi tiết lỗi hệ thống: ${error.message || error}`
+      );
     } finally {
       setSyncing(false);
     }
@@ -142,10 +198,16 @@ export default function App() {
         body: JSON.stringify(payload)
       });
       
-      alert("Đã đồng bộ dữ liệu lên Google Sheets thành công!");
-    } catch (error) {
+      alert("🎉 Đã đồng bộ dữ liệu lên Google Sheets thành công!");
+    } catch (error: any) {
       console.error("Lỗi khi đồng bộ:", error);
-      alert("Lỗi khi đồng bộ lên Google Sheets.");
+      alert(
+        `❌ Lỗi khi đồng bộ dữ liệu lên Google Sheets!\n\n` +
+        `Vui lòng kiểm tra:\n` +
+        `- Đảm bảo thiết bị của bạn có kết nối mạng.\n` +
+        `- Google Apps Script phải được triển khai (Deploy) công khai cho "Anyone" (Bất kỳ ai).\n\n` +
+        `Chi tiết lỗi: ${error.message || error}`
+      );
     } finally {
       setSyncing(false);
     }
