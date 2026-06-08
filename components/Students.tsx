@@ -1,10 +1,143 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Card, Badge } from './Common';
 import { Student } from '../types';
 import { sortStudents, isPreschoolClass, isNurseryClass } from '../utils/calculations';
+
+interface DateInputProps {
+  value: string;
+  onChange: (val: string) => void;
+  className?: string;
+  placeholder?: string;
+}
+
+const DateInput = ({ value, onChange, className = '', placeholder = 'DD/MM/YYYY' }: DateInputProps) => {
+  const formatYMDtoDMY = (ymd: string) => {
+    if (!ymd) return '';
+    const parts = ymd.split('-');
+    if (parts.length === 3) {
+      return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    }
+    return ymd;
+  };
+
+  const formatDMYtoYMD = (dmy: string) => {
+    const parts = dmy.split('/');
+    if (parts.length === 3) {
+      const d = parts[0].padStart(2, '0');
+      const m = parts[1].padStart(2, '0');
+      const y = parts[2];
+      
+      const dayNum = Number(d);
+      const monthNum = Number(m);
+      const yearNum = Number(y);
+      
+      if (
+        y.length === 4 &&
+        !isNaN(dayNum) && dayNum >= 1 && dayNum <= 31 &&
+        !isNaN(monthNum) && monthNum >= 1 && monthNum <= 12 &&
+        !isNaN(yearNum) && yearNum >= 1900 && yearNum <= 2100
+      ) {
+        return `${y}-${m}-${d}`;
+      }
+    }
+    return '';
+  };
+
+  const [text, setText] = useState(() => formatYMDtoDMY(value));
+  
+  useEffect(() => {
+    setText(formatYMDtoDMY(value));
+  }, [value]);
+
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let input = e.target.value;
+    const isDeleting = input.length < text.length;
+    
+    // Allow only digits and slashes
+    input = input.replace(/[^0-9/]/g, '');
+    
+    if (!isDeleting) {
+      if (/^\d{2}$/.test(input)) {
+        input = input + '/';
+      } else if (/^\d{2}\/\d{2}$/.test(input)) {
+        input = input + '/';
+      }
+    }
+    
+    input = input.replace(/\/\/+/g, '/');
+    
+    if (input.length > 10) {
+      input = input.substring(0, 10);
+    }
+    
+    setText(input);
+
+    const ymd = formatDMYtoYMD(input);
+    if (ymd) {
+      onChange(ymd);
+    }
+  };
+
+  const handleBlur = () => {
+    const ymd = formatDMYtoYMD(text);
+    if (ymd) {
+      onChange(ymd);
+    } else {
+      setText(formatYMDtoDMY(value));
+    }
+  };
+
+  const pickerRef = useRef<HTMLInputElement>(null);
+
+  const handlePickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newVal = e.target.value;
+    if (newVal) {
+      onChange(newVal);
+      setText(formatYMDtoDMY(newVal));
+    }
+  };
+
+  return (
+    <div className="relative flex items-center w-full">
+      <input
+        type="text"
+        placeholder={placeholder}
+        value={text}
+        onChange={handleTextChange}
+        onBlur={handleBlur}
+        className={className}
+        maxLength={10}
+      />
+      
+      <input
+        type="date"
+        ref={pickerRef}
+        value={value || ''}
+        onChange={handlePickerChange}
+        className="absolute w-0 h-0 opacity-0 pointer-events-none"
+        tabIndex={-1}
+      />
+      
+      <button
+        type="button"
+        onClick={() => {
+          try {
+            pickerRef.current?.showPicker();
+          } catch {
+            pickerRef.current?.focus();
+          }
+        }}
+        className="absolute right-4 text-slate-400 hover:text-slate-600 transition-colors p-1"
+        title="Chọn ngày"
+      >
+        <Calendar size={18} />
+      </button>
+    </div>
+  );
+};
 
 interface StudentsProps {
   students: Student[];
@@ -360,7 +493,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Ngày sinh</label>
-                  <input type="date" value={formData.dob} onChange={(e) => setFormData({...formData, dob: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500" />
+                  <DateInput value={formData.dob || ''} onChange={(val) => setFormData({...formData, dob: val})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 pl-4 pr-12 font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Lớp học</label>
@@ -379,7 +512,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Ngày nhập học</label>
-                  <input type="date" value={formData.admissionDate} onChange={(e) => setFormData({...formData, admissionDate: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500" />
+                  <DateInput value={formData.admissionDate || ''} onChange={(val) => setFormData({...formData, admissionDate: val})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 pl-4 pr-12 font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Trạng thái học tập</label>
