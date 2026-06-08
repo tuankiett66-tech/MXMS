@@ -9,7 +9,7 @@ import { Invoices } from './components/Invoices.tsx';
 import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
 import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2 } from 'lucide-react';
-import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass } from './utils/calculations.ts';
+import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, ensureClassEntryDates } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
 
@@ -19,7 +19,7 @@ export default function App() {
   // Khởi tạo state từ LocalStorage hoặc mặc định
   const [students, setStudents] = useState<Student[]>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_STUDENTS`);
-    return saved ? JSON.parse(saved) : [];
+    return saved ? ensureClassEntryDates(JSON.parse(saved)) : [];
   });
   
   const [attendance, setAttendance] = useState<Attendance[]>(() => {
@@ -68,7 +68,7 @@ export default function App() {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           const data = await response.json();
-          if (data.students) setStudents(data.students);
+          if (data.students) setStudents(ensureClassEntryDates(data.students));
           if (data.attendance) setAttendance(data.attendance);
           if (data.config) setConfig(data.config);
           if (data.month) setCurrentMonth(data.month);
@@ -108,7 +108,7 @@ export default function App() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      if (data.students) setStudents(data.students);
+      if (data.students) setStudents(ensureClassEntryDates(data.students));
       if (data.attendance) setAttendance(data.attendance);
       if (data.config) setConfig(data.config);
       if (data.month) setCurrentMonth(data.month);
@@ -167,6 +167,14 @@ export default function App() {
           ];
         });
 
+      // Tạo thêm 150 dòng trống để xóa trắng các dòng thừa cũ ở Google Sheets
+      // khi số học sinh bị giảm đi (ví dụ bé chuyển sang "Tạm nghỉ")
+      const paddedPreschoolRows = [...preschoolRows];
+      const emptyPreschoolRow = Array(14).fill("");
+      for (let i = 0; i < 150; i++) {
+        paddedPreschoolRows.push(emptyPreschoolRow);
+      }
+
       const nurseryRows = sortedActiveStudents
         .filter(s => isNurseryClass(s.className))
         .map((s, i) => {
@@ -181,12 +189,18 @@ export default function App() {
           ];
         });
 
+      const paddedNurseryRows = [...nurseryRows];
+      const emptyNurseryRow = Array(12).fill("");
+      for (let i = 0; i < 150; i++) {
+        paddedNurseryRows.push(emptyNurseryRow);
+      }
+
       const payload = {
         students,
         attendance,
         config,
-        formattedPreschool: preschoolRows,
-        formattedNursery: nurseryRows,
+        formattedPreschool: paddedPreschoolRows,
+        formattedNursery: paddedNurseryRows,
         month: currentMonth,
         year: currentYear
       };

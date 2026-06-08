@@ -29,12 +29,36 @@ export const isPreschoolClass = (className: string): boolean => {
 
 export const sortStudents = (list: Student[]): Student[] => {
   return [...list].sort((a, b) => {
-    const dateA = (a.classEntryDate || a.admissionDate) ? new Date(a.classEntryDate || a.admissionDate).getTime() : 0;
-    const dateB = (b.classEntryDate || b.admissionDate) ? new Date(b.classEntryDate || b.admissionDate).getTime() : 0;
+    const parseDate = (valArr: (string | undefined)[]) => {
+      for (const val of valArr) {
+        if (!val) continue;
+        const time = new Date(val).getTime();
+        if (!isNaN(time)) return time;
+      }
+      return 0;
+    };
+    const dateA = parseDate([a.classEntryDate, a.admissionDate]);
+    const dateB = parseDate([b.classEntryDate, b.admissionDate]);
+    
     if (dateA !== dateB) {
       return dateA - dateB;
     }
     return a.name.localeCompare(b.name, 'vi');
+  });
+};
+
+export const ensureClassEntryDates = (list: Student[]): Student[] => {
+  const now = Date.now();
+  return list.map((student, index) => {
+    if (!student.classEntryDate) {
+      const admissionTime = student.admissionDate ? new Date(student.admissionDate).getTime() : NaN;
+      const fallbackTime = !isNaN(admissionTime) ? admissionTime + index : now + index * 1000;
+      return {
+        ...student,
+        classEntryDate: new Date(fallbackTime).toISOString()
+      };
+    }
+    return student;
   });
 };
 

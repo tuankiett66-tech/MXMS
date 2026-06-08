@@ -106,7 +106,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
           admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || new Date().toISOString().split('T')[0],
           phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || ''),
           status: row['Trạng thái'] || row.Status || 'Đang học',
-          notes: String(row['GHI CHÚ'] || row['Ghi chú'] || row['Ghi Chú'] || row.Notes || row.notes || '').trim()
+          notes: String(row['GHI CHÚ'] || row['Ghi chú'] || row['Ghi Chú'] || row.Notes || row.notes || '').trim(),
+          classEntryDate: new Date(Date.now() + index * 1000).toISOString()
         };
       });
 
@@ -168,16 +169,20 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
 
     let finalData = { ...formData };
     
-    // Nếu đổi lớp và tick chọn chuyển xuống dưới cùng của danh sách lớp mới
-    if (editingStudent && finalData.className !== editingStudent.className) {
+    // Xác định classEntryDate để kiểm soát thứ tự dòng của bé trên sheet
+    if (!editingStudent) {
+      // Khi thêm mới bé, gán thời gian hiện tại để bé luôn xếp cuối danh sách (CUỐI HÀNG)
+      finalData.classEntryDate = new Date().toISOString();
+    } else if (editingStudent.status === 'Tạm nghỉ' && finalData.status !== 'Tạm nghỉ') {
+      // Khi bé từ tạm nghỉ quay lại học (hoặc học hè), xếp bé xuống cuối danh sách (CUỐI HÀNG)
+      finalData.classEntryDate = new Date().toISOString();
+    } else if (finalData.className !== editingStudent.className) {
+      // Khi chuyển lớp cho bé
       if (shouldUpdateAdmission) {
         finalData.classEntryDate = new Date().toISOString();
       } else {
         finalData.classEntryDate = editingStudent.classEntryDate || editingStudent.admissionDate;
       }
-    } else if (!editingStudent) {
-      // Khi thêm mới bé, mặc định classEntryDate là ngày nhập học
-      finalData.classEntryDate = finalData.admissionDate;
     }
 
     if (editingStudent) {
