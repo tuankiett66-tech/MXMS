@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FileText, Printer, Phone, Share2, ArrowLeft, ChevronLeft, ChevronRight, LayoutGrid, List, MessageCircle, FileDown, Loader2 } from 'lucide-react';
 import { Card, Badge } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
-import { calculateInvoice, formatCurrency, generateZaloMessage, sortStudents } from '../utils/calculations';
+import { calculateInvoice, formatCurrency, generateZaloMessage, sortStudents, formatDateToDMY } from '../utils/calculations';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
@@ -179,7 +179,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
           <div className="print-container-wrapper">
           {classStudents.map((student) => {
             const inv = calculateInvoice(student, config, attendance, currentMonth, currentYear);
-            const dob = new Date(student.dob).toLocaleDateString('vi-VN');
+            const dob = formatDateToDMY(student.dob);
             return (
               <div key={student.id} className="invoice-print-item bg-white p-8 border border-slate-200 rounded-lg relative">
                 <div className="text-center mb-4">
@@ -256,7 +256,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
 
   const inv = calculateInvoice(selectedStudent, config, attendance, currentMonth, currentYear);
   const zaloMsg = generateZaloMessage(inv, currentMonth, currentYear, config);
-  const formattedDOB = new Date(selectedStudent.dob).toLocaleDateString('vi-VN');
+  const formattedDOB = formatDateToDMY(selectedStudent.dob);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">

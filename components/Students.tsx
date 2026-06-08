@@ -4,7 +4,7 @@ import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp, Calendar } 
 import * as XLSX from 'xlsx';
 import { Card, Badge } from './Common';
 import { Student } from '../types';
-import { sortStudents, isPreschoolClass, isNurseryClass } from '../utils/calculations';
+import { sortStudents, isPreschoolClass, isNurseryClass, formatDateToDMY, normalizeToYMD } from '../utils/calculations';
 
 interface DateInputProps {
   value: string;
@@ -148,6 +148,14 @@ interface StudentsProps {
   onClearAll: () => void;
 }
 
+const getTodayYMD = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClearAll }: StudentsProps) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeClassTab, setActiveClassTab] = useState<'all' | 'nursery' | 'preschool'>('all');
@@ -163,21 +171,14 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     className: 'Lớp Mẫu giáo',
     giftedSubjects: { english: false, drawing: false, rhythm: false },
     isNewStudent: false,
-    admissionDate: new Date().toISOString().split('T')[0],
+    admissionDate: getTodayYMD(),
     phoneNumber: '',
     status: 'Đang học',
     notes: ''
   });
 
   const formatToInputDate = (dateStr: any) => {
-    if (!dateStr) return '';
-    try {
-      const d = new Date(dateStr);
-      if (isNaN(d.getTime())) return '';
-      return d.toISOString().split('T')[0];
-    } catch {
-      return '';
-    }
+    return normalizeToYMD(dateStr);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -236,7 +237,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
           className,
           giftedSubjects: { english, drawing, rhythm },
           isNewStudent,
-          admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || new Date().toISOString().split('T')[0],
+          admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || getTodayYMD(),
           phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || ''),
           status: row['Trạng thái'] || row.Status || 'Đang học',
           notes: String(row['GHI CHÚ'] || row['Ghi chú'] || row['Ghi Chú'] || row.Notes || row.notes || '').trim(),
@@ -284,11 +285,11 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         className: 'Lớp Mẫu giáo',
         giftedSubjects: { english: false, drawing: false, rhythm: false },
         isNewStudent: false,
-        admissionDate: new Date().toISOString().split('T')[0],
+        admissionDate: getTodayYMD(),
         phoneNumber: '',
         status: 'Đang học',
         notes: '',
-        classEntryDate: new Date().toISOString().split('T')[0]
+        classEntryDate: getTodayYMD()
       });
     }
     setShowModal(true);
@@ -301,6 +302,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     }
 
     let finalData = { ...formData };
+    if (finalData.dob) finalData.dob = normalizeToYMD(finalData.dob);
+    if (finalData.admissionDate) finalData.admissionDate = normalizeToYMD(finalData.admissionDate);
     
     // Xác định classEntryDate để kiểm soát thứ tự dòng của bé trên sheet
     if (!editingStudent) {
@@ -431,11 +434,11 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
               <div className="space-y-2 mb-6">
                  <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
                     <CheckCircle2 size={12} className="text-emerald-500" />
-                    <span>NS: {student.dob ? new Date(student.dob).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                    <span>NS: {student.dob ? formatDateToDMY(student.dob) : 'N/A'}</span>
                  </div>
                  <div className="flex items-center gap-2 text-[10px] text-slate-500 font-bold">
                     <Calendar size={12} className="text-blue-500" />
-                    <span>Nhập học: {student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('vi-VN') : 'N/A'}</span>
+                    <span>Nhập học: {student.admissionDate ? formatDateToDMY(student.admissionDate) : 'N/A'}</span>
                  </div>
                  {student.notes && (
                    <div className="p-2.5 bg-amber-50 border border-amber-200/40 rounded-xl text-[11px] text-amber-950 font-bold leading-relaxed shadow-sm">

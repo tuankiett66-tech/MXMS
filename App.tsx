@@ -9,7 +9,7 @@ import { Invoices } from './components/Invoices.tsx';
 import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
 import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2 } from 'lucide-react';
-import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, ensureClassEntryDates } from './utils/calculations.ts';
+import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, ensureClassEntryDates, formatDateToDMY } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
 
@@ -155,7 +155,7 @@ export default function App() {
         .filter(s => isPreschoolClass(s.className))
         .map((s, i) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
-          const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";
+          const formattedDOB = s.dob ? formatDateToDMY(s.dob) : "";
           return [
             i + 1, s.name.toUpperCase(), formattedDOB, 
             formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
@@ -179,7 +179,7 @@ export default function App() {
         .filter(s => isNurseryClass(s.className))
         .map((s, i) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
-          const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";
+          const formattedDOB = s.dob ? formatDateToDMY(s.dob) : "";
           return [
             i + 1, s.name.toUpperCase(), formattedDOB, 
             formatCurrency(inv.tuition), formatCurrency(inv.mealFee),

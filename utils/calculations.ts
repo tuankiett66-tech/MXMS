@@ -1,10 +1,93 @@
 
 import { Student, GlobalConfig, InvoiceDetail, Attendance } from '../types';
 
+export const normalizeToYMD = (dateStr: any): string => {
+  if (!dateStr) return '';
+  if (typeof dateStr !== 'string') {
+    try {
+      const d = new Date(dateStr);
+      if (isNaN(d.getTime())) return '';
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    } catch {
+      return '';
+    }
+  }
+
+  const cleanStr = dateStr.trim();
+  // 1. Nếu đã đúng chuẩn YYYY-MM-DD
+  if (/^\d{4}-\d{2}-\d{2}$/.test(cleanStr)) {
+    return cleanStr;
+  }
+
+  // 2. Nếu là ISO string hoặc định dạng rác có chứa T
+  if (cleanStr.includes('T')) {
+    const rawDate = cleanStr.split('T')[0];
+    if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
+      return rawDate;
+    }
+  }
+
+  // 3. Nếu là dạng DD/MM/YYYY hoặc D/M/YYYY
+  if (cleanStr.includes('/')) {
+    const parts = cleanStr.split('/');
+    if (parts.length === 3) {
+      const d = parts[0].padStart(2, '0');
+      const m = parts[1].padStart(2, '0');
+      const y = parts[2];
+      if (y.length === 4) {
+        return `${y}-${m}-${d}`;
+      }
+    }
+  }
+
+  // 4. Nếu là dạng DD-MM-YYYY hoặc D-M-YYYY (năm ở cuối)
+  if (cleanStr.includes('-')) {
+    const parts = cleanStr.split('-');
+    if (parts.length === 3 && parts[2].length === 4) {
+      const d = parts[0].padStart(2, '0');
+      const m = parts[1].padStart(2, '0');
+      const y = parts[2];
+      return `${y}-${m}-${d}`;
+    }
+  }
+
+  // 5. Thử parse thông thường nhưng an toàn với timezone địa phương
+  try {
+    const d = new Date(cleanStr);
+    if (!isNaN(d.getTime())) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+  } catch {}
+
+  return '';
+};
+
+export const formatDateToDMY = (dateStr: any): string => {
+  const ymd = normalizeToYMD(dateStr);
+  if (!ymd) return '';
+  const parts = ymd.split('-');
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+};
+
 export const calculateAgeInMonths = (dob: string): number => {
-  const birth = new Date(dob);
-  const now = new Date();
-  return (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  const normalized = normalizeToYMD(dob);
+  if (!normalized) return 0;
+  const parts = normalized.split('-');
+  if (parts.length === 3) {
+    const year = parseInt(parts[0], 10);
+    const month = parseInt(parts[1], 10) - 1; // 0-indexed month
+    const day = parseInt(parts[2], 10);
+    const birth = new Date(year, month, day);
+    const now = new Date();
+    return (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
+  }
+  return 0;
 };
 
 export const formatCurrency = (amount: number): string => {
@@ -171,7 +254,7 @@ export const calculateInvoice = (
 
 export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year: number, config: GlobalConfig): string => {
   const { student, total, tuition, extraFee, csvcFee, materialFee, calculationInfo, discountType } = invoice;
-  const formattedDOB = new Date(student.dob).toLocaleDateString('vi-VN');
+  const formattedDOB = formatDateToDMY(student.dob);
   const fullMealFee = calculationInfo.effectiveStandardDays * config.mealFeePerDay;
   const absentDeduction = calculationInfo.absentDays * config.mealFeePerDay;
 
