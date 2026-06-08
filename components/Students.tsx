@@ -4,7 +4,7 @@ import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp, Calendar } 
 import * as XLSX from 'xlsx';
 import { Card, Badge } from './Common';
 import { Student } from '../types';
-import { sortStudents, isPreschoolClass, isNurseryClass, formatDateToDMY, normalizeToYMD } from '../utils/calculations';
+import { sortStudents, isPreschoolClass, isNurseryClass, formatDateToDMY, normalizeToYMD, formatDateToVietnamYMD } from '../utils/calculations';
 
 interface DateInputProps {
   value: string;
@@ -149,11 +149,7 @@ interface StudentsProps {
 }
 
 const getTodayYMD = () => {
-  const d = new Date();
-  const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return formatDateToVietnamYMD(new Date());
 };
 
 export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClearAll }: StudentsProps) => {
@@ -272,6 +268,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         ...student,
         className: isNurseryClass(student.className) ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo',
         dob: formatToInputDate(student.dob),
+        admissionDate: formatToInputDate(student.admissionDate) || getTodayYMD(),
         status: student.status || 'Đang học',
         notes: student.notes || '',
         classEntryDate: student.classEntryDate || student.admissionDate
@@ -546,7 +543,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                     </label>
                     <p className="text-[10px] text-amber-700 leading-relaxed font-bold">
                       Bạn đang chuyển lớp cho bé từ <strong>{editingStudent.className}</strong> sang <strong>{formData.className}</strong>. 
-                      Hệ thống sẽ giữ nguyên <strong>Ngày nhập học gốc ({new Date(editingStudent.admissionDate).toLocaleDateString('vi-VN')})</strong> để bảo toàn lịch sử học tập &amp; không bị tính sai học phí, 
+                      Hệ thống sẽ giữ nguyên <strong>Ngày nhập học gốc ({formatDateToDMY(editingStudent.admissionDate)})</strong> để bảo toàn lịch sử học tập &amp; không bị tính sai học phí, 
                       đồng thời tự động dán bé vào dòng cuối của danh sách lớp mới.
                     </p>
                   </div>

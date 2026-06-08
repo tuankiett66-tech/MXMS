@@ -1,16 +1,44 @@
 
 import { Student, GlobalConfig, InvoiceDetail, Attendance } from '../types';
 
+export const formatDateToVietnamYMD = (d: Date): string => {
+  try {
+    const formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Ho_Chi_Minh',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const parts = formatter.formatToParts(d);
+    let year = '';
+    let month = '';
+    let day = '';
+    for (const part of parts) {
+      if (part.type === 'year') year = part.value;
+      if (part.type === 'month') month = part.value;
+      if (part.type === 'day') day = part.value;
+    }
+    if (year && month && day) {
+      return `${year}-${month}-${day}`;
+    }
+  } catch (err) {
+    console.error('Error formatting date to Asia/Ho_Chi_Minh timezone:', err);
+  }
+  
+  // Fallback to local timezone dates if Intl fails
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 export const normalizeToYMD = (dateStr: any): string => {
   if (!dateStr) return '';
   if (typeof dateStr !== 'string') {
     try {
       const d = new Date(dateStr);
       if (isNaN(d.getTime())) return '';
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+      return formatDateToVietnamYMD(d);
     } catch {
       return '';
     }
@@ -24,6 +52,13 @@ export const normalizeToYMD = (dateStr: any): string => {
 
   // 2. Nếu là ISO string hoặc định dạng rác có chứa T
   if (cleanStr.includes('T')) {
+    try {
+      const d = new Date(cleanStr);
+      if (!isNaN(d.getTime())) {
+        return formatDateToVietnamYMD(d);
+      }
+    } catch {}
+    
     const rawDate = cleanStr.split('T')[0];
     if (/^\d{4}-\d{2}-\d{2}$/.test(rawDate)) {
       return rawDate;
@@ -58,10 +93,7 @@ export const normalizeToYMD = (dateStr: any): string => {
   try {
     const d = new Date(cleanStr);
     if (!isNaN(d.getTime())) {
-      const year = d.getFullYear();
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const day = String(d.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
+      return formatDateToVietnamYMD(d);
     }
   } catch {}
 
@@ -133,15 +165,22 @@ export const sortStudents = (list: Student[]): Student[] => {
 export const ensureClassEntryDates = (list: Student[]): Student[] => {
   const now = Date.now();
   return list.map((student, index) => {
-    if (!student.classEntryDate) {
-      const admissionTime = student.admissionDate ? new Date(student.admissionDate).getTime() : NaN;
+    const dob = normalizeToYMD(student.dob);
+    const admissionDate = normalizeToYMD(student.admissionDate);
+    
+    let classEntryDate = student.classEntryDate;
+    if (!classEntryDate) {
+      const admissionTime = admissionDate ? new Date(admissionDate).getTime() : NaN;
       const fallbackTime = !isNaN(admissionTime) ? admissionTime + index : now + index * 1000;
-      return {
-        ...student,
-        classEntryDate: new Date(fallbackTime).toISOString()
-      };
+      classEntryDate = new Date(fallbackTime).toISOString();
     }
-    return student;
+    
+    return {
+      ...student,
+      dob,
+      admissionDate,
+      classEntryDate
+    };
   });
 };
 
