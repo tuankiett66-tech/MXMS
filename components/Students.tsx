@@ -32,7 +32,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     isNewStudent: false,
     admissionDate: new Date().toISOString().split('T')[0],
     phoneNumber: '',
-    status: 'Đang học'
+    status: 'Đang học',
+    notes: ''
   });
 
   const formatToInputDate = (dateStr: any) => {
@@ -99,7 +100,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
           isNewStudent,
           admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || new Date().toISOString().split('T')[0],
           phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || ''),
-          status: row['Trạng thái'] || row.Status || 'Đang học'
+          status: row['Trạng thái'] || row.Status || 'Đang học',
+          notes: String(row['GHI CHÚ'] || row['Ghi chú'] || row['Ghi Chú'] || row.Notes || row.notes || '').trim()
         };
       });
 
@@ -130,7 +132,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
       setFormData({
         ...student,
         dob: formatToInputDate(student.dob),
-        status: student.status || 'Đang học'
+        status: student.status || 'Đang học',
+        notes: student.notes || ''
       });
     } else {
       setEditingStudent(null);
@@ -143,7 +146,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         isNewStudent: false,
         admissionDate: new Date().toISOString().split('T')[0],
         phoneNumber: '',
-        status: 'Đang học'
+        status: 'Đang học',
+        notes: ''
       });
     }
     setShowModal(true);
@@ -273,6 +277,12 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                     <Calendar size={12} className="text-blue-500" />
                     <span>Nhập học: {student.admissionDate ? new Date(student.admissionDate).toLocaleDateString('vi-VN') : 'N/A'}</span>
                  </div>
+                 {student.notes && (
+                   <div className="p-2.5 bg-amber-50 border border-amber-200/40 rounded-xl text-[11px] text-amber-950 font-bold leading-relaxed shadow-sm">
+                     <span className="text-amber-600 uppercase text-[9px] font-black tracking-wider block mb-0.5">📝 Ghi chú:</span>
+                     {student.notes}
+                   </div>
+                 )}
                  <div className="flex flex-wrap gap-1 mt-2">
                   {student.giftedSubjects.english && <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-black rounded-md border border-blue-100 uppercase">Anh văn</span>}
                   {student.giftedSubjects.drawing && <span className="px-2 py-0.5 bg-pink-50 text-pink-600 text-[9px] font-black rounded-md border border-pink-100 uppercase">Vẽ</span>}
@@ -402,6 +412,17 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                   <input type="checkbox" id="isRhythm" checked={formData.giftedSubjects?.rhythm} onChange={(e) => setFormData({...formData, giftedSubjects: {...formData.giftedSubjects!, rhythm: e.target.checked}})} className="w-5 h-5 accent-purple-600" />
                   <label htmlFor="isRhythm" className="text-xs font-bold text-purple-800">Học Nhịp Điệu</label>
                 </div>
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Nhãn ghi chú (Đặc điểm/Ghi chú cần theo dõi)</label>
+                <textarea 
+                  value={formData.notes || ''} 
+                  onChange={(e) => setFormData({...formData, notes: e.target.value})} 
+                  placeholder="Nhập ghi chú cho bé (ví dụ: dị ứng đồ ăn, đón muộn, mức đóng đặc biệt...)" 
+                  rows={2}
+                  className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all font-medium text-sm resize-none"
+                />
               </div>
             </div>
 

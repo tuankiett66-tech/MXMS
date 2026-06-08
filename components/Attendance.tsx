@@ -1,5 +1,6 @@
 
 import React, { useState } from 'react';
+import { Search, X } from 'lucide-react';
 import { Card } from './Common';
 import { Student, Attendance, GiftedSubjects } from '../types';
 import { sortStudents } from '../utils/calculations';
@@ -20,15 +21,20 @@ export const AttendanceTable = ({
   students, attendance, currentMonth, currentYear, onAttendanceChange, onToggleDiscount, onToggleGifted, onToggleNew, onViewInvoice 
 }: AttendanceProps) => {
   const [activeClassTab, setActiveClassTab] = useState<'all' | 'nursery' | 'preschool'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
 
   const activeStudents = students.filter(s => s.status !== 'Tạm nghỉ');
   const sortedStudents = sortStudents(activeStudents);
 
   const filteredStudents = sortedStudents.filter(s => {
     const classNameLower = s.className.toLowerCase();
-    if (activeClassTab === 'nursery') return classNameLower.includes('nhà trẻ');
-    if (activeClassTab === 'preschool') return classNameLower.includes('mẫu giáo');
-    return true;
+    const isClassMatch = activeClassTab === 'all' || 
+                         (activeClassTab === 'nursery' && classNameLower.includes('nhà trẻ')) ||
+                         (activeClassTab === 'preschool' && classNameLower.includes('mẫu giáo'));
+    const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          s.className.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
+    return isClassMatch && matchesSearch;
   });
 
   const totalAbsentDays = filteredStudents.reduce((acc, student) => {
@@ -38,22 +44,46 @@ export const AttendanceTable = ({
 
   return (
     <Card className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex flex-col md:flex-row items-center justify-between mb-8 gap-4">
-        <div className="flex flex-col gap-1">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between mb-8 gap-4 no-print">
+        <div className="flex flex-col gap-1 shrink-0">
           <h4 className="font-black text-slate-800 text-xl italic uppercase tracking-tight text-emerald-700 shrink-0">Bảng phí & Điểm danh T{currentMonth}</h4>
           <p className="text-[10px] font-black uppercase text-slate-500">Tổng cộng ngày phép: <span className="text-emerald-700 text-sm">{totalAbsentDays} ngày</span></p>
         </div>
         
-        <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner no-print">
-          {['all', 'preschool', 'nursery'].map(tab => (
-            <button 
-              key={tab}
-              onClick={() => setActiveClassTab(tab as any)}
-              className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${activeClassTab === tab ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
-            >
-              {tab === 'all' ? 'Tất cả' : tab === 'preschool' ? 'Khối MG' : 'Khối NT'}
-            </button>
-          ))}
+        <div className="flex flex-col sm:flex-row items-center gap-4 flex-1 max-w-2xl justify-end">
+          {/* Tìm kiếm */}
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <input 
+              type="text" 
+              placeholder="Tìm bé điểm danh..." 
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-bold text-xs text-slate-700 shadow-inner"
+            />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-all p-1 rounded-full hover:bg-slate-200 flex items-center justify-center"
+                title="Xóa tìm kiếm"
+              >
+                <X size={12} className="stroke-[3]" />
+              </button>
+            )}
+          </div>
+
+          {/* Menu Khối Lớp */}
+          <div className="flex bg-slate-100 p-1 rounded-2xl border border-slate-200 shadow-inner">
+            {['all', 'preschool', 'nursery'].map(tab => (
+              <button 
+                key={tab}
+                onClick={() => setActiveClassTab(tab as any)}
+                className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all ${activeClassTab === tab ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}
+              >
+                {tab === 'all' ? 'Tất cả' : tab === 'preschool' ? 'Khối MG' : 'Khối NT'}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

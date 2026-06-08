@@ -163,7 +163,7 @@ export default function App() {
             formatCurrency(s.giftedSubjects.drawing ? config.giftedFees.drawing : 0),
             formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
             formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
-            inv.calculationInfo.absentDays, formatCurrency(inv.total), ""
+            inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || ""
           ];
         });
 
@@ -177,7 +177,7 @@ export default function App() {
             formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
             formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
             formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
-            inv.calculationInfo.absentDays, formatCurrency(inv.total), ""
+            inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || ""
           ];
         });
 

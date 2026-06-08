@@ -15,6 +15,7 @@ export interface Student {
   admissionDate: string;
   phoneNumber?: string; 
   status?: 'Đang học' | 'Tạm nghỉ' | 'Học hè';
+  notes?: string;
 }
 
 export interface Attendance {
