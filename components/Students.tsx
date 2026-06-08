@@ -179,8 +179,17 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
               placeholder="Tìm tên bé, lớp hoặc ID..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium shadow-sm"
+              className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium shadow-sm"
             />
+            {searchTerm && (
+              <button 
+                onClick={() => setSearchTerm('')}
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-all p-1.5 rounded-full hover:bg-slate-100 flex items-center justify-center"
+                title="Xóa tìm kiếm"
+              >
+                <X size={14} className="stroke-[3]" />
+              </button>
+            )}
           </div>
           
           <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
@@ -318,7 +327,14 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Lớp học</label>
-                  <input type="text" value={formData.className} onChange={(e) => setFormData({...formData, className: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500" />
+                  <select 
+                    value={formData.className || 'Lớp Mẫu giáo'} 
+                    onChange={(e) => setFormData({...formData, className: e.target.value})} 
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3.5 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all cursor-pointer"
+                  >
+                    <option value="Lớp Mẫu giáo">Lớp Mẫu giáo</option>
+                    <option value="Lớp Nhà trẻ">Lớp Nhà trẻ</option>
+                  </select>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Số điện thoại</label>
