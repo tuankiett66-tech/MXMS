@@ -91,11 +91,16 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         const isNewStudent = (Number(row['CSVC']) > 0 || Number(row['HỌC PHẨM']) > 0) || 
                             (row.IsNewStudent === true || row['Mới'] === true);
 
+        const rawClass = String(row.Class || row['Lớp'] || '');
+        const className = rawClass 
+          ? (isNurseryClass(rawClass) ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo')
+          : (activeClassTab === 'nursery' ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo');
+
         return {
           id: String(row.ID || row['Mã HS'] || `HS${Date.now()}${index}`),
           name,
           dob,
-          className: String(row.Class || row['Lớp'] || (activeClassTab === 'nursery' ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo')),
+          className,
           giftedSubjects: { english, drawing, rhythm },
           isNewStudent,
           admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || new Date().toISOString().split('T')[0],
@@ -130,6 +135,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
       setEditingStudent(student);
       setFormData({
         ...student,
+        className: isNurseryClass(student.className) ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo',
         dob: formatToInputDate(student.dob),
         status: student.status || 'Đang học',
         notes: student.notes || '',
