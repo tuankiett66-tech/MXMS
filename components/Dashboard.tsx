@@ -2,7 +2,7 @@
 import React, { useMemo } from 'react';
 import { TrendingUp, Users, Calendar, FileSpreadsheet, Download } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import { Card } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
 import { calculateInvoice, formatCurrency, calculateMonthsRemaining, sortStudents } from '../utils/calculations';
@@ -59,27 +59,143 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
 
       const rows = filteredStudents.map((s, index) => {
         const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
-        const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";
+        const formattedDOB = s.dob ? s.dob : ""; // Dạng yyyy-mm-dd chuẩn ngày như của người dùng trong ảnh
         
         return isPreschool ? [
-          index + 1, s.name.toUpperCase(), formattedDOB, formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
-          formatCurrency(s.giftedSubjects.english ? config.giftedFees.english : 0),
-          formatCurrency(s.giftedSubjects.drawing ? config.giftedFees.drawing : 0),
-          formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
-          formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
-          inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || ""
+          index + 1, 
+          s.name.toUpperCase(), 
+          formattedDOB, 
+          inv.tuition, 
+          inv.mealFee,
+          s.giftedSubjects.english ? config.giftedFees.english : 0,
+          s.giftedSubjects.drawing ? config.giftedFees.drawing : 0,
+          s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0,
+          inv.extraFee, 
+          inv.csvcFee, 
+          inv.materialFee,
+          inv.calculationInfo.absentDays, 
+          inv.total, 
+          s.notes || ""
         ] : [
-          index + 1, s.name.toUpperCase(), formattedDOB, formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
-          formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
-          formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
-          inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || ""
+          index + 1, 
+          s.name.toUpperCase(), 
+          formattedDOB, 
+          inv.tuition, 
+          inv.mealFee,
+          s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0,
+          inv.extraFee, 
+          inv.csvcFee, 
+          inv.materialFee,
+          inv.calculationInfo.absentDays, 
+          inv.total, 
+          s.notes || ""
         ];
       });
 
       const wsData = [[title], headers, ...rows];
       const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Áp dụng định dạng phong cách in ấn tuyệt đẹp, giống hệt mẫu trang tính người dùng cung cấp
+      const range = XLSX.utils.decode_range(ws['!ref'] || 'A1:A1');
+      
+      const thinBorder = {
+        top: { style: "thin", color: { rgb: "000000" } },
+        bottom: { style: "thin", color: { rgb: "000000" } },
+        left: { style: "thin", color: { rgb: "000000" } },
+        right: { style: "thin", color: { rgb: "000000" } }
+      };
+
+      const rowHeights = [
+        { hpt: 35 }, // Dòng Tiêu Đề Lớp to rõ
+        { hpt: 26 }  // Dòng Tiêu Đề Cột
+      ];
+      for (let r = 2; r <= range.e.r; r++) {
+        rowHeights.push({ hpt: 22 }); // Các dòng dữ liệu học sinh giãn rộng rãi phù hợp điền tay và nhìn rõ
+      }
+      ws['!rows'] = rowHeights;
+
+      for (let R = range.s.r; R <= range.e.r; ++R) {
+        for (let C = range.s.c; C <= range.e.c; ++C) {
+          const cell_ref = XLSX.utils.encode_cell({ r: R, c: C });
+          if (!ws[cell_ref]) {
+            ws[cell_ref] = { t: 's', v: '' }; // Đảm bảo cell rỗng vẫn có đối tượng định dạng để tạo khung viền khép kín
+          }
+          const cell = ws[cell_ref];
+
+          // Font nền tảng: cỡ 11, viền mỏng đen khép kín các ô
+          cell.s = {
+            font: { name: "Arial", sz: 11, color: { rgb: "000000" } },
+            alignment: { vertical: "center" },
+            border: thinBorder
+          };
+
+          if (R === 0) {
+            // [Tiêu đề bảng]
+            cell.s = {
+              font: { name: "Arial", sz: 13, bold: true, color: { rgb: "000000" } },
+              alignment: { horizontal: "center", vertical: "center" },
+              border: {} // Tiêu đề gộp không cần vẽ viền ở các ô con bên trong
+            };
+          } else if (R === 1) {
+            // [Đề mục các cột]
+            cell.s = {
+              font: { name: "Arial", sz: 10, bold: true, color: { rgb: "000000" } },
+              fill: { fgColor: { rgb: "E2E8F0" } }, // Màu xám nhạt (Tailwind Slate-200) sang trọng, in mực đen/mực màu đều rõ nét
+              alignment: { horizontal: "center", vertical: "center", wrapText: true },
+              border: thinBorder
+            };
+          } else {
+            // [Thông tin học sinh]
+            if (C === 0) {
+              // Cột STT
+              cell.s.alignment = { horizontal: "center", vertical: "center" };
+            } else if (C === 1) {
+              // Cột Họ và tên (Căn trái, tên viết hoa)
+              cell.s.alignment = { horizontal: "left", vertical: "center" };
+            } else if (C === 2) {
+              // Cột Ngày sinh
+              cell.s.alignment = { horizontal: "center", vertical: "center" };
+            } else if (isPreschool) {
+              // Khối Mẫu Giáo
+              // Điểm số & tiền: 3 -> 10, Phép: 11, Thành tiền: 12 (Bold), Ghi chú: 13
+              if (C >= 3 && C <= 10) {
+                cell.t = 'n';
+                cell.z = '#,##0';
+                cell.s.alignment = { horizontal: "right", vertical: "center" };
+              } else if (C === 11) {
+                cell.s.alignment = { horizontal: "center", vertical: "center" };
+              } else if (C === 12) {
+                cell.t = 'n';
+                cell.z = '#,##0';
+                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
+                cell.s.alignment = { horizontal: "right", vertical: "center" };
+              } else {
+                cell.s.alignment = { horizontal: "left", vertical: "center" };
+              }
+            } else {
+              // Khối Nhà Trẻ
+              // Điểm số & tiền: 3 -> 8, Phép: 9, Thành tiền: 10 (Bold), Ghi chú: 11
+              if (C >= 3 && C <= 8) {
+                cell.t = 'n';
+                cell.z = '#,##0';
+                cell.s.alignment = { horizontal: "right", vertical: "center" };
+              } else if (C === 9) {
+                cell.s.alignment = { horizontal: "center", vertical: "center" };
+              } else if (C === 10) {
+                cell.t = 'n';
+                cell.z = '#,##0';
+                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
+                cell.s.alignment = { horizontal: "right", vertical: "center" };
+              } else {
+                cell.s.alignment = { horizontal: "left", vertical: "center" };
+              }
+            }
+          }
+        }
+      }
+
       ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
-      ws['!cols'] = headers.map((h, i) => i === 1 ? { wch: 30 } : i === 0 ? { wch: 5 } : { wch: 12 });
+      ws['!cols'] = headers.map((h, i) => i === 1 ? { wch: 28 } : i === 0 ? { wch: 6 } : i === 2 ? { wch: 14 } : { wch: 13 });
 
       XLSX.utils.book_append_sheet(wb, ws, groupName);
     });

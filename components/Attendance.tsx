@@ -101,17 +101,23 @@ export const AttendanceTable = ({
               <th className="pb-4 text-right pr-2">Thao tác</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-50">
+          <tbody className="divide-y divide-slate-200">
             {filteredStudents.map((student, index) => {
               const att = attendance.find(a => a.studentId === student.id && a.month === currentMonth && a.year === currentYear);
+              const isEven = index % 2 === 0;
               return (
-                <tr key={student.id} className="group hover:bg-slate-50/50 transition-colors">
-                  <td className="py-4 pl-2">
-                    <span className="w-7 h-7 flex items-center justify-center bg-slate-100 text-slate-500 rounded-lg font-black text-[10px]">
+                <tr 
+                  key={student.id} 
+                  className={`group transition-all duration-150 ${
+                    isEven ? 'bg-slate-100/60' : 'bg-white'
+                  } hover:bg-emerald-50/85`}
+                >
+                  <td className="py-4 pl-3">
+                    <span className="w-7 h-7 flex items-center justify-center bg-slate-200 text-slate-700 group-hover:bg-white rounded-lg font-black text-[10px] transition-colors">
                       {index + 1}
                     </span>
                   </td>
-                  <td className="py-4">
+                  <td className="py-4 font-black">
                     <p className="text-sm font-black text-slate-800 uppercase leading-none">{student.name}</p>
                     <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">{student.className}</p>
                   </td>
@@ -120,7 +126,7 @@ export const AttendanceTable = ({
                   <td className="py-4"><div className="flex justify-center"><input type="checkbox" checked={student.giftedSubjects.drawing} onChange={() => onToggleGifted(student.id, 'drawing')} className="w-6 h-6 accent-pink-600 rounded-lg cursor-pointer border-2" /></div></td>
                   <td className="py-4"><div className="flex justify-center"><input type="checkbox" checked={student.giftedSubjects.rhythm} onChange={() => onToggleGifted(student.id, 'rhythm')} className="w-6 h-6 accent-purple-600 rounded-lg cursor-pointer border-2" /></div></td>
 
-                  <td className="py-4 bg-orange-50/30">
+                  <td className={`py-4 transition-colors ${isEven ? 'bg-orange-50/70' : 'bg-orange-50/30'} group-hover:bg-orange-100/50`}>
                     <div className="flex justify-center">
                       <input 
                         type="checkbox" 
@@ -130,7 +136,7 @@ export const AttendanceTable = ({
                       />
                     </div>
                   </td>
-                  <td className="py-4 bg-blue-50/30">
+                  <td className={`py-4 transition-colors ${isEven ? 'bg-blue-50/70' : 'bg-blue-50/30'} group-hover:bg-blue-100/50`}>
                     <div className="flex justify-center">
                       <input 
                         type="checkbox" 
@@ -143,13 +149,13 @@ export const AttendanceTable = ({
                   
                   <td className="py-4">
                     <div className="flex items-center justify-center space-x-1">
-                      <button onClick={() => onAttendanceChange(student.id, -1)} className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center font-black bg-white hover:bg-slate-50 transition-all text-xs">-</button>
-                      <span className="font-black text-slate-900 text-base min-w-[20px] text-center">{att?.absentDays || 0}</span>
-                      <button onClick={() => onAttendanceChange(student.id, 1)} className="w-7 h-7 rounded-lg border border-slate-200 flex items-center justify-center font-black bg-white hover:bg-slate-50 transition-all text-xs">+</button>
+                      <button onClick={() => onAttendanceChange(student.id, -1)} className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-black bg-white hover:bg-slate-50 transition-all text-xs">-</button>
+                      <span className="font-mono font-black text-slate-900 text-base min-w-[24px] text-center">{att?.absentDays || 0}</span>
+                      <button onClick={() => onAttendanceChange(student.id, 1)} className="w-7 h-7 rounded-lg border border-slate-300 flex items-center justify-center font-black bg-white hover:bg-slate-50 transition-all text-xs">+</button>
                     </div>
                   </td>
                   
-                  <td className="py-4 text-right pr-2">
+                  <td className="py-4 text-right pr-3">
                     <button onClick={() => onViewInvoice(student)} className="px-3 py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black hover:bg-emerald-700 uppercase transition-all shadow-md">Lập phiếu</button>
                   </td>
                 </tr>
