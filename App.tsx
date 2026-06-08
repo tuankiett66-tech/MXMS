@@ -277,6 +277,16 @@ export default function App() {
   };
 
   const handleToggleDiscount = (studentId: string, type: '50%' | '100%') => {
+    // 1. Cập nhật thuộc tính bền vững trên đối tượng Student để lưu giữ khi đổi tháng
+    setStudents(prev => prev.map(s => {
+      if (s.id === studentId) {
+        if (type === '50%') return { ...s, isHalfDiscount: !s.isHalfDiscount, isFullDiscount: false };
+        if (type === '100%') return { ...s, isFullDiscount: !s.isFullDiscount, isHalfDiscount: false };
+      }
+      return s;
+    }));
+
+    // 2. Đồng thời cập nhật dữ liệu điểm danh tháng hiện tại
     setAttendance(prev => {
       const existing = prev.find(a => a.studentId === studentId && a.month === currentMonth && a.year === currentYear);
       if (existing) {

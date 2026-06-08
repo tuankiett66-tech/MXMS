@@ -124,7 +124,7 @@ export const AttendanceTable = ({
                     <div className="flex justify-center">
                       <input 
                         type="checkbox" 
-                        checked={!!att?.isFullDiscount} 
+                        checked={student.isFullDiscount !== undefined ? !!student.isFullDiscount : !!att?.isFullDiscount} 
                         onChange={() => onToggleDiscount(student.id, '100%')} 
                         className="w-7 h-7 accent-orange-600 rounded-lg cursor-pointer border-2 border-orange-200 hover:scale-110 transition-transform"
                       />
@@ -134,7 +134,7 @@ export const AttendanceTable = ({
                     <div className="flex justify-center">
                       <input 
                         type="checkbox" 
-                        checked={!!att?.isHalfDiscount} 
+                        checked={student.isHalfDiscount !== undefined ? !!student.isHalfDiscount : !!att?.isHalfDiscount} 
                         onChange={() => onToggleDiscount(student.id, '50%')} 
                         className="w-7 h-7 accent-blue-600 rounded-lg cursor-pointer border-2 border-blue-200 hover:scale-110 transition-transform"
                       />

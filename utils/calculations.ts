@@ -56,8 +56,8 @@ export const calculateInvoice = (
     a => a.studentId === student.id && a.month === currentMonth && a.year === currentYear
   );
 
-  const isFull = !!currentAttendance?.isFullDiscount;
-  const isHalf = !!currentAttendance?.isHalfDiscount;
+  const isFull = student.isFullDiscount !== undefined ? !!student.isFullDiscount : !!currentAttendance?.isFullDiscount;
+  const isHalf = student.isHalfDiscount !== undefined ? !!student.isHalfDiscount : !!currentAttendance?.isHalfDiscount;
 
   // 1. Lấy giá gốc dựa trên tuổi
   let baseTuition = ageMonths >= 36 ? config.tuitionOver36 : config.tuitionUnder36;

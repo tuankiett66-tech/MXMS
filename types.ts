@@ -17,6 +17,8 @@ export interface Student {
   status?: 'Đang học' | 'Tạm nghỉ' | 'Học hè';
   notes?: string;
   classEntryDate?: string;
+  isHalfDiscount?: boolean; // Giảm 50%
+  isFullDiscount?: boolean; // Giảm 100%
 }
 
 export interface Attendance {
