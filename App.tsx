@@ -350,9 +350,43 @@ export default function App() {
   
   const importStudents = (newStudents: Student[]) => {
     setStudents(prev => {
-      const existingIds = new Set(prev.map(s => s.id));
-      const filteredNew = newStudents.filter(s => !existingIds.has(s.id));
-      return [...prev, ...filteredNew];
+      const idMap = new Map(prev.map(s => [s.id, s]));
+      const nameMap = new Map(prev.map(s => [s.name.trim().toLowerCase(), s]));
+      const updatedList = [...prev];
+
+      newStudents.forEach(newS => {
+        const keyId = newS.id;
+        const keyName = newS.name.trim().toLowerCase();
+
+        // Match first by ID, if match not found, try by trimmed name (case-insensitive)
+        const matched = idMap.get(keyId) || nameMap.get(keyName);
+
+        if (matched) {
+          const idx = updatedList.findIndex(s => s.id === matched.id);
+          if (idx !== -1) {
+            updatedList[idx] = {
+              ...updatedList[idx],
+              name: newS.name || updatedList[idx].name,
+              dob: newS.dob || updatedList[idx].dob,
+              className: newS.className || updatedList[idx].className,
+              phoneNumber: newS.phoneNumber || updatedList[idx].phoneNumber,
+              notes: newS.notes || updatedList[idx].notes,
+              status: newS.status || updatedList[idx].status,
+              isNewStudent: newS.isNewStudent !== undefined ? newS.isNewStudent : updatedList[idx].isNewStudent,
+              isHalfDiscount: newS.isHalfDiscount !== undefined ? newS.isHalfDiscount : updatedList[idx].isHalfDiscount,
+              isFullDiscount: newS.isFullDiscount !== undefined ? newS.isFullDiscount : updatedList[idx].isFullDiscount,
+              giftedSubjects: {
+                english: newS.giftedSubjects?.english !== undefined ? newS.giftedSubjects.english : updatedList[idx].giftedSubjects?.english,
+                drawing: newS.giftedSubjects?.drawing !== undefined ? newS.giftedSubjects.drawing : updatedList[idx].giftedSubjects?.drawing,
+                rhythm: newS.giftedSubjects?.rhythm !== undefined ? newS.giftedSubjects.rhythm : updatedList[idx].giftedSubjects?.rhythm,
+              }
+            };
+          }
+        } else {
+          updatedList.push(newS);
+        }
+      });
+      return updatedList;
     });
   };
 

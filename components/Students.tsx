@@ -306,6 +306,42 @@ const StudentRow = ({ student, index, onUpdate, onDelete, onOpenModal }: Student
         </div>
       </td>
 
+      {/* Giảm 50% */}
+      <td className="py-1 px-2 text-center min-w-[90px] border-r border-slate-200 bg-amber-50/10">
+        <div className="flex items-center justify-center py-1">
+          <input 
+            type="checkbox"
+            checked={!!student.isHalfDiscount}
+            onChange={(e) => {
+              onUpdate({ 
+                ...student, 
+                isHalfDiscount: e.target.checked,
+                isFullDiscount: e.target.checked ? false : !!student.isFullDiscount
+              });
+            }}
+            className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 accent-amber-600 cursor-pointer"
+          />
+        </div>
+      </td>
+
+      {/* Giảm 100% */}
+      <td className="py-1 px-2 text-center min-w-[90px] border-r border-slate-200 bg-red-50/10">
+        <div className="flex items-center justify-center py-1">
+          <input 
+            type="checkbox"
+            checked={!!student.isFullDiscount}
+            onChange={(e) => {
+              onUpdate({ 
+                ...student, 
+                isFullDiscount: e.target.checked,
+                isHalfDiscount: e.target.checked ? false : !!student.isHalfDiscount
+              });
+            }}
+            className="w-4 h-4 rounded text-red-600 focus:ring-red-500 accent-red-600 cursor-pointer"
+          />
+        </div>
+      </td>
+
       {/* 9. Anh Văn */}
       <td className="py-1 px-2 text-center min-w-[70px] border-r border-slate-200">
         <div className="flex items-center justify-center py-1">
@@ -477,6 +513,12 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         const isNewStudent = (Number(row['CSVC']) > 0 || Number(row['HỌC PHẨM']) > 0) || 
                             (row.IsNewStudent === true || row['Mới'] === true);
 
+        // Kiểm tra miễn giảm học phí
+        const sheetHalf = !!(row['GIẢM 50%'] === true || row['Giảm 50%'] === true || String(row['GIẢM 50%'] || '').trim().toUpperCase() === 'X' || String(row['Giảm 50%'] || '').trim().toUpperCase() === 'X' || row.IsHalfDiscount === true || row.isHalfDiscount === true);
+        const sheetFull = !!(row['GIẢM 100%'] === true || row['Giảm 100%'] === true || String(row['GIẢM 100%'] || '').trim().toUpperCase() === 'X' || String(row['Giảm 100%'] || '').trim().toUpperCase() === 'X' || row.IsFullDiscount === true || row.isFullDiscount === true);
+        const isFullDiscount = sheetFull;
+        const isHalfDiscount = sheetHalf && !sheetFull;
+
         const rawClass = String(row.Class || row['Lớp'] || '');
         const className = rawClass 
           ? (isNurseryClass(rawClass) ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo')
@@ -493,7 +535,9 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
           phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || ''),
           status: row['Trạng thái'] || row.Status || 'Đang học',
           notes: String(row['GHI CHÚ'] || row['Ghi chú'] || row['Ghi Chú'] || row.Notes || row.notes || '').trim(),
-          classEntryDate: new Date(Date.now() + index * 1000).toISOString()
+          classEntryDate: new Date(Date.now() + index * 1000).toISOString(),
+          isHalfDiscount,
+          isFullDiscount
         };
       });
 
@@ -527,7 +571,9 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         admissionDate: formatToInputDate(student.admissionDate) || getTodayYMD(),
         status: student.status || 'Đang học',
         notes: student.notes || '',
-        classEntryDate: student.classEntryDate || student.admissionDate
+        classEntryDate: student.classEntryDate || student.admissionDate,
+        isHalfDiscount: student.isHalfDiscount || false,
+        isFullDiscount: student.isFullDiscount || false,
       });
     } else {
       setEditingStudent(null);
@@ -542,7 +588,9 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         phoneNumber: '',
         status: 'Đang học',
         notes: '',
-        classEntryDate: getTodayYMD()
+        classEntryDate: getTodayYMD(),
+        isHalfDiscount: false,
+        isFullDiscount: false,
       });
     }
     setShowModal(true);
@@ -678,6 +726,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 <th className="py-3 px-3 border border-slate-200 min-w-[145px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Ngày nhập học</th>
                 <th className="py-3 px-3 border border-slate-200 min-w-[180px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Trạng thái</th>
                 <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Bé Mới</th>
+                <th className="py-3 px-2 border border-slate-200 min-w-[90px] font-black text-[11px] text-amber-700 uppercase tracking-wider text-center bg-amber-50/50">Giảm 50%</th>
+                <th className="py-3 px-2 border border-slate-200 min-w-[90px] font-black text-[11px] text-red-700 uppercase tracking-wider text-center bg-red-50/50">Giảm 100%</th>
                 <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Anh Văn</th>
                 <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Vẽ</th>
                 <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Nhịp điệu</th>
@@ -688,7 +738,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
             <tbody className="divide-y divide-slate-200">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={13} className="py-24 text-center font-black uppercase text-xs tracking-wider text-slate-400 bg-slate-50/20 italic">
+                  <td colSpan={15} className="py-24 text-center font-black uppercase text-xs tracking-wider text-slate-400 bg-slate-50/20 italic">
                     Không tìm thấy bé nào khớp với từ khóa tìm kiếm
                   </td>
                 </tr>
@@ -802,6 +852,34 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                 <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
                   <input type="checkbox" id="isNew" checked={formData.isNewStudent} onChange={(e) => setFormData({...formData, isNewStudent: e.target.checked})} className="w-5 h-5 accent-emerald-600" />
                   <label htmlFor="isNew" className="text-xs font-bold text-emerald-800">Bé Mới (Tính phí CSVC & Học phẩm)</label>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                  <input 
+                    type="checkbox" 
+                    id="isHalfDisc" 
+                    checked={formData.isHalfDiscount || false} 
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      isHalfDiscount: e.target.checked, 
+                      isFullDiscount: e.target.checked ? false : !!formData.isFullDiscount
+                    })} 
+                    className="w-5 h-5 accent-amber-600 cursor-pointer" 
+                  />
+                  <label htmlFor="isHalfDisc" className="text-xs font-bold text-amber-850 cursor-pointer">Giảm học phí 50%</label>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-red-50 rounded-2xl border border-red-100">
+                  <input 
+                    type="checkbox" 
+                    id="isFullDisc" 
+                    checked={formData.isFullDiscount || false} 
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      isFullDiscount: e.target.checked, 
+                      isHalfDiscount: e.target.checked ? false : !!formData.isHalfDiscount
+                    })} 
+                    className="w-5 h-5 accent-red-600 cursor-pointer" 
+                  />
+                  <label htmlFor="isFullDisc" className="text-xs font-bold text-red-800 cursor-pointer">Giảm học phí 100% (Miễn phí)</label>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
                   <input type="checkbox" id="isEnglish" checked={formData.giftedSubjects?.english} onChange={(e) => setFormData({...formData, giftedSubjects: {...formData.giftedSubjects!, english: e.target.checked}})} className="w-5 h-5 accent-blue-600" />

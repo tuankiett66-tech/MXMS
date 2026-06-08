@@ -54,17 +54,21 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
 
       const title = `THU HỌC PHÍ THÁNG ${currentMonth}/${currentYear} LỚP ${groupName.toUpperCase()}`;
       const headers = isPreschool 
-        ? ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "ANH VĂN", "VẼ", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"]
-        : ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"];
+        ? ["STT", "MÃ HS", "HỌ VÀ TÊN", "NGÀY SINH", "BÉ MỚI", "GIẢM 50%", "GIẢM 100%", "HỌC PHÍ", "TIỀN ĂN", "ANH VĂN", "VẼ", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"]
+        : ["STT", "MÃ HS", "HỌ VÀ TÊN", "NGÀY SINH", "BÉ MỚI", "GIẢM 50%", "GIẢM 100%", "HỌC PHÍ", "TIỀN ĂN", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"];
 
       const rows = filteredStudents.map((s, index) => {
         const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
         const formattedDOB = s.dob ? s.dob : ""; // Dạng yyyy-mm-dd chuẩn ngày như của người dùng trong ảnh
         
         return isPreschool ? [
-          index + 1, 
+          index + 1,
+          s.id,
           s.name.toUpperCase(), 
           formattedDOB, 
+          s.isNewStudent ? "X" : "",
+          s.isHalfDiscount ? "X" : "",
+          s.isFullDiscount ? "X" : "",
           inv.tuition, 
           inv.mealFee,
           s.giftedSubjects.english ? config.giftedFees.english : 0,
@@ -77,9 +81,13 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
           inv.total, 
           s.notes || ""
         ] : [
-          index + 1, 
+          index + 1,
+          s.id,
           s.name.toUpperCase(), 
           formattedDOB, 
+          s.isNewStudent ? "X" : "",
+          s.isHalfDiscount ? "X" : "",
+          s.isFullDiscount ? "X" : "",
           inv.tuition, 
           inv.mealFee,
           s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0,
@@ -150,21 +158,39 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
               // Cột STT
               cell.s.alignment = { horizontal: "center", vertical: "center" };
             } else if (C === 1) {
+              // Cột MÃ HS
+              cell.s.alignment = { horizontal: "center", vertical: "center" };
+              cell.s.font = { name: "Arial", sz: 9, color: { rgb: "64748B" } }; // Màu chữ xám nhạt, cỡ chữ nhỏ hơn cho ID
+            } else if (C === 2) {
               // Cột Họ và tên (Căn trái, tên viết hoa)
               cell.s.alignment = { horizontal: "left", vertical: "center" };
-            } else if (C === 2) {
+            } else if (C === 3) {
               // Cột Ngày sinh
               cell.s.alignment = { horizontal: "center", vertical: "center" };
+            } else if (C === 4 || C === 5 || C === 6) {
+              // Bé mới, Giảm 50%, Giảm 100%
+              cell.s.alignment = { horizontal: "center", vertical: "center" };
+              cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
+              if (C === 5 && cell.v === "X") {
+                cell.s.fill = { fgColor: { rgb: "FEF3C7" } }; // Nền hổ phách nhạt cho 50%
+                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "B45309" } };
+              } else if (C === 6 && cell.v === "X") {
+                cell.s.fill = { fgColor: { rgb: "FEE2E2" } }; // Nền đỏ nhạt cho 100%
+                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "B91C1C" } };
+              } else if (C === 4 && cell.v === "X") {
+                cell.s.fill = { fgColor: { rgb: "D1FAE5" } }; // Nền lục nhạt cho Bé mới
+                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "047857" } };
+              }
             } else if (isPreschool) {
               // Khối Mẫu Giáo
-              // Điểm số & tiền: 3 -> 10, Phép: 11, Thành tiền: 12 (Bold), Ghi chú: 13
-              if (C >= 3 && C <= 10) {
+              // Điểm số & tiền: 7 -> 14, Phép: 15, Thành tiền: 16 (Bold), Ghi chú: 17
+              if (C >= 7 && C <= 14) {
                 cell.t = 'n';
                 cell.z = '#,##0';
                 cell.s.alignment = { horizontal: "right", vertical: "center" };
-              } else if (C === 11) {
+              } else if (C === 15) {
                 cell.s.alignment = { horizontal: "center", vertical: "center" };
-              } else if (C === 12) {
+              } else if (C === 16) {
                 cell.t = 'n';
                 cell.z = '#,##0';
                 cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
@@ -174,14 +200,14 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
               }
             } else {
               // Khối Nhà Trẻ
-              // Điểm số & tiền: 3 -> 8, Phép: 9, Thành tiền: 10 (Bold), Ghi chú: 11
-              if (C >= 3 && C <= 8) {
+              // Điểm số & tiền: 7 -> 12, Phép: 13, Thành tiền: 14 (Bold), Ghi chú: 15
+              if (C >= 7 && C <= 12) {
                 cell.t = 'n';
                 cell.z = '#,##0';
                 cell.s.alignment = { horizontal: "right", vertical: "center" };
-              } else if (C === 9) {
+              } else if (C === 13) {
                 cell.s.alignment = { horizontal: "center", vertical: "center" };
-              } else if (C === 10) {
+              } else if (C === 14) {
                 cell.t = 'n';
                 cell.z = '#,##0';
                 cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
@@ -195,7 +221,7 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
       }
 
       ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
-      ws['!cols'] = headers.map((h, i) => i === 1 ? { wch: 28 } : i === 0 ? { wch: 6 } : i === 2 ? { wch: 14 } : { wch: 13 });
+      ws['!cols'] = headers.map((h, i) => i === 2 ? { wch: 28 } : i === 0 ? { wch: 6 } : i === 1 ? { wch: 14 } : i === 3 ? { wch: 14 } : (i === 4 || i === 5 || i === 6) ? { wch: 10 } : { wch: 13 });
 
       XLSX.utils.book_append_sheet(wb, ws, groupName);
     });
