@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Save, RefreshCw, DollarSign, Calendar, BookOpen, Link, ArrowRightCircle, Share2 } from 'lucide-react';
+import { Save, RefreshCw, DollarSign, Calendar, BookOpen, Link, ArrowRightCircle, Share2, Download, Loader2 } from 'lucide-react';
 import { Card } from './Common';
 import { GlobalConfig } from '../types';
 import { formatCurrency } from '../utils/calculations';
@@ -10,9 +10,11 @@ interface SettingsProps {
   setConfig: (c: GlobalConfig) => void;
   onManualSave: () => void;
   onNextMonth: () => void;
+  onLoadData?: () => void;
+  syncing?: boolean;
 }
 
-export const Settings = ({ config, setConfig, onManualSave, onNextMonth }: SettingsProps) => {
+export const Settings = ({ config, setConfig, onManualSave, onNextMonth, onLoadData, syncing }: SettingsProps) => {
   const handleChange = (field: string, value: any) => {
     setConfig({ ...config, [field]: value });
   };
@@ -55,23 +57,41 @@ export const Settings = ({ config, setConfig, onManualSave, onNextMonth }: Setti
               <p className="mt-2 text-[10px] text-slate-400 italic">Dán link Script URL của bạn vào đây để đồng bộ dữ liệu lên Google Sheets.</p>
               
               {config.scriptUrl && (
-                <div className="mt-4 p-4 bg-purple-50 rounded-xl border border-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <p className="text-xs font-bold text-purple-950">Chia sẻ cấu hình sang thiết bị khác</p>
-                    <p className="text-[10px] text-purple-600">Sao chép liên kết này và gửi qua Zalo/Facebook, khi mở trên máy tính khác sẽ tự động điền URL Script và kết nối dữ liệu.</p>
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-purple-50 rounded-xl border border-purple-100 flex flex-col justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-purple-950">Chia sẻ cấu hình sang thiết bị khác</p>
+                      <p className="text-[10px] text-purple-600">Gửi cấu hình Google Script URL sang các thiết bị khác hoặc đồng bộ nhanh với Zalo.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const baseUrl = window.location.origin + window.location.pathname;
+                        const shareLink = `${baseUrl}?scriptUrl=${encodeURIComponent(config.scriptUrl || '')}`;
+                        navigator.clipboard.writeText(shareLink);
+                        alert("📋 Đã sao chép liên kết đồng bộ thông minh!\n\nHãy gửi liên kết này sang quý thiết bị khác và chỉ cần nhấn mở nó để đồng bộ cấu hình tự động.");
+                      }}
+                      className="w-full px-4 py-2.5 bg-purple-600 text-white rounded-xl text-xs font-black uppercase hover:bg-purple-700 transition-all flex items-center justify-center gap-2 shadow-sm shadow-purple-200 cursor-pointer"
+                    >
+                      <Share2 size={14} /> Sao chép liên kết
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const baseUrl = window.location.origin + window.location.pathname;
-                      const shareLink = `${baseUrl}?scriptUrl=${encodeURIComponent(config.scriptUrl || '')}`;
-                      navigator.clipboard.writeText(shareLink);
-                      alert("📋 Đã sao chép liên kết đồng bộ thông minh!\n\nHãy gửi liên kết này sang máy tính khác và chỉ cần nhấn mở nó để đồng bộ dữ liệu ngay lập tức.");
-                    }}
-                    className="shrink-0 self-start sm:self-center px-4 py-2 bg-purple-600 text-white rounded-xl text-xs font-black uppercase hover:bg-purple-700 transition-all flex items-center gap-2 shadow-sm shadow-purple-200"
-                  >
-                    <Share2 size={14} /> Sao chép liên kết
-                  </button>
+
+                  <div className="p-4 bg-blue-50 rounded-xl border border-blue-100 flex flex-col justify-between gap-3">
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold text-blue-950">Đồng bộ từ Google Sheets về máy</p>
+                      <p className="text-[10px] text-blue-600">Tải toàn bộ hồ sơ học sinh, điểm danh và dữ liệu mới nhất từ Trang tính Google về máy.</p>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={syncing}
+                      onClick={onLoadData}
+                      className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-xl text-xs font-black uppercase hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-sm shadow-blue-200 cursor-pointer disabled:opacity-50"
+                    >
+                      {syncing ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+                      Tải dữ liệu về máy
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

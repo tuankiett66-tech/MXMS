@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, Users, CalendarCheck, FileText, Settings, Calendar, Save, Utensils } from 'lucide-react';
+import { LayoutDashboard, Users, CalendarCheck, FileText, Settings, Calendar, Save, Utensils, Download, Loader2 } from 'lucide-react';
 import { GlobalConfig } from '../types';
 import { calculateMonthsRemaining } from '../utils/calculations';
 
@@ -14,6 +14,8 @@ interface SidebarProps {
   config: GlobalConfig;
   setConfig: (c: GlobalConfig) => void;
   onManualSave: () => void;
+  onLoadData: () => void;
+  syncing: boolean;
 }
 
 const SidebarItem = ({ icon: Icon, label, active, onClick }: any) => (
@@ -29,7 +31,7 @@ const SidebarItem = ({ icon: Icon, label, active, onClick }: any) => (
 );
 
 export const Sidebar = ({ 
-  activeTab, setActiveTab, currentMonth, setCurrentMonth, currentYear, setCurrentYear, config, setConfig, onManualSave 
+  activeTab, setActiveTab, currentMonth, setCurrentMonth, currentYear, setCurrentYear, config, setConfig, onManualSave, onLoadData, syncing 
 }: SidebarProps) => {
   return (
     <div className="w-72 bg-white border-r border-slate-100 flex flex-col p-6 space-y-6 no-print overflow-y-auto shrink-0">
@@ -106,12 +108,25 @@ export const Sidebar = ({
              <span className="text-slate-500 font-bold uppercase">Niên học còn:</span>
              <span className="text-emerald-700 font-black">{calculateMonthsRemaining(currentMonth)} tháng</span>
            </div>
-           <button 
-            onClick={onManualSave}
-            className="w-full py-2 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-md shadow-emerald-100"
-           >
-             <Save size={14} /> Lưu lại (Save)
-           </button>
+           <div className="space-y-2">
+             <button 
+              onClick={onManualSave}
+              disabled={syncing}
+              className="w-full py-2.5 bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all shadow-md shadow-emerald-100 cursor-pointer disabled:opacity-50"
+             >
+               {syncing ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />} 
+               Lưu vào máy & Sheets
+             </button>
+             <button 
+              type="button"
+              disabled={syncing}
+              onClick={onLoadData}
+              className="w-full py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100 rounded-xl text-[10px] font-black uppercase flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-50"
+             >
+               {syncing ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />} 
+               Tải dữ liệu từ Sheets
+             </button>
+           </div>
         </div>
       </div>
 

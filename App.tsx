@@ -9,7 +9,7 @@ import { Invoices } from './components/Invoices.tsx';
 import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
 import { MealRefund } from './components/MealRefund.tsx';
-import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2, Utensils } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2, Utensils, Download } from 'lucide-react';
 import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, ensureClassEntryDates, formatDateToDMY } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
@@ -99,7 +99,11 @@ export default function App() {
 
   const loadData = async () => {
     if (!config.scriptUrl) {
-      alert("Đường dẫn Google Script URL chưa được cấu hình trong mục 'Cấu hình phí'!");
+      alert(
+        "💡 Bạn chưa thiết lập liên kết đồng bộ Google Sheets!\n\n" +
+        "Vui lòng vào tab 'Cấu hình phí' -> phần 'Đồng bộ Google Sheets' dán link Google Apps Script URL của bạn.\n" +
+        "Sau đó, bạn sẽ có thể lưu trữ và tải dữ liệu lưu trên Google Trang Tính về máy bất kỳ lúc nào!"
+      );
       return;
     }
     setSyncing(true);
@@ -414,6 +418,8 @@ export default function App() {
           currentYear={currentYear} setCurrentYear={setCurrentYear}
           config={config} setConfig={setConfig}
           onManualSave={handleManualSave}
+          onLoadData={loadData}
+          syncing={syncing}
         />
       </div>
 
@@ -433,21 +439,21 @@ export default function App() {
             <button 
               onClick={handleManualSave}
               disabled={syncing}
-              className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition-all md:mr-2 flex items-center gap-2 disabled:opacity-50"
+              className="px-3 py-1 bg-emerald-50 text-emerald-700 border border-emerald-100 rounded-lg hover:bg-emerald-100 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              title="Lưu dữ liệu hiện tại lên bộ nhớ máy & Google Trang Tính"
             >
               {syncing ? <Loader2 size={14} className="animate-spin" /> : null}
               Lưu dữ liệu
             </button>
-            {config.scriptUrl && (
-              <button 
-                onClick={loadData}
-                disabled={syncing}
-                className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg hover:bg-blue-100 transition-all md:mr-2 flex items-center gap-2 disabled:opacity-50"
-              >
-                {syncing ? <Loader2 size={14} className="animate-spin" /> : <RefreshCw size={14} />}
-                Tải lại
-              </button>
-            )}
+            <button 
+              onClick={loadData}
+              disabled={syncing}
+              className="px-3 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-lg hover:bg-blue-100 transition-all flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+              title="Tải dữ liệu từ Google Trang Tính xuống bộ nhớ máy"
+            >
+              {syncing ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+              Tải dữ liệu
+            </button>
             <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center border-2 border-white shadow-sm">AD</div>
           </div>
         </header>
@@ -468,7 +474,7 @@ export default function App() {
           {activeTab === 'invoices' && <Invoices students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent} bulkPrintClass={bulkPrintClass} setBulkPrintClass={setBulkPrintClass} />}
           {activeTab === 'mealRefund' && <MealRefund students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} onUpdateAbsentDays={handleUpdateAbsentDays} />}
           {activeTab === 'students' && <Students students={students} onAdd={addStudent} onUpdate={updateStudent} onDelete={deleteStudent} onImport={importStudents} onClearAll={clearAllStudents} />}
-          {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} onManualSave={handleManualSave} onNextMonth={handleNextMonth} />}
+          {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} onManualSave={handleManualSave} onNextMonth={handleNextMonth} onLoadData={loadData} syncing={syncing} />}
         </main>
 
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-1 py-2 flex items-center justify-around z-50 no-print shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
