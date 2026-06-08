@@ -1,6 +1,6 @@
 
-import React from 'react';
-import { Save, RefreshCw, DollarSign, Calendar, BookOpen, Link, ArrowRightCircle, Share2, Download, Loader2 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Save, RefreshCw, DollarSign, Calendar, BookOpen, Link, ArrowRightCircle, Share2, Download, Loader2, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { Card } from './Common';
 import { GlobalConfig } from '../types';
 import { formatCurrency } from '../utils/calculations';
@@ -15,6 +15,147 @@ interface SettingsProps {
 }
 
 export const Settings = ({ config, setConfig, onManualSave, onNextMonth, onLoadData, syncing }: SettingsProps) => {
+  const [showScriptCode, setShowScriptCode] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
+
+  const googleScriptCode = `function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // --- 1. GHI DỮ LIỆU KHỐI MẪU GIÁO (Lớp Mẫu Giáo) ---
+    var sheetPreschool = ss.getSheetByName("Lớp Mẫu Giáo") || ss.insertSheet("Lớp Mẫu Giáo");
+    
+    // Ghi tiêu đề danh sách ở Dòng 1
+    sheetPreschool.getRange(1, 1).setValue("THU HỌC PHÍ THÁNG " + data.month + "/" + data.year + " LỚP MẪU GIÁO");
+    var titleRangePre = sheetPreschool.getRange(1, 1, 1, 14);
+    titleRangePre.merge();
+    titleRangePre.setFontWeight("bold");
+    titleRangePre.setFontSize(14);
+    titleRangePre.setHorizontalAlignment("center");
+    titleRangePre.setVerticalAlignment("middle");
+    titleRangePre.setBackground("#d1e7dd"); // xanh lá nhạt dịu mát
+    sheetPreschool.setRowHeight(1, 40);
+
+    // Ghi tiêu đề các cột ở Dòng 2 (Bỏ hoàn toàn 4 cột không cần thiết: MÃ HS, BÉ MỚI, GIẢM 50%, GIẢM 100%)
+    var headersPre = ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "ANH VĂN", "VẼ", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"];
+    sheetPreschool.getRange(2, 1, 1, 14).setValues([headersPre]);
+    var headerRangePre = sheetPreschool.getRange(2, 1, 1, 14);
+    headerRangePre.setFontWeight("bold");
+    headerRangePre.setHorizontalAlignment("center");
+    headerRangePre.setVerticalAlignment("middle");
+    headerRangePre.setBackground("#f1f5f9");
+    headerRangePre.setBorder(true, true, true, true, true, true, "#94a3b8", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+    sheetPreschool.setRowHeight(2, 28);
+
+    // Xóa sạch nội dung và định dạng viền (Borders) cũ từ dòng thứ 3 trở đi
+    var lastRowPre = sheetPreschool.getLastRow();
+    if (lastRowPre >= 3) {
+      var clearRangePre = sheetPreschool.getRange(3, 1, lastRowPre - 2, 24); // xóa dư ra 24 cột đề phòng trước đó còn rác
+      clearRangePre.clearContent();
+      clearRangePre.setBorder(false, false, false, false, false, false);
+    }
+    
+    // Xóa triệt để các cột dư thừa từ cột O (cột 15) trở đi trong bảng tính
+    var maxColsPre = sheetPreschool.getMaxColumns();
+    if (maxColsPre >= 15) {
+      sheetPreschool.getRange(1, 15, sheetPreschool.getMaxRows(), maxColsPre - 14).clear();
+    }
+
+    // Ghi dữ liệu Khối Mẫu Giáo mới vào Sheet từ Dòng 3
+    if (data.formattedPreschool && data.formattedPreschool.length > 0) {
+      var rangePre = sheetPreschool.getRange(3, 1, data.formattedPreschool.length, 14);
+      rangePre.setValues(data.formattedPreschool);
+      // Chỉ kẻ khung viền mỏng cho các ô có dữ liệu học sinh thực tế (màu xám nhạt #cccccc)
+      rangePre.setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
+      rangePre.setVerticalAlignment("middle");
+    }
+    
+    // --- 2. GHI DỮ LIỆU KHỐI NHÀ TRẺ (Lớp Nhà Trẻ) ---
+    var sheetNursery = ss.getSheetByName("Lớp Nhà Trẻ") || ss.insertSheet("Lớp Nhà Trẻ");
+    
+    // Ghi tiêu đề danh sách ở Dòng 1
+    sheetNursery.getRange(1, 1).setValue("THU HỌC PHÍ THÁNG " + data.month + "/" + data.year + " LỚP NHÀ TRẺ");
+    var titleRangeNur = sheetNursery.getRange(1, 1, 1, 12);
+    titleRangeNur.merge();
+    titleRangeNur.setFontWeight("bold");
+    titleRangeNur.setFontSize(14);
+    titleRangeNur.setHorizontalAlignment("center");
+    titleRangeNur.setVerticalAlignment("middle");
+    titleRangeNur.setBackground("#e0f2fe"); // xanh dương nhạt dịu mát
+    sheetNursery.setRowHeight(1, 40);
+
+    // Ghi tiêu đề các cột ở Dòng 2 (Bỏ hoàn toàn 4 cột không cần thiết: MÃ HS, BÉ MỚI, GIẢM 50%, GIẢM 100%)
+    var headersNur = ["STT", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"];
+    sheetNursery.getRange(2, 1, 1, 12).setValues([headersNur]);
+    var headerRangeNur = sheetNursery.getRange(2, 1, 1, 12);
+    headerRangeNur.setFontWeight("bold");
+    headerRangeNur.setHorizontalAlignment("center");
+    headerRangeNur.setVerticalAlignment("middle");
+    headerRangeNur.setBackground("#f1f5f9");
+    headerRangeNur.setBorder(true, true, true, true, true, true, "#94a3b8", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+    sheetNursery.setRowHeight(2, 28);
+
+    // Xóa sạch nội dung và định dạng viền (Borders) cũ từ dòng thứ 3 trở đi
+    var lastRowNur = sheetNursery.getLastRow();
+    if (lastRowNur >= 3) {
+      var clearRangeNur = sheetNursery.getRange(3, 1, lastRowNur - 2, 24); // xóa dư ra 24 cột đề phòng trước đó còn rác
+      clearRangeNur.clearContent();
+      clearRangeNur.setBorder(false, false, false, false, false, false);
+    }
+    
+    // Xóa triệt để các cột dư thừa từ cột M (cột 13) trở đi trong bảng tính
+    var maxColsNur = sheetNursery.getMaxColumns();
+    if (maxColsNur >= 13) {
+      sheetNursery.getRange(1, 13, sheetNursery.getMaxRows(), maxColsNur - 12).clear();
+    }
+
+    // Ghi dữ liệu Khối Nhà Trẻ mới vào Sheet từ Dòng 3
+    if (data.formattedNursery && data.formattedNursery.length > 0) {
+      var rangeNur = sheetNursery.getRange(3, 1, data.formattedNursery.length, 12);
+      rangeNur.setValues(data.formattedNursery);
+      // Chỉ kẻ khung viền mỏng cho các ô có dữ liệu học sinh thực tế
+      rangeNur.setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
+      rangeNur.setVerticalAlignment("middle");
+    }
+    
+    // --- 3. GHI TOÀN BỘ CHÈN DỮ LIỆU THÔ PHỤC VỤ DOWNLOAD ---
+    var cacheSheet = ss.getSheetByName("RAW_DATA") || ss.insertSheet("RAW_DATA");
+    cacheSheet.clear();
+    cacheSheet.getRange(1, 1).setValue(JSON.stringify({
+      students: data.students,
+      attendance: data.attendance,
+      config: data.config,
+      month: data.month,
+      year: data.year
+    }));
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+function doGet(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var cacheSheet = ss.getSheetByName("RAW_DATA");
+  if (cacheSheet) {
+    var jsonStr = cacheSheet.getRange(1, 1).getValue();
+    return ContentService.createTextOutput(jsonStr)
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  return ContentService.createTextOutput(JSON.stringify({ error: "No data found" }))
+    .setMimeType(ContentService.MimeType.JSON);
+}`;
+
+  const handleCopyScript = () => {
+    navigator.clipboard.writeText(googleScriptCode);
+    setCopiedScript(true);
+    setTimeout(() => setCopiedScript(false), 2000);
+  };
+
   const handleChange = (field: string, value: any) => {
     setConfig({ ...config, [field]: value });
   };
@@ -55,6 +196,58 @@ export const Settings = ({ config, setConfig, onManualSave, onNextMonth, onLoadD
                 className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-purple-500"
               />
               <p className="mt-2 text-[10px] text-slate-400 italic">Dán link Script URL của bạn vào đây để đồng bộ dữ liệu lên Google Sheets.</p>
+
+              {/* Hướng dẫn khắc phục in nhiều trang trắng */}
+              <div className="mt-4 p-4 rounded-xl border border-blue-100 bg-blue-50/40 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+                  <div className="space-y-1">
+                    <h6 className="text-xs font-bold text-blue-900 uppercase tracking-wide flex items-center gap-1.5">
+                      💡 Cải tiến lỗi in quá nhiều trang trắng trên Google Sheets
+                    </h6>
+                    <p className="text-[10px] text-blue-700 leading-relaxed">
+                      Để sửa hoàn toàn lỗi khi nhấn in trên Google Sheets ra quá nhiều trang trắng (do định dạng kẻ khung viền dư thừa cũ): 
+                      Ứng dụng đã được cập nhật chỉ gửi đi dòng học sinh thực tế. Bạn hãy nâng cấp đoạn mã <b>Google Apps Script (bản mới bên dưới)</b> để tự động dọn dẹp sạch ô trống và kẻ khung viền mỏng tự động.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowScriptCode(!showScriptCode)}
+                    className="shrink-0 self-start sm:self-center px-3 py-2 bg-blue-100 text-blue-800 border border-blue-200 rounded-xl text-[10px] font-black uppercase flex items-center gap-1 hover:bg-blue-200 transition-all cursor-pointer"
+                  >
+                    <span>{showScriptCode ? "Thu gọn" : "Xem mã Script mới"}</span>
+                    {showScriptCode ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+                  </button>
+                </div>
+
+                {showScriptCode && (
+                  <div className="space-y-2 mt-3 animate-in fade-in slide-in-from-top-2 duration-300">
+                    <div className="flex items-center justify-between bg-white px-3 py-2 border border-blue-100 rounded-t-xl">
+                      <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest font-mono">Code.gs / Apps Script (MỚI)</span>
+                      <button
+                        type="button"
+                        onClick={handleCopyScript}
+                        className="text-[10px] font-black uppercase text-blue-600 flex items-center gap-1 hover:text-blue-800 cursor-pointer"
+                      >
+                        {copiedScript ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                        <span className={copiedScript ? "text-emerald-600" : ""}>
+                          {copiedScript ? "Đã sao chép!" : "Sao chép mã"}
+                        </span>
+                      </button>
+                    </div>
+                    <pre className="p-4 bg-slate-900 text-slate-100 rounded-b-xl text-[10px] max-h-64 overflow-y-auto font-mono leading-relaxed whitespace-pre scrollbar-thin">
+                      {googleScriptCode}
+                    </pre>
+                    <div className="text-[10px] text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 leading-relaxed space-y-1">
+                      <p className="font-bold text-slate-700">📌 Các bước cập nhật rất đơn giản:</p>
+                      <p>1. Nhấn nút <b>"Sao chép mã"</b> màu xanh ở trên.</p>
+                      <p>2. Trên thanh menu Google Sheets của bạn, chọn <b>Tiện ích mở rộng (Extensions)</b> → <b>Apps Script</b>.</p>
+                      <p>3. Chọn tất cả code cũ trong tệp <code className="bg-slate-100 px-1 py-0.5 rounded text-red-600 font-bold font-mono text-[9px]">Code.gs</code> rồi <b>Dán đè (Paste)</b> đè lên.</p>
+                      <p>4. Nhấn <b>Lưu (Save)</b> (biểu tượng đĩa mềm hoặc phím tắt Ctrl+S / Cmd+S).</p>
+                      <p>5. Nhấn nút <b>Triển khai (Deploy)</b> → <b>Quản lý bản triển khai (Manage deployments)</b> → Chọn biểu tượng <b>Bút chì (Edit)</b> → chọn Version là <b>Bản triển khai mới / New Version</b> rồi nhấn <b>Triển khai (Deploy)</b>.</p>
+                    </div>
+                  </div>
+                )}
+              </div>
               
               {config.scriptUrl && (
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">

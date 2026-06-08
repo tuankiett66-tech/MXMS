@@ -172,14 +172,6 @@ export default function App() {
           ];
         });
 
-      // Tạo thêm 150 dòng trống để xóa trắng các dòng thừa cũ ở Google Sheets
-      // khi số học sinh bị giảm đi (ví dụ bé chuyển sang "Tạm nghỉ")
-      const paddedPreschoolRows = [...preschoolRows];
-      const emptyPreschoolRow = Array(14).fill("");
-      for (let i = 0; i < 150; i++) {
-        paddedPreschoolRows.push(emptyPreschoolRow);
-      }
-
       const nurseryRows = sortedActiveStudents
         .filter(s => isNurseryClass(s.className))
         .map((s, i) => {
@@ -194,18 +186,12 @@ export default function App() {
           ];
         });
 
-      const paddedNurseryRows = [...nurseryRows];
-      const emptyNurseryRow = Array(12).fill("");
-      for (let i = 0; i < 150; i++) {
-        paddedNurseryRows.push(emptyNurseryRow);
-      }
-
       const payload = {
         students,
         attendance,
         config,
-        formattedPreschool: paddedPreschoolRows,
-        formattedNursery: paddedNurseryRows,
+        formattedPreschool: preschoolRows,
+        formattedNursery: nurseryRows,
         month: currentMonth,
         year: currentYear
       };
