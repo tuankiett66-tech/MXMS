@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Printer, FileSpreadsheet, UserPlus, CheckSquare, Square } from 'lucide-react';
 import { Card } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
-import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, formatDateToDMY } from '../utils/calculations';
+import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass } from '../utils/calculations';
 import * as XLSX from 'xlsx-js-style';
 
 interface MealRefundProps {
@@ -76,8 +76,7 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
       const refundAmount = absentDays * mealFeePerDay;
       const scheduledDays = inv.calculationInfo.effectiveStandardDays; // "Số ngày đi học"
 
-      const formattedDob = s.dob ? formatDateToDMY(s.dob) : '';
-      const fullNameAndDob = `${s.name.toUpperCase()}${formattedDob ? ` SN ${formattedDob}.` : ''}`;
+      const fullNameAndDob = s.name.toUpperCase();
 
       return {
         stt: index + 1,
@@ -279,6 +278,11 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
             width: 100%;
             color: #000 !important;
             background-color: #fff !important;
+            border: none !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
           }
           table {
             border-collapse: collapse !important;
