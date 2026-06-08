@@ -4,6 +4,7 @@ import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp, Calendar } 
 import * as XLSX from 'xlsx';
 import { Card, Badge } from './Common';
 import { Student } from '../types';
+import { sortStudents } from '../utils/calculations';
 
 interface StudentsProps {
   students: Student[];
@@ -19,6 +20,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
   const [activeClassTab, setActiveClassTab] = useState<'all' | 'nursery' | 'preschool'>('all');
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [shouldUpdateAdmission, setShouldUpdateAdmission] = useState(true);
   const [isConfirmingClear, setIsConfirmingClear] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -29,7 +31,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     giftedSubjects: { english: false, drawing: false, rhythm: false },
     isNewStudent: false,
     admissionDate: new Date().toISOString().split('T')[0],
-    phoneNumber: ''
+    phoneNumber: '',
+    status: 'Đang học'
   });
 
   const formatToInputDate = (dateStr: any) => {
@@ -95,7 +98,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
           giftedSubjects: { english, drawing, rhythm },
           isNewStudent,
           admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || new Date().toISOString().split('T')[0],
-          phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || '')
+          phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || ''),
+          status: row['Trạng thái'] || row.Status || 'Đang học'
         };
       });
 
@@ -106,7 +110,9 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     reader.readAsBinaryString(file);
   };
 
-  const filteredStudents = students.filter(s => {
+  const sortedAndFiltered = sortStudents(students);
+
+  const filteredStudents = sortedAndFiltered.filter(s => {
     const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          s.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -118,11 +124,13 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
   });
 
   const handleOpenModal = (student?: Student) => {
+    setShouldUpdateAdmission(true);
     if (student) {
       setEditingStudent(student);
       setFormData({
         ...student,
-        dob: formatToInputDate(student.dob)
+        dob: formatToInputDate(student.dob),
+        status: student.status || 'Đang học'
       });
     } else {
       setEditingStudent(null);
@@ -134,7 +142,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         giftedSubjects: { english: false, drawing: false, rhythm: false },
         isNewStudent: false,
         admissionDate: new Date().toISOString().split('T')[0],
-        phoneNumber: ''
+        phoneNumber: '',
+        status: 'Đang học'
       });
     }
     setShowModal(true);
@@ -232,7 +241,15 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                     <img src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${student.id}`} alt="Avatar" className="w-full h-full object-cover" />
                   </div>
                 </div>
-                <Badge color={student.isNewStudent ? 'emerald' : 'slate'}>{student.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
+                <div className="flex flex-col items-end gap-1">
+                  <Badge color={student.isNewStudent ? 'emerald' : 'slate'}>{student.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
+                  <Badge color={
+                    student.status === 'Đang học' || !student.status ? 'blue' :
+                    student.status === 'Học hè' ? 'purple' : 'slate'
+                  }>
+                    {student.status || 'Đang học'}
+                  </Badge>
+                </div>
               </div>
               
               <h5 className="font-black text-slate-900 text-lg uppercase mb-0.5 truncate tracking-tight">{student.name}</h5>
@@ -311,7 +328,46 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Ngày nhập học</label>
                   <input type="date" value={formData.admissionDate} onChange={(e) => setFormData({...formData, admissionDate: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500" />
                 </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Trạng thái học tập</label>
+                  <select 
+                    value={formData.status || 'Đang học'} 
+                    onChange={(e) => setFormData({...formData, status: e.target.value as any})} 
+                    className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500 font-bold"
+                  >
+                    <option value="Đang học">Đang học (Chính thức)</option>
+                    <option value="Học hè">Học hè (Chỉ học hè 3 tháng)</option>
+                    <option value="Tạm nghỉ">Tạm nghỉ (Lưu hồ sơ - Nghỉ hè/Tạm dừng)</option>
+                  </select>
+                </div>
               </div>
+
+              {editingStudent && formData.className !== editingStudent.className && (
+                <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex items-start gap-3 animate-in slide-in-from-top-2 duration-300">
+                  <input 
+                    type="checkbox" 
+                    id="autoUpdateAdmission"
+                    checked={shouldUpdateAdmission}
+                    onChange={(e) => {
+                      setShouldUpdateAdmission(e.target.checked);
+                      if (e.target.checked) {
+                        setFormData(prev => ({ ...prev, admissionDate: new Date().toISOString().split('T')[0] }));
+                      } else {
+                        setFormData(prev => ({ ...prev, admissionDate: editingStudent.admissionDate }));
+                      }
+                    }}
+                    className="w-5 h-5 accent-orange-600 mt-0.5 shrink-0" 
+                  />
+                  <div className="space-y-1">
+                    <label htmlFor="autoUpdateAdmission" className="text-xs font-bold text-orange-950 block cursor-pointer">
+                      Cập nhất Ngày nhập học thành hôm nay (Khuyên dùng)
+                    </label>
+                    <p className="text-[10px] text-orange-600">
+                      Bạn đang chuyển lớp từ <strong>{editingStudent.className}</strong> sang <strong>{formData.className}</strong>. Bật tùy chọn này để bé tự động xếp ở cuối của danh sách lớp mới (theo trình tự thời gian).
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">

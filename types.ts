@@ -14,6 +14,7 @@ export interface Student {
   isNewStudent: boolean;
   admissionDate: string;
   phoneNumber?: string; 
+  status?: 'Đang học' | 'Tạm nghỉ' | 'Học hè';
 }
 
 export interface Attendance {

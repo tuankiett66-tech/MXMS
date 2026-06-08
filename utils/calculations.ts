@@ -11,6 +11,17 @@ export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('vi-VN').format(amount);
 };
 
+export const sortStudents = (list: Student[]): Student[] => {
+  return [...list].sort((a, b) => {
+    const dateA = a.admissionDate ? new Date(a.admissionDate).getTime() : 0;
+    const dateB = b.admissionDate ? new Date(b.admissionDate).getTime() : 0;
+    if (dateA !== dateB) {
+      return dateA - dateB;
+    }
+    return a.name.localeCompare(b.name, 'vi');
+  });
+};
+
 export const calculateMonthsRemaining = (month: number): number => {
   return ((8 - month) % 12 + 12) % 12 + 1;
 };

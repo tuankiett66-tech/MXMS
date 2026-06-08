@@ -9,7 +9,7 @@ import { Invoices } from './components/Invoices.tsx';
 import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
 import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2 } from 'lucide-react';
-import { calculateInvoice, formatCurrency } from './utils/calculations.ts';
+import { calculateInvoice, formatCurrency, sortStudents } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
 
@@ -147,8 +147,11 @@ export default function App() {
 
     setSyncing(true);
     try {
-      // Chuẩn bị dữ liệu định dạng cho các Sheet
-      const preschoolRows = students
+      // Chuẩn bị dữ liệu định dạng cho các Sheet (Chỉ đồng bộ các bé Đang học & Học hè, bỏ qua Tạm nghỉ)
+      const activeStudentsForSheet = students.filter(s => s.status !== 'Tạm nghỉ');
+      const sortedActiveStudents = sortStudents(activeStudentsForSheet);
+
+      const preschoolRows = sortedActiveStudents
         .filter(s => (s.className || "").toLowerCase().includes('mẫu giáo'))
         .map((s, i) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
@@ -164,7 +167,7 @@ export default function App() {
           ];
         });
 
-      const nurseryRows = students
+      const nurseryRows = sortedActiveStudents
         .filter(s => (s.className || "").toLowerCase().includes('nhà trẻ'))
         .map((s, i) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);

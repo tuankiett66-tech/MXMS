@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FileText, Printer, Phone, Share2, ArrowLeft, ChevronLeft, ChevronRight, LayoutGrid, List, MessageCircle, FileDown, Loader2 } from 'lucide-react';
 import { Card, Badge } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
-import { calculateInvoice, formatCurrency, generateZaloMessage } from '../utils/calculations';
+import { calculateInvoice, formatCurrency, generateZaloMessage, sortStudents } from '../utils/calculations';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
@@ -29,11 +29,15 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
     if (selectedStudent) setTargetPhone(selectedStudent.phoneNumber || '');
   }, [selectedStudent]);
 
-  const classes = useMemo(() => Array.from(new Set(students.map(s => s.className.trim() || "Chưa phân lớp"))), [students]);
+  const activeStudents = useMemo(() => {
+    return sortStudents(students.filter(s => s.status !== 'Tạm nghỉ'));
+  }, [students]);
 
-  const currentIndex = useMemo(() => selectedStudent ? students.findIndex(s => s.id === selectedStudent.id) : -1, [selectedStudent, students]);
-  const goToNext = () => currentIndex < students.length - 1 && setSelectedStudent(students[currentIndex + 1]);
-  const goToPrev = () => currentIndex > 0 && setSelectedStudent(students[currentIndex - 1]);
+  const classes = useMemo(() => Array.from(new Set(activeStudents.map(s => s.className.trim() || "Chưa phân lớp"))), [activeStudents]);
+
+  const currentIndex = useMemo(() => selectedStudent ? activeStudents.findIndex(s => s.id === selectedStudent.id) : -1, [selectedStudent, activeStudents]);
+  const goToNext = () => currentIndex < activeStudents.length - 1 && setSelectedStudent(activeStudents[currentIndex + 1]);
+  const goToPrev = () => currentIndex > 0 && setSelectedStudent(activeStudents[currentIndex - 1]);
 
   const handleExportPDF = async () => {
     if (!printRef.current) return;
@@ -61,10 +65,8 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
 
   const classStudents = useMemo(() => {
     if (!bulkPrintClass) return [];
-    return students
-      .filter(s => (s.className.trim() || "Chưa phân lớp") === bulkPrintClass)
-      .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-  }, [students, bulkPrintClass]);
+    return activeStudents.filter(s => (s.className.trim() || "Chưa phân lớp") === bulkPrintClass);
+  }, [activeStudents, bulkPrintClass]);
 
   if (!selectedStudent && !bulkPrintClass) {
     return (
@@ -91,7 +93,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
           </div>
         </div>
         <div className={selectionMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "space-y-2"}>
-          {students.map(s => (
+          {activeStudents.map(s => (
             <div key={s.id} onClick={() => setSelectedStudent(s)} className={`p-6 rounded-[32px] bg-white border-2 border-slate-100 hover:border-emerald-500 cursor-pointer transition-all shadow-sm flex flex-col items-start`}>
               <Badge color={s.isNewStudent ? 'emerald' : 'slate'}>{s.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
               <span className="font-black text-slate-900 text-lg uppercase mt-3">{s.name}</span>

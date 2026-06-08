@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import * as XLSX from 'xlsx';
 import { Card } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
-import { calculateInvoice, formatCurrency, calculateMonthsRemaining } from '../utils/calculations';
+import { calculateInvoice, formatCurrency, calculateMonthsRemaining, sortStudents } from '../utils/calculations';
 
 interface DashboardProps {
   students: Student[];
@@ -18,16 +18,20 @@ interface DashboardProps {
 
 export const Dashboard = ({ students, config, attendance, currentMonth, currentYear, onBulkPrint }: DashboardProps) => {
   const stats = useMemo(() => {
-    const invoices = students.map(s => calculateInvoice(s, config, attendance, currentMonth, currentYear));
+    const activeStudents = students.filter(s => s.status !== 'Tạm nghỉ');
+    const invoices = activeStudents.map(s => calculateInvoice(s, config, attendance, currentMonth, currentYear));
     const totalRevenue = invoices.reduce((acc, inv) => acc + inv.total, 0);
     return {
       totalRevenue,
-      studentCount: students.length,
-      newCount: students.filter(s => s.isNewStudent).length
+      studentCount: activeStudents.length,
+      newCount: activeStudents.filter(s => s.isNewStudent).length
     };
   }, [students, config, attendance, currentMonth, currentYear]);
 
-  const classes = useMemo(() => Array.from(new Set(students.map(s => s.className.trim() || "Chưa phân lớp"))), [students]);
+  const classes = useMemo(() => {
+    const activeStudents = students.filter(s => s.status !== 'Tạm nghỉ');
+    return Array.from(new Set(activeStudents.map(s => s.className.trim() || "Chưa phân lớp")));
+  }, [students]);
 
   const revenueData = [
     { name: 'T1', value: 125500000 }, { name: 'T2', value: 135000000 },
@@ -41,9 +45,10 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
     
     groups.forEach(groupName => {
       const isPreschool = groupName === 'Mẫu giáo';
-      const filteredStudents = students
-        .filter(s => (s.className || "").toLowerCase().includes(groupName.toLowerCase()))
-        .sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+      // Chỉ xuất học sinh Đang học và Học hè, loại bỏ Tạm nghỉ; đồng thời sắp xếp chuẩn theo ngày nhập học tăng dần
+      const filteredStudents = sortStudents(
+        students.filter(s => s.status !== 'Tạm nghỉ' && (s.className || "").toLowerCase().includes(groupName.toLowerCase()))
+      );
 
       if (filteredStudents.length === 0) return;
 

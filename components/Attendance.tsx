@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Card } from './Common';
 import { Student, Attendance, GiftedSubjects } from '../types';
+import { sortStudents } from '../utils/calculations';
 
 interface AttendanceProps {
   students: Student[];
@@ -20,7 +21,10 @@ export const AttendanceTable = ({
 }: AttendanceProps) => {
   const [activeClassTab, setActiveClassTab] = useState<'all' | 'nursery' | 'preschool'>('all');
 
-  const filteredStudents = students.filter(s => {
+  const activeStudents = students.filter(s => s.status !== 'Tạm nghỉ');
+  const sortedStudents = sortStudents(activeStudents);
+
+  const filteredStudents = sortedStudents.filter(s => {
     const classNameLower = s.className.toLowerCase();
     if (activeClassTab === 'nursery') return classNameLower.includes('nhà trẻ');
     if (activeClassTab === 'preschool') return classNameLower.includes('mẫu giáo');
