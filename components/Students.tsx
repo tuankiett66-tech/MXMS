@@ -4,7 +4,7 @@ import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp, Calendar } 
 import * as XLSX from 'xlsx';
 import { Card, Badge } from './Common';
 import { Student } from '../types';
-import { sortStudents } from '../utils/calculations';
+import { sortStudents, isPreschoolClass, isNurseryClass } from '../utils/calculations';
 
 interface StudentsProps {
   students: Student[];
@@ -119,9 +119,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
                          s.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const classNameLower = s.className.toLowerCase();
-    if (activeClassTab === 'nursery') return matchesSearch && classNameLower.includes('nhà trẻ');
-    if (activeClassTab === 'preschool') return matchesSearch && classNameLower.includes('mẫu giáo');
+    if (activeClassTab === 'nursery') return matchesSearch && isNurseryClass(s.className);
+    if (activeClassTab === 'preschool') return matchesSearch && isPreschoolClass(s.className);
     return matchesSearch;
   });
 
@@ -133,7 +132,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         ...student,
         dob: formatToInputDate(student.dob),
         status: student.status || 'Đang học',
-        notes: student.notes || ''
+        notes: student.notes || '',
+        classEntryDate: student.classEntryDate || student.admissionDate
       });
     } else {
       setEditingStudent(null);
@@ -147,7 +147,8 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
         admissionDate: new Date().toISOString().split('T')[0],
         phoneNumber: '',
         status: 'Đang học',
-        notes: ''
+        notes: '',
+        classEntryDate: new Date().toISOString().split('T')[0]
       });
     }
     setShowModal(true);
@@ -158,10 +159,25 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
       alert("Vui lòng nhập họ tên và ngày sinh!");
       return;
     }
+
+    let finalData = { ...formData };
+    
+    // Nếu đổi lớp và tick chọn chuyển xuống dưới cùng của danh sách lớp mới
+    if (editingStudent && finalData.className !== editingStudent.className) {
+      if (shouldUpdateAdmission) {
+        finalData.classEntryDate = new Date().toISOString();
+      } else {
+        finalData.classEntryDate = editingStudent.classEntryDate || editingStudent.admissionDate;
+      }
+    } else if (!editingStudent) {
+      // Khi thêm mới bé, mặc định classEntryDate là ngày nhập học
+      finalData.classEntryDate = finalData.admissionDate;
+    }
+
     if (editingStudent) {
-      onUpdate(formData as Student);
+      onUpdate(finalData as Student);
     } else {
-      onAdd(formData as Student);
+      onAdd(finalData as Student);
     }
     setShowModal(false);
   };
@@ -369,27 +385,22 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
               </div>
 
               {editingStudent && formData.className !== editingStudent.className && (
-                <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex items-start gap-3 animate-in slide-in-from-top-2 duration-300">
+                <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200/40 flex items-start gap-3 animate-in slide-in-from-top-2 duration-300">
                   <input 
                     type="checkbox" 
                     id="autoUpdateAdmission"
                     checked={shouldUpdateAdmission}
-                    onChange={(e) => {
-                      setShouldUpdateAdmission(e.target.checked);
-                      if (e.target.checked) {
-                        setFormData(prev => ({ ...prev, admissionDate: new Date().toISOString().split('T')[0] }));
-                      } else {
-                        setFormData(prev => ({ ...prev, admissionDate: editingStudent.admissionDate }));
-                      }
-                    }}
-                    className="w-5 h-5 accent-orange-600 mt-0.5 shrink-0" 
+                    onChange={(e) => setShouldUpdateAdmission(e.target.checked)}
+                    className="w-5 h-5 accent-amber-600 mt-0.5 shrink-0 cursor-pointer" 
                   />
                   <div className="space-y-1">
-                    <label htmlFor="autoUpdateAdmission" className="text-xs font-bold text-orange-950 block cursor-pointer">
-                      Cập nhất Ngày nhập học thành hôm nay (Khuyên dùng)
+                    <label htmlFor="autoUpdateAdmission" className="text-xs font-black text-amber-950 block cursor-pointer">
+                      Xếp bé tự động xuống cuối danh sách lớp mới (Khuyên dùng)
                     </label>
-                    <p className="text-[10px] text-orange-600">
-                      Bạn đang chuyển lớp từ <strong>{editingStudent.className}</strong> sang <strong>{formData.className}</strong>. Bật tùy chọn này để bé tự động xếp ở cuối của danh sách lớp mới (theo trình tự thời gian).
+                    <p className="text-[10px] text-amber-700 leading-relaxed font-bold">
+                      Bạn đang chuyển lớp cho bé từ <strong>{editingStudent.className}</strong> sang <strong>{formData.className}</strong>. 
+                      Hệ thống sẽ giữ nguyên <strong>Ngày nhập học gốc ({new Date(editingStudent.admissionDate).toLocaleDateString('vi-VN')})</strong> để bảo toàn lịch sử học tập &amp; không bị tính sai học phí, 
+                      đồng thời tự động dán bé vào dòng cuối của danh sách lớp mới.
                     </p>
                   </div>
                 </div>

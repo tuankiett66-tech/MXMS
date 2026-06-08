@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Search, X } from 'lucide-react';
 import { Card } from './Common';
 import { Student, Attendance, GiftedSubjects } from '../types';
-import { sortStudents } from '../utils/calculations';
+import { sortStudents, isPreschoolClass, isNurseryClass } from '../utils/calculations';
 
 interface AttendanceProps {
   students: Student[];
@@ -27,10 +27,9 @@ export const AttendanceTable = ({
   const sortedStudents = sortStudents(activeStudents);
 
   const filteredStudents = sortedStudents.filter(s => {
-    const classNameLower = s.className.toLowerCase();
     const isClassMatch = activeClassTab === 'all' || 
-                         (activeClassTab === 'nursery' && classNameLower.includes('nhà trẻ')) ||
-                         (activeClassTab === 'preschool' && classNameLower.includes('mẫu giáo'));
+                         (activeClassTab === 'nursery' && isNurseryClass(s.className)) ||
+                         (activeClassTab === 'preschool' && isPreschoolClass(s.className));
     const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           s.className.toLowerCase().includes(searchTerm.toLowerCase()) || 
                           s.id.toLowerCase().includes(searchTerm.toLowerCase());

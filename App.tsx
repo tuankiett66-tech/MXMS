@@ -9,7 +9,7 @@ import { Invoices } from './components/Invoices.tsx';
 import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
 import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2 } from 'lucide-react';
-import { calculateInvoice, formatCurrency, sortStudents } from './utils/calculations.ts';
+import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
 
@@ -152,7 +152,7 @@ export default function App() {
       const sortedActiveStudents = sortStudents(activeStudentsForSheet);
 
       const preschoolRows = sortedActiveStudents
-        .filter(s => (s.className || "").toLowerCase().includes('mẫu giáo'))
+        .filter(s => isPreschoolClass(s.className))
         .map((s, i) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
           const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";
@@ -168,7 +168,7 @@ export default function App() {
         });
 
       const nurseryRows = sortedActiveStudents
-        .filter(s => (s.className || "").toLowerCase().includes('nhà trẻ'))
+        .filter(s => isNurseryClass(s.className))
         .map((s, i) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
           const formattedDOB = s.dob ? new Date(s.dob).toLocaleDateString('vi-VN') : "";

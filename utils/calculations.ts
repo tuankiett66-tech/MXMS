@@ -11,10 +11,34 @@ export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('vi-VN').format(amount);
 };
 
+export const isPreschoolClass = (className: string): boolean => {
+  if (!className) return false;
+  const name = className.toLowerCase();
+  const norm = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return name.includes('mẫu giáo') || 
+         name.includes('máu giáo') ||
+         name.includes('mẩu giáo') ||
+         name.includes('mấu giáo') ||
+         name.includes('khối mg') ||
+         norm.includes('mau giao') ||
+         norm.includes('mg');
+};
+
+export const isNurseryClass = (className: string): boolean => {
+  if (!className) return false;
+  const name = className.toLowerCase();
+  const norm = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  return name.includes('nhà trẻ') || 
+         name.includes('nha trẻ') ||
+         name.includes('khối nt') ||
+         norm.includes('nha tre') ||
+         norm.includes('nt');
+};
+
 export const sortStudents = (list: Student[]): Student[] => {
   return [...list].sort((a, b) => {
-    const dateA = a.admissionDate ? new Date(a.admissionDate).getTime() : 0;
-    const dateB = b.admissionDate ? new Date(b.admissionDate).getTime() : 0;
+    const dateA = (a.classEntryDate || a.admissionDate) ? new Date(a.classEntryDate || a.admissionDate).getTime() : 0;
+    const dateB = (b.classEntryDate || b.admissionDate) ? new Date(b.classEntryDate || b.admissionDate).getTime() : 0;
     if (dateA !== dateB) {
       return dateA - dateB;
     }
