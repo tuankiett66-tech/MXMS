@@ -1,10 +1,19 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp, Calendar } from 'lucide-react';
+import { Plus, Search, Trash2, Edit2, X, Info, CheckCircle2, FileUp, Calendar, Trash } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { Card, Badge } from './Common';
-import { Student } from '../types';
-import { sortStudents, isPreschoolClass, isNurseryClass, formatDateToDMY, normalizeToYMD, formatDateToVietnamYMD } from '../utils/calculations';
+import { Student, GlobalConfig, Attendance } from '../types';
+import { 
+  sortStudents, 
+  isPreschoolClass, 
+  isNurseryClass, 
+  formatDateToDMY, 
+  normalizeToYMD, 
+  formatDateToVietnamYMD,
+  calculateInvoice,
+  formatCurrency
+} from '../utils/calculations';
 
 interface DateInputProps {
   value: string;
@@ -142,24 +151,34 @@ const DateInput = ({ value, onChange, className = '', placeholder = 'DD/MM/YYYY'
 interface StudentRowProps {
   student: Student;
   index: number;
+  config: GlobalConfig;
+  attendance: Attendance[];
+  currentMonth: number;
+  currentYear: number;
+  isPreschool: boolean;
   onUpdate: (s: Student) => void;
   onDelete: (id: string, name: string) => void;
   onOpenModal: (s: Student) => void;
 }
 
-const StudentRow = ({ student, index, onUpdate, onDelete, onOpenModal }: StudentRowProps) => {
+const StudentRow = ({ 
+  student, 
+  index, 
+  config, 
+  attendance, 
+  currentMonth, 
+  currentYear, 
+  isPreschool,
+  onUpdate, 
+  onDelete, 
+  onOpenModal 
+}: StudentRowProps) => {
   const [localName, setLocalName] = useState(student.name);
-  const [localPhone, setLocalPhone] = useState(student.phoneNumber || '');
   const [localNotes, setLocalNotes] = useState(student.notes || '');
 
-  // Keep state sync'ed with prop updates
   useEffect(() => {
     setLocalName(student.name);
   }, [student.name]);
-
-  useEffect(() => {
-    setLocalPhone(student.phoneNumber || '');
-  }, [student.phoneNumber]);
 
   useEffect(() => {
     setLocalNotes(student.notes || '');
@@ -169,17 +188,10 @@ const StudentRow = ({ student, index, onUpdate, onDelete, onOpenModal }: Student
     const trimmed = localName.trim();
     if (trimmed !== student.name) {
       if (trimmed === '') {
-        setLocalName(student.name); // revert if empty
+        setLocalName(student.name); 
       } else {
         onUpdate({ ...student, name: trimmed });
       }
-    }
-  };
-
-  const handlePhoneBlur = () => {
-    const trimmed = localPhone.trim();
-    if (trimmed !== (student.phoneNumber || '')) {
-      onUpdate({ ...student, phoneNumber: trimmed });
     }
   };
 
@@ -196,10 +208,66 @@ const StudentRow = ({ student, index, onUpdate, onDelete, onOpenModal }: Student
     }
   };
 
+  const invoice = calculateInvoice(student, config, attendance, currentMonth, currentYear);
+  const { tuition, mealFee, csvcFee, materialFee, total, discountType } = invoice;
+  const absentDays = invoice.calculationInfo.absentDays;
+
+  const englishFee = config.giftedFees.english;
+  const drawingFee = config.giftedFees.drawing;
+  const rhythmFee = config.giftedFees.rhythm;
+
+  const toggleEnglish = () => {
+    onUpdate({
+      ...student,
+      giftedSubjects: {
+        ...student.giftedSubjects,
+        english: !student.giftedSubjects.english
+      }
+    });
+  };
+
+  const toggleDrawing = () => {
+    onUpdate({
+      ...student,
+      giftedSubjects: {
+        ...student.giftedSubjects,
+        drawing: !student.giftedSubjects.drawing
+      }
+    });
+  };
+
+  const toggleRhythm = () => {
+    onUpdate({
+      ...student,
+      giftedSubjects: {
+        ...student.giftedSubjects,
+        rhythm: !student.giftedSubjects.rhythm
+      }
+    });
+  };
+
+  const cycleDiscount = () => {
+    if (!student.isHalfDiscount && !student.isFullDiscount) {
+      onUpdate({ ...student, isHalfDiscount: true, isFullDiscount: false });
+    } else if (student.isHalfDiscount) {
+      onUpdate({ ...student, isHalfDiscount: false, isFullDiscount: true });
+    } else {
+      onUpdate({ ...student, isHalfDiscount: false, isFullDiscount: false });
+    }
+  };
+
+  const toggleNewStudent = () => {
+    onUpdate({ ...student, isNewStudent: !student.isNewStudent });
+  };
+
   return (
-    <tr className="hover:bg-slate-50/60 bg-white transition-all text-xs border-b border-slate-200">
+    <tr className="hover:bg-slate-50/80 bg-white transition-all text-xs border-b border-slate-200 group">
       {/* 1. STT */}
-      <td className="py-2 px-2 text-center text-slate-500 font-bold bg-slate-50/50 w-[55px] font-mono select-none border-r border-slate-200">
+      <td 
+        onClick={() => onOpenModal(student)}
+        className="py-2.5 px-2 text-center text-slate-500 font-bold bg-slate-50/50 w-[55px] font-mono select-none border-r border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors"
+        title="Bấm để chỉnh sửa chi tiết hồ sơ bé"
+      >
         {index + 1}
       </td>
 
@@ -211,13 +279,13 @@ const StudentRow = ({ student, index, onUpdate, onDelete, onOpenModal }: Student
           onChange={(e) => setLocalName(e.target.value)}
           onBlur={handleNameBlur}
           onKeyDown={handleKeyDown}
-          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none px-2 py-1.5 rounded-lg text-slate-900 font-extrabold uppercase transition-all text-xs tracking-tight"
+          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none px-2 py-1.5 rounded-lg text-slate-900 font-extrabold uppercase transition-all text-xs tracking-tight animate-none"
           placeholder="Họ tên của bé..."
         />
       </td>
 
       {/* 3. Ngày sinh */}
-      <td className="py-1 px-2 min-w-[135px] border-r border-slate-200">
+      <td className="py-1 px-2 min-w-[130px] border-r border-slate-200">
         <DateInput 
           value={student.dob || ''}
           onChange={(val) => {
@@ -225,205 +293,147 @@ const StudentRow = ({ student, index, onUpdate, onDelete, onOpenModal }: Student
               onUpdate({ ...student, dob: val });
             }
           }}
-          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none pl-2 pr-10 py-1.5 rounded-lg text-slate-800 font-bold text-xs text-center transition-all"
+          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none pl-2 pr-8 py-1 rounded-lg text-slate-800 font-bold text-xs text-center transition-all"
         />
       </td>
 
-      {/* 4. Lớp học */}
-      <td className="py-1 px-2 min-w-[140px] text-center border-r border-slate-200">
-        <select 
-          value={student.className}
-          onChange={(e) => {
-            const newClass = e.target.value;
-            if (newClass !== student.className) {
-              onUpdate({ ...student, className: newClass });
-            }
-          }}
-          className="bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 outline-none px-2 py-1.5 rounded-lg text-slate-800 font-bold text-xs text-center transition-all cursor-pointer w-full"
-        >
-          <option value="Lớp Mẫu giáo">Lớp Mẫu giáo</option>
-          <option value="Lớp Nhà trẻ">Lớp Nhà trẻ</option>
-        </select>
-      </td>
-
-      {/* 5. Số điện thoại */}
-      <td className="py-1 px-2 min-w-[120px] border-r border-slate-200">
-        <input 
-          type="text"
-          value={localPhone}
-          onChange={(e) => {
-            setLocalPhone(e.target.value.replace(/[^0-9+\s\-()]/g, ''));
-          }}
-          onBlur={handlePhoneBlur}
-          onKeyDown={handleKeyDown}
-          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none px-2 py-1.5 rounded-lg text-slate-800 font-mono font-bold text-xs transition-all"
-          placeholder="SĐT..."
-        />
-      </td>
-
-      {/* 6. Ngày nhập học */}
-      <td className="py-1 px-2 min-w-[145px] border-r border-slate-200">
-        <DateInput 
-          value={student.admissionDate || ''}
-          onChange={(val) => {
-            if (val !== student.admissionDate) {
-              onUpdate({ ...student, admissionDate: val });
-            }
-          }}
-          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none pl-2 pr-10 py-1.5 rounded-lg text-slate-800 font-bold text-xs text-center transition-all"
-        />
-      </td>
-
-      {/* 7. Trạng thái */}
-      <td className="py-1 px-2 min-w-[180px] text-center border-r border-slate-200">
-        <select 
-          value={student.status || 'Đang học'}
-          onChange={(e) => {
-            const newStatus = e.target.value as any;
-            if (newStatus !== (student.status || 'Đang học')) {
-              onUpdate({ ...student, status: newStatus });
-            }
-          }}
-          className="bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 outline-none px-2 py-1.5 rounded-lg text-slate-800 font-bold text-xs transition-all cursor-pointer w-full"
-        >
-          <option value="Đang học">Đang học (Chính thức)</option>
-          <option value="Học hè">Học hè (Chỉ học hè 3 tháng)</option>
-          <option value="Tạm nghỉ">Tạm nghỉ (Lưu hồ sơ)</option>
-        </select>
-      </td>
-
-      {/* 8. Bé Mới */}
-      <td className="py-1 px-2 text-center min-w-[70px] border-r border-slate-200">
-        <div className="flex items-center justify-center py-1">
-          <input 
-            type="checkbox"
-            checked={student.isNewStudent}
-            onChange={(e) => {
-              onUpdate({ ...student, isNewStudent: e.target.checked });
-            }}
-            className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 accent-emerald-600 cursor-pointer"
-          />
+      {/* 4. Học phí */}
+      <td 
+        onClick={cycleDiscount}
+        className="py-1 px-3 min-w-[125px] text-right font-extrabold text-slate-900 border-r border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-colors select-none"
+        title="Bấm để thay đổi miễn giảm học phí (Không giảm -> Giảm 50% -> Miễn phí)"
+      >
+        <div className="flex flex-col items-end">
+          <span>{formatCurrency(tuition)}</span>
+          {discountType === '50%' && (
+            <span className="text-[9px] bg-amber-100 text-amber-800 px-1 rounded font-bold font-sans mt-0.5 animate-in fade-in duration-200">Giảm 50%</span>
+          )}
+          {discountType === '100%' && (
+            <span className="text-[9px] bg-rose-100 text-rose-800 px-1 rounded font-bold font-sans mt-0.5 animate-in fade-in duration-200">Miễn 100%</span>
+          )}
         </div>
       </td>
 
-      {/* Giảm 50% */}
-      <td className="py-1 px-2 text-center min-w-[90px] border-r border-slate-200 bg-amber-50/10">
-        <div className="flex items-center justify-center py-1">
-          <input 
-            type="checkbox"
-            checked={!!student.isHalfDiscount}
-            onChange={(e) => {
-              onUpdate({ 
-                ...student, 
-                isHalfDiscount: e.target.checked,
-                isFullDiscount: e.target.checked ? false : !!student.isFullDiscount
-              });
-            }}
-            className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 accent-amber-600 cursor-pointer"
-          />
-        </div>
+      {/* 5. Tiền ăn */}
+      <td className="py-1 px-3 min-w-[110px] text-right font-extrabold text-slate-800 bg-emerald-50/20 border-r border-slate-200">
+        {formatCurrency(mealFee)}
       </td>
 
-      {/* Giảm 100% */}
-      <td className="py-1 px-2 text-center min-w-[90px] border-r border-slate-200 bg-red-50/10">
-        <div className="flex items-center justify-center py-1">
-          <input 
-            type="checkbox"
-            checked={!!student.isFullDiscount}
-            onChange={(e) => {
-              onUpdate({ 
-                ...student, 
-                isFullDiscount: e.target.checked,
-                isHalfDiscount: e.target.checked ? false : !!student.isHalfDiscount
-              });
-            }}
-            className="w-4 h-4 rounded text-red-600 focus:ring-red-500 accent-red-600 cursor-pointer"
-          />
-        </div>
+      {/* 6, 7, 8. Môn năng khiếu (Conditionally rendered) */}
+      {isPreschool ? (
+        <>
+          {/* ANH VĂN */}
+          <td 
+            onClick={toggleEnglish}
+            className={`py-1 px-3 min-w-[95px] text-right font-bold border-r border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-all select-none ${
+              student.giftedSubjects.english 
+                ? 'text-blue-700 bg-blue-50/40 font-extrabold' 
+                : 'text-slate-400 font-normal'
+            }`}
+            title="Bấm nhấp để bật/tắt môn Anh Văn"
+          >
+            {student.giftedSubjects.english ? formatCurrency(englishFee) : '0'}
+          </td>
+          {/* VẼ */}
+          <td 
+            onClick={toggleDrawing}
+            className={`py-1 px-3 min-w-[95px] text-right font-bold border-r border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-all select-none ${
+              student.giftedSubjects.drawing 
+                ? 'text-pink-700 bg-pink-50/40 font-extrabold' 
+                : 'text-slate-400 font-normal'
+            }`}
+            title="Bấm nhấp để bật/tắt môn Vẽ"
+          >
+            {student.giftedSubjects.drawing ? formatCurrency(drawingFee) : '0'}
+          </td>
+        </>
+      ) : null}
+
+      {/* NHỊP ĐIỆU */}
+      <td 
+        onClick={toggleRhythm}
+        className={`py-1 px-3 min-w-[95px] text-right font-bold border-r border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-all select-none ${
+          student.giftedSubjects.rhythm 
+            ? 'text-purple-700 bg-purple-50/40 font-extrabold' 
+            : 'text-slate-400 font-normal'
+        }`}
+        title="Bấm nhấp để bật/tắt môn Nhịp Điệu"
+      >
+        {student.giftedSubjects.rhythm ? formatCurrency(rhythmFee) : '0'}
       </td>
 
-      {/* 9. Anh Văn */}
-      <td className="py-1 px-2 text-center min-w-[70px] border-r border-slate-200">
-        <div className="flex items-center justify-center py-1">
-          <input 
-            type="checkbox"
-            checked={student.giftedSubjects.english}
-            onChange={(e) => {
-              onUpdate({ 
-                ...student, 
-                giftedSubjects: { ...student.giftedSubjects, english: e.target.checked } 
-              });
-            }}
-            className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 accent-blue-600 cursor-pointer"
-          />
-        </div>
+      {/* PHỤ PHÍ */}
+      <td className="py-1 px-3 min-w-[110px] text-right font-bold text-slate-700 border-r border-slate-200">
+        {formatCurrency(config.extraFee)}
       </td>
 
-      {/* 10. Vẽ */}
-      <td className="py-1 px-2 text-center min-w-[70px] border-r border-slate-200">
-        <div className="flex items-center justify-center py-1">
-          <input 
-            type="checkbox"
-            checked={student.giftedSubjects.drawing}
-            onChange={(e) => {
-              onUpdate({ 
-                ...student, 
-                giftedSubjects: { ...student.giftedSubjects, drawing: e.target.checked } 
-              });
-            }}
-            className="w-4 h-4 rounded text-pink-600 focus:ring-pink-500 accent-pink-600 cursor-pointer"
-          />
-        </div>
+      {/* CSVC */}
+      <td 
+        onClick={toggleNewStudent}
+        className={`py-1 px-3 min-w-[100px] text-right font-bold border-r border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-all select-none ${
+          student.isNewStudent 
+            ? 'text-teal-700 bg-teal-50/30 font-extrabold' 
+            : 'text-slate-400 font-normal'
+        }`}
+        title="Bấm nhấp để bật/tắt trạng thái Bé Mới (Phí CSVN & Học Phẩm)"
+      >
+        {student.isNewStudent ? formatCurrency(csvcFee) : '0'}
       </td>
 
-      {/* 11. Nhịp điệu */}
-      <td className="py-1 px-2 text-center min-w-[70px] border-r border-slate-200">
-        <div className="flex items-center justify-center py-1">
-          <input 
-            type="checkbox"
-            checked={student.giftedSubjects.rhythm}
-            onChange={(e) => {
-              onUpdate({ 
-                ...student, 
-                giftedSubjects: { ...student.giftedSubjects, rhythm: e.target.checked } 
-              });
-            }}
-            className="w-4 h-4 rounded text-purple-600 focus:ring-purple-500 accent-purple-600 cursor-pointer"
-          />
-        </div>
+      {/* HỌC PHẨM */}
+      <td 
+        onClick={toggleNewStudent}
+        className={`py-1 px-3 min-w-[100px] text-right font-bold border-r border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-all select-none ${
+          student.isNewStudent 
+            ? 'text-cyan-700 bg-cyan-50/30 font-extrabold' 
+            : 'text-slate-400 font-normal'
+        }`}
+        title="Bấm nhấp để bật/tắt trạng thái Bé Mới (Phí CSVN & Học Phẩm)"
+      >
+        {student.isNewStudent ? formatCurrency(materialFee) : '0'}
       </td>
 
-      {/* 12. Ghi chú */}
-      <td className="py-1 px-2 min-w-[220px] border-r border-slate-200">
+      {/* NGÀY PHÉP */}
+      <td className="py-1 px-2 min-w-[95px] text-center font-bold text-slate-600 border-r border-slate-200">
+        {absentDays > 0 ? (
+          <span className="bg-red-50 text-red-600 px-2 py-0.5 rounded-full font-mono text-xs">{absentDays} ngày</span>
+        ) : (
+          <span className="text-slate-400">0</span>
+        )}
+      </td>
+
+      {/* THÀNH TIỀN */}
+      <td className="py-1 px-3 min-w-[125px] text-right font-black text-rose-600 border-r border-slate-200 bg-rose-50/10">
+        {formatCurrency(total)}
+      </td>
+
+      {/* GHI CHÚ */}
+      <td className="py-1 px-2 min-w-[220px] relative border-b border-slate-200 overflow-visible">
         <input 
           type="text"
           value={localNotes}
           onChange={(e) => setLocalNotes(e.target.value)}
           onBlur={handleNotesBlur}
           onKeyDown={handleKeyDown}
-          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none px-2 py-1.5 rounded-lg text-slate-800 font-bold text-xs transition-all"
-          placeholder="Ghi chú về bé..."
+          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none px-2 py-1 rounded-sm text-slate-800 font-bold text-xs transition-all animate-none"
+          placeholder="Nhập ghi chú cho bé..."
         />
-      </td>
-
-      {/* 13. Xóa / Chi tiết */}
-      <td className="py-1 px-2 text-center min-w-[100px] select-none">
-        <div className="flex justify-center items-center gap-1">
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all duration-200 flex items-center gap-1 bg-white/95 pl-2 py-1 shadow-md rounded-lg border border-slate-200 z-[5]">
           <button 
             type="button"
-            onClick={() => onOpenModal(student)} 
-            className="p-1 text-slate-400 hover:text-emerald-500 hover:bg-emerald-50 rounded-lg transition-all"
-            title="Sửa chi tiết"
+            onClick={(e) => { e.stopPropagation(); onOpenModal(student); }}
+            className="p-1 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-all"
+            title="Sửa chi tiết thông tin và lớp học"
           >
-            <Edit2 size={13} />
+            <Edit2 size={13} className="stroke-[2.5]" />
           </button>
           <button 
             type="button"
-            onClick={() => onDelete(student.id, student.name)} 
-            className="p-1 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-            title="Xóa bé"
+            onClick={(e) => { e.stopPropagation(); onDelete(student.id, student.name); }}
+            className="p-1 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-all"
+            title="Xóa bé khỏi danh sách"
           >
-            <Trash2 size={13} />
+            <Trash2 size={13} className="stroke-[2.5]" />
           </button>
         </div>
       </td>
@@ -433,6 +443,10 @@ const StudentRow = ({ student, index, onUpdate, onDelete, onOpenModal }: Student
 
 interface StudentsProps {
   students: Student[];
+  config: GlobalConfig;
+  attendance: Attendance[];
+  currentMonth: number;
+  currentYear: number;
   onAdd: (s: Student) => void;
   onUpdate: (s: Student) => void;
   onDelete: (id: string) => void;
@@ -444,9 +458,20 @@ const getTodayYMD = () => {
   return formatDateToVietnamYMD(new Date());
 };
 
-export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClearAll }: StudentsProps) => {
+export const Students = ({ 
+  students, 
+  config, 
+  attendance, 
+  currentMonth, 
+  currentYear, 
+  onAdd, 
+  onUpdate, 
+  onDelete, 
+  onImport, 
+  onClearAll 
+}: StudentsProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeClassTab, setActiveClassTab] = useState<'all' | 'nursery' | 'preschool'>('all');
+  const [activeClassTab, setActiveClassTab] = useState<'preschool' | 'nursery'>('preschool');
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [shouldUpdateAdmission, setShouldUpdateAdmission] = useState(true);
@@ -462,7 +487,9 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     admissionDate: getTodayYMD(),
     phoneNumber: '',
     status: 'Đang học',
-    notes: ''
+    notes: '',
+    isHalfDiscount: false,
+    isFullDiscount: false
   });
 
   const formatToInputDate = (dateStr: any) => {
@@ -477,73 +504,112 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     reader.onload = (evt) => {
       const bstr = evt.target?.result;
       const wb = XLSX.read(bstr, { type: 'binary', cellDates: true });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
       
-      // Kiểm tra xem có phải định dạng báo cáo (Dòng 1 tiêu đề, Dòng 3 tiêu đề cột)
-      const cellA1 = ws['A1'] ? String(ws['A1'].v).toUpperCase() : '';
-      const isReportFormat = cellA1.includes('THU HỌC PHÍ');
-      
-      // Nếu là định dạng báo cáo, bỏ qua 2 dòng đầu (range: 2)
-      const data = XLSX.utils.sheet_to_json(ws, { range: isReportFormat ? 2 : 0 }) as any[];
+      let sheetsToParse: { name: string; ws: any; forcedClass?: string }[] = [];
 
-      const importedStudents: Student[] = data.map((row, index) => {
-        // Ánh xạ tên
-        const name = String(row['HỌ VÀ TÊN'] || row.Name || row['Họ tên'] || row['Tên'] || 'Không rõ tên');
-        
-        // Ánh xạ ngày sinh / năm sinh
-        let dob = '';
-        const dobValue = row['NGÀY SINH'] || row['NĂM SINH'];
-        if (dobValue) {
-          if (typeof dobValue === 'number' && dobValue > 1900 && dobValue < 2100) {
-            dob = `${dobValue}-01-01`; // Mặc định ngày 1/1 nếu chỉ có năm
-          } else {
-            dob = formatToInputDate(dobValue);
-          }
-        } else {
-          dob = formatToInputDate(row.DOB || row['Ngày sinh']);
-        }
-
-        // Ánh xạ môn năng khiếu (Nếu có số tiền > 0 hoặc đánh dấu true)
-        const english = (row['ANH VĂN'] && Number(row['ANH VĂN']) > 0) || row.English === true || row['Anh văn'] === true;
-        const drawing = (row['VẼ'] && Number(row['VẼ']) > 0) || row.Drawing === true || row['Vẽ'] === true;
-        const rhythm = (row['NHỊP ĐIỆU'] && Number(row['NHỊP ĐIỆU']) > 0) || row.Rhythm === true || row['Nhịp điệu'] === true;
-
-        // Kiểm tra bé mới (Nếu có phí CSVC hoặc Học phẩm)
-        const isNewStudent = (Number(row['CSVC']) > 0 || Number(row['HỌC PHẨM']) > 0) || 
-                            (row.IsNewStudent === true || row['Mới'] === true);
-
-        // Kiểm tra miễn giảm học phí
-        const sheetHalf = !!(row['GIẢM 50%'] === true || row['Giảm 50%'] === true || String(row['GIẢM 50%'] || '').trim().toUpperCase() === 'X' || String(row['Giảm 50%'] || '').trim().toUpperCase() === 'X' || row.IsHalfDiscount === true || row.isHalfDiscount === true);
-        const sheetFull = !!(row['GIẢM 100%'] === true || row['Giảm 100%'] === true || String(row['GIẢM 100%'] || '').trim().toUpperCase() === 'X' || String(row['Giảm 100%'] || '').trim().toUpperCase() === 'X' || row.IsFullDiscount === true || row.isFullDiscount === true);
-        const isFullDiscount = sheetFull;
-        const isHalfDiscount = sheetHalf && !sheetFull;
-
-        const rawClass = String(row.Class || row['Lớp'] || '');
-        const className = rawClass 
-          ? (isNurseryClass(rawClass) ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo')
-          : (activeClassTab === 'nursery' ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo');
-
-        return {
-          id: String(row.ID || row['Mã HS'] || `HS${Date.now()}${index}`),
-          name,
-          dob,
-          className,
-          giftedSubjects: { english, drawing, rhythm },
-          isNewStudent,
-          admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || getTodayYMD(),
-          phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || ''),
-          status: row['Trạng thái'] || row.Status || 'Đang học',
-          notes: String(row['GHI CHÚ'] || row['Ghi chú'] || row['Ghi Chú'] || row.Notes || row.notes || '').trim(),
-          classEntryDate: new Date(Date.now() + index * 1000).toISOString(),
-          isHalfDiscount,
-          isFullDiscount
-        };
+      // Detect sheets matching "Lớp Mẫu Giáo" and "Lớp Nhà Trẻ"
+      const preschoolSheets = wb.SheetNames.filter(name => {
+        const n = name.toLowerCase();
+        return n.includes("mẫu giáo") || n.includes("mau giao") || n.includes("preschool");
       });
+
+      const nurserySheets = wb.SheetNames.filter(name => {
+        const n = name.toLowerCase();
+        return n.includes("nhà trẻ") || n.includes("nha tre") || n.includes("nursery");
+      });
+
+      if (preschoolSheets.length > 0 || nurserySheets.length > 0) {
+        preschoolSheets.forEach(name => {
+          sheetsToParse.push({ name, ws: wb.Sheets[name], forcedClass: 'Lớp Mẫu giáo' });
+        });
+        nurserySheets.forEach(name => {
+          sheetsToParse.push({ name, ws: wb.Sheets[name], forcedClass: 'Lớp Nhà trẻ' });
+        });
+      } else {
+        // Fallback: parse the first sheet only
+        sheetsToParse.push({ name: wb.SheetNames[0], ws: wb.Sheets[wb.SheetNames[0]] });
+      }
+
+      let importedStudents: Student[] = [];
+      let globalIndex = 0;
+
+      sheetsToParse.forEach(sheetObj => {
+        const ws = sheetObj.ws;
+        if (!ws) return;
+
+        // Check format of report
+        const cellA1 = ws['A1'] ? String(ws['A1'].v).toUpperCase() : '';
+        const isReportFormat = cellA1.includes('THU HỌC PHÍ') || cellA1.includes('TIỀN ĂN') || cellA1.includes('BÁO ĐÓNG TIỀN');
+        
+        const data = XLSX.utils.sheet_to_json(ws, { range: isReportFormat ? 2 : 0 }) as any[];
+
+        data.forEach((row) => {
+          const name = String(row['HỌ VÀ TÊN'] || row['Họ và tên'] || row.Name || row['Họ tên'] || row['Tên'] || '').trim();
+          if (!name || name === 'Không rõ tên' || name.toUpperCase().includes('TỔNG CỘNG') || name.toUpperCase().includes('NGƯỜI LẬP BẢNG') || name.includes('---')) {
+            return; // Skip empty/header/footer rows
+          }
+
+          // Map birth date
+          let dob = '';
+          const dobValue = row['NGÀY SINH'] || row['NĂM SINH'] || row.DOB || row['Ngày sinh'];
+          if (dobValue) {
+            if (typeof dobValue === 'number' && dobValue > 1900 && dobValue < 2100) {
+              dob = `${dobValue}-01-01`;
+            } else {
+              dob = formatToInputDate(dobValue);
+            }
+          }
+
+          // Map gifted subjects
+          const english = (row['ANH VĂN'] && Number(row['ANH VĂN']) > 0) || row.English === true || row['Anh văn'] === true;
+          const drawing = (row['VẼ'] && Number(row['VẼ']) > 0) || row.Drawing === true || row['Vẽ'] === true;
+          const rhythm = (row['NHỊP ĐIỆU'] && Number(row['NHỊP ĐIỆU']) > 0) || row.Rhythm === true || row['Nhịp điệu'] === true;
+
+          // Check if new student
+          const isNewStudent = (Number(row['CSVC']) > 0 || Number(row['HỌC PHẨM']) > 0) || 
+                              (row.IsNewStudent === true || row['Mới'] === true);
+
+          // Check fee discounts
+          const sheetHalf = !!(row['GIẢM 50%'] === true || row['Giảm 50%'] === true || String(row['GIẢM 50%'] || '').trim().toUpperCase() === 'X' || row.IsHalfDiscount === true || row.isHalfDiscount === true);
+          const sheetFull = !!(row['GIẢM 100%'] === true || row['Giảm 100%'] === true || String(row['GIẢM 100%'] || '').trim().toUpperCase() === 'X' || row.IsFullDiscount === true || row.isFullDiscount === true);
+          const isFullDiscount = sheetFull;
+          const isHalfDiscount = sheetHalf && !sheetFull;
+
+          const rawClass = String(row.Class || row['Lớp'] || '');
+          const className = sheetObj.forcedClass 
+            ? sheetObj.forcedClass
+            : (rawClass 
+                ? (isNurseryClass(rawClass) ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo')
+                : (activeClassTab === 'nursery' ? 'Lớp Nhà trẻ' : 'Lớp Mẫu giáo'));
+
+          importedStudents.push({
+            id: String(row.ID || row['Mã HS'] || `HS${Date.now()}${globalIndex}`),
+            name,
+            dob,
+            className,
+            giftedSubjects: { english, drawing, rhythm },
+            isNewStudent,
+            admissionDate: formatToInputDate(row.AdmissionDate || row['Ngày nhập học']) || getTodayYMD(),
+            phoneNumber: String(row.PhoneNumber || row['SĐT'] || row['Số điện thoại'] || ''),
+            status: row['Trạng thái'] || row.Status || 'Đang học',
+            notes: String(row['GHI CHÚ'] || row['Ghi chú'] || row['Ghi Chú'] || row.Notes || row.notes || '').trim(),
+            classEntryDate: new Date(Date.now() + globalIndex * 1000).toISOString(),
+            isHalfDiscount,
+            isFullDiscount
+          });
+
+          globalIndex++;
+        });
+      });
+
+      if (importedStudents.length === 0) {
+        alert("Không tìm thấy dòng học sinh hợp lệ nào để nạp. Vui lòng kiểm tra lại cấu trúc file!");
+        return;
+      }
 
       onImport(importedStudents);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      alert(`Đã nạp thành công ${importedStudents.length} bé vào danh sách!`);
+      alert(`Đã nạp thành công tổng cộng ${importedStudents.length} bé từ các sheet lớp học vào danh sách!`);
     };
     reader.readAsBinaryString(file);
   };
@@ -636,6 +702,39 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
     }
   };
 
+  const isPreschool = activeClassTab === 'preschool';
+
+  const sumTuition = filteredStudents.reduce((sum, s) => {
+    return sum + calculateInvoice(s, config, attendance, currentMonth, currentYear).tuition;
+  }, 0);
+  const sumMealFee = filteredStudents.reduce((sum, s) => {
+    return sum + calculateInvoice(s, config, attendance, currentMonth, currentYear).mealFee;
+  }, 0);
+  const sumEnglish = isPreschool ? filteredStudents.reduce((sum, s) => {
+    return sum + (s.giftedSubjects.english ? config.giftedFees.english : 0);
+  }, 0) : 0;
+  const sumDrawing = isPreschool ? filteredStudents.reduce((sum, s) => {
+    return sum + (s.giftedSubjects.drawing ? config.giftedFees.drawing : 0);
+  }, 0) : 0;
+  const sumRhythm = filteredStudents.reduce((sum, s) => {
+    return sum + (s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0);
+  }, 0);
+  const sumExtra = filteredStudents.reduce((sum, s) => {
+    return sum + config.extraFee;
+  }, 0);
+  const sumCSVC = filteredStudents.reduce((sum, s) => {
+    return sum + calculateInvoice(s, config, attendance, currentMonth, currentYear).csvcFee;
+  }, 0);
+  const sumMaterial = filteredStudents.reduce((sum, s) => {
+    return sum + calculateInvoice(s, config, attendance, currentMonth, currentYear).materialFee;
+  }, 0);
+  const sumAbsent = filteredStudents.reduce((sum, s) => {
+    return sum + calculateInvoice(s, config, attendance, currentMonth, currentYear).calculationInfo.absentDays;
+  }, 0);
+  const sumGrandTotal = filteredStudents.reduce((sum, s) => {
+    return sum + calculateInvoice(s, config, attendance, currentMonth, currentYear).total;
+  }, 0);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
@@ -644,7 +743,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
-              placeholder="Tìm tên bé, lớp hoặc ID..." 
+              placeholder="Tìm tên bé hoặc ghi chú..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium shadow-sm"
@@ -660,10 +759,33 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
             )}
           </div>
           
-          <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
-            <button onClick={() => setActiveClassTab('all')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap ${activeClassTab === 'all' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Tất cả ({students.length})</button>
-            <button onClick={() => setActiveClassTab('preschool')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap ${activeClassTab === 'preschool' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Khối Mẫu Giáo</button>
-            <button onClick={() => setActiveClassTab('nursery')} className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all whitespace-nowrap ${activeClassTab === 'nursery' ? 'bg-emerald-600 text-white shadow-md' : 'text-slate-400 hover:bg-slate-50'}`}>Khối Nhà Trẻ</button>
+          <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
+            <button 
+              onClick={() => setActiveClassTab('preschool')} 
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
+                activeClassTab === 'preschool' 
+                  ? 'bg-[#385723] text-white shadow-md' 
+                  : 'text-slate-600 hover:bg-slate-200/50'
+              }`}
+            >
+              <span>🟢 Lớp Mẫu Giáo</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'preschool' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                {students.filter(s => isPreschoolClass(s.className)).length} bé
+              </span>
+            </button>
+            <button 
+              onClick={() => setActiveClassTab('nursery')} 
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
+                activeClassTab === 'nursery' 
+                  ? 'bg-[#1f4e78] text-white shadow-md' 
+                  : 'text-slate-600 hover:bg-slate-200/50'
+              }`}
+            >
+              <span>🔵 Lớp Nhà Trẻ</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'nursery' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+                {students.filter(s => isNurseryClass(s.className)).length} bé
+              </span>
+            </button>
           </div>
         </div>
 
@@ -691,7 +813,7 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
             className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold text-xs uppercase shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"
           >
             <Plus size={18} />
-            Tiếp nhận bé
+            Tiếp nhận bé mới
           </button>
         </div>
       </div>
@@ -699,65 +821,161 @@ export const Students = ({ students, onAdd, onUpdate, onDelete, onImport, onClea
       {students.length === 0 ? (
         <div className="py-32 flex flex-col items-center justify-center bg-white rounded-[40px] border-4 border-dashed border-slate-100 text-slate-300">
            <FileUp size={80} className="mb-6 opacity-10" />
-           <p className="font-black uppercase text-xl tracking-widest opacity-30 italic">Chưa có dữ liệu</p>
+           <p className="font-black uppercase text-xl tracking-widest opacity-30 italic">Chưa có dữ liệu học sinh</p>
            <div className="flex gap-4 mt-6">
               <button onClick={() => fileInputRef.current?.click()} className="px-8 py-3 bg-blue-600 text-white rounded-2xl text-[11px] font-black uppercase shadow-lg">Nạp Excel</button>
                <button onClick={() => handleOpenModal()} className="px-8 py-3 bg-emerald-600 text-white rounded-2xl text-[11px] font-black uppercase shadow-lg">Thêm thủ công</button>
            </div>
         </div>
       ) : (
-        <div className="space-y-3">
-          <div className="flex items-start md:items-center gap-2.5 px-5 py-3 bg-emerald-50/60 border border-emerald-100 rounded-[20px] text-[11px] text-emerald-800 font-bold shadow-sm animate-in fade-in slide-in-from-top-1 duration-300">
+        <div className="space-y-4">
+          <div className="flex items-start md:items-center gap-2.5 px-5 py-3.5 bg-emerald-50/60 border border-emerald-100 rounded-[20px] text-[11px] text-emerald-800 font-bold shadow-sm animate-in fade-in slide-in-from-top-1 duration-300">
             <span className="text-sm select-none">💡</span>
             <span className="leading-snug">
-              <strong>Mẹo dễ thao tác:</strong> Nhấn giữ phím <kbd className="px-1.5 py-0.5 bg-emerald-100/80 border border-emerald-200/60 rounded font-mono text-[10px] select-none text-emerald-900 shadow-sm">Shift</kbd> + cuộn chuột khi di chuột trên bảng để kéo ngang cực nhanh, hoặc dùng thanh cuộn dọc/ngang luôn xuất hiện cố định ở khung bảng mà không cần kéo xuống cuối trang!
+              <strong>Mẹo thao tác trực tiếp trên bảng Excel:</strong> Nhấp đúp (Double-click) dòng hoặc nhấp vào Họ Tên để Sửa hồ sơ chi tiết. Có thể nhấp chuột trực tiếp vào các phí: <strong>Học phí (Đóng/Giảm/Miễn)</strong>, các môn phụ <strong>(Anh văn, Vẽ, Nhịp điệu)</strong>, hoặc <strong>CSVC/Học phẩm (Bé mới)</strong> để thay đổi chính sách đóng phí cực nhanh của bé đó!
             </span>
           </div>
 
           <div className="w-full max-h-[calc(100vh-280px)] min-h-[420px] overflow-auto rounded-[30px] border-2 border-slate-200/80 bg-white shadow-md scrollbar-thin">
             <table className="w-full text-left border-collapse border border-slate-200">
-            <thead className="bg-[#f8fafc] sticky top-0 z-10">
-              <tr className="bg-slate-50/50">
-                <th className="py-3 px-2 border border-slate-200 w-[55px] font-black text-[11px] text-slate-500 uppercase tracking-wider text-center">STT</th>
-                <th className="py-3 px-3 border border-slate-200 min-w-[200px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-left pl-4">Họ và tên bé</th>
-                <th className="py-3 px-3 border border-slate-200 min-w-[135px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Ngày sinh</th>
-                <th className="py-3 px-3 border border-slate-200 min-w-[140px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Lớp học</th>
-                <th className="py-3 px-3 border border-slate-200 min-w-[120px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-left">Số điện thoại</th>
-                <th className="py-3 px-3 border border-slate-200 min-w-[145px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Ngày nhập học</th>
-                <th className="py-3 px-3 border border-slate-200 min-w-[180px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Trạng thái</th>
-                <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Bé Mới</th>
-                <th className="py-3 px-2 border border-slate-200 min-w-[90px] font-black text-[11px] text-amber-700 uppercase tracking-wider text-center bg-amber-50/50">Giảm 50%</th>
-                <th className="py-3 px-2 border border-slate-200 min-w-[90px] font-black text-[11px] text-red-700 uppercase tracking-wider text-center bg-red-50/50">Giảm 100%</th>
-                <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Anh Văn</th>
-                <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Vẽ</th>
-                <th className="py-3 px-2 border border-slate-200 min-w-[75px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Nhịp điệu</th>
-                <th className="py-3 px-3 border border-slate-200 min-w-[220px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-left">Ghi chú</th>
-                <th className="py-3 px-3 border border-slate-200 w-[100px] font-black text-[11px] text-slate-600 uppercase tracking-wider text-center">Thao tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-200">
-              {filteredStudents.length === 0 ? (
-                <tr>
-                  <td colSpan={15} className="py-24 text-center font-black uppercase text-xs tracking-wider text-slate-400 bg-slate-50/20 italic">
-                    Không tìm thấy bé nào khớp với từ khóa tìm kiếm
-                  </td>
-                </tr>
+              {isPreschool ? (
+                /* ============= 14 CỘT LỚP MẪU GIÁO ============= */
+                <>
+                  <thead className="bg-[#f8fafc] sticky top-0 z-10 text-center font-bold">
+                    <tr className="bg-[#e2f0d9] border border-[#a9d08e]">
+                      <th colSpan={14} className="py-3 px-4 border border-[#a9d08e] text-center text-sm font-black uppercase text-[#385723]">
+                        THU HỌC PHÍ THÁNG {currentMonth}/{currentYear} LỚP MẪU GIÁO
+                      </th>
+                    </tr>
+                    <tr className="bg-slate-100 font-bold text-slate-700 text-[11px] uppercase tracking-wider">
+                      <th className="py-2.5 px-2 border border-slate-200 text-center w-[55px] select-none">STT</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left pl-4 min-w-[200px]">Họ và tên</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[130px]">Ngày sinh</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[125px]">Học phí</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[110px]">Tiền ăn</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[95px]">Anh văn</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[95px]">Vẽ</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[95px]">Nhịp điệu</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[110px]">Phụ phí</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[100px]">CSVC</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[100px]">Học phẩm</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[95px]">Ngày phép</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[125px]">Thành tiền</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left min-w-[220px]">Ghi chú</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {filteredStudents.length === 0 ? (
+                      <tr>
+                        <td colSpan={14} className="py-24 text-center font-black uppercase text-xs tracking-wider text-slate-400 bg-slate-50/20 italic">
+                          Không tìm thấy bé nào trong lớp Mẫu giáo
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredStudents.map((student, idx) => (
+                        <StudentRow
+                          key={student.id}
+                          student={student}
+                          index={idx}
+                          config={config}
+                          attendance={attendance}
+                          currentMonth={currentMonth}
+                          currentYear={currentYear}
+                          isPreschool={true}
+                          onUpdate={onUpdate}
+                          onDelete={handleDelete}
+                          onOpenModal={handleOpenModal}
+                        />
+                      ))
+                    )}
+                    {/* Hàng tổng cộng 14 cột */}
+                    {filteredStudents.length > 0 && (
+                      <tr className="bg-slate-100/90 font-black text-xs text-slate-800 border-t border-slate-300">
+                        <td colSpan={3} className="py-3 px-4 border border-slate-300 text-center font-extrabold uppercase text-slate-700">TỔNG CỘNG</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-slate-900">{formatCurrency(sumTuition)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-emerald-800 bg-emerald-50/20">{formatCurrency(sumMealFee)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-blue-800">{formatCurrency(sumEnglish)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-pink-800">{formatCurrency(sumDrawing)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-purple-800">{formatCurrency(sumRhythm)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-slate-800">{formatCurrency(sumExtra)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-teal-800">{formatCurrency(sumCSVC)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-cyan-800">{formatCurrency(sumMaterial)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-center font-bold text-red-700">{sumAbsent} ngày</td>
+                        <td className="py-3 px-3 border border-[#f43f5e]/30 text-right font-black text-rose-600 bg-rose-100/30">{formatCurrency(sumGrandTotal)}</td>
+                        <td className="py-3 px-3 border border-slate-300"></td>
+                      </tr>
+                    )}
+                  </tbody>
+                </>
               ) : (
-                filteredStudents.map((student, index) => (
-                  <StudentRow
-                    key={student.id}
-                    student={student}
-                    index={index}
-                    onUpdate={onUpdate}
-                    onDelete={handleDelete}
-                    onOpenModal={handleOpenModal}
-                  />
-                ))
+                /* ============= 12 CỘT LỚP NHÀ TRẺ ============= */
+                <>
+                  <thead className="bg-[#f8fafc] sticky top-0 z-10 text-center font-bold">
+                    <tr className="bg-[#ddebf7] border border-[#9bc2e6]">
+                      <th colSpan={12} className="py-3 px-4 border border-[#9bc2e6] text-center text-sm font-black uppercase text-[#1f4e78]">
+                        THU HỌC PHÍ THÁNG {currentMonth}/{currentYear} LỚP NHÀ TRẺ
+                      </th>
+                    </tr>
+                    <tr className="bg-slate-100 font-bold text-slate-700 text-[11px] uppercase tracking-wider">
+                      <th className="py-2.5 px-2 border border-slate-200 text-center w-[55px] select-none">STT</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left pl-4 min-w-[200px]">Họ và tên</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[130px]">Ngày sinh</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[125px]">Học phí</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[110px]">Tiền ăn</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[95px]">Nhịp điệu</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[110px]">Phụ phí</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[100px]">CSVC</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[100px]">Học phẩm</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[95px]">Ngày phép</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[125px]">Thành tiền</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left min-w-[220px]">Ghi chú</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {filteredStudents.length === 0 ? (
+                      <tr>
+                        <td colSpan={12} className="py-24 text-center font-black uppercase text-xs tracking-wider text-slate-400 bg-slate-50/20 italic">
+                          Không tìm thấy bé nào trong lớp Nhà trẻ
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredStudents.map((student, idx) => (
+                        <StudentRow
+                          key={student.id}
+                          student={student}
+                          index={idx}
+                          config={config}
+                          attendance={attendance}
+                          currentMonth={currentMonth}
+                          currentYear={currentYear}
+                          isPreschool={false}
+                          onUpdate={onUpdate}
+                          onDelete={handleDelete}
+                          onOpenModal={handleOpenModal}
+                        />
+                      ))
+                    )}
+                    {/* Hàng tổng cộng 12 cột */}
+                    {filteredStudents.length > 0 && (
+                      <tr className="bg-slate-100/90 font-black text-xs text-slate-800 border-t border-slate-300">
+                        <td colSpan={3} className="py-3 px-4 border border-slate-300 text-center font-extrabold uppercase text-slate-700">TỔNG CỘNG</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-slate-900">{formatCurrency(sumTuition)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-emerald-850 bg-emerald-50/20">{formatCurrency(sumMealFee)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-purple-800">{formatCurrency(sumRhythm)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-slate-800">{formatCurrency(sumExtra)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-teal-800">{formatCurrency(sumCSVC)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-right font-black text-cyan-800">{formatCurrency(sumMaterial)}</td>
+                        <td className="py-3 px-3 border border-slate-300 text-center font-bold text-red-700">{sumAbsent} ngày</td>
+                        <td className="py-3 px-3 border border-[#f43f5e]/30 text-right font-black text-rose-600 bg-rose-100/30">{formatCurrency(sumGrandTotal)}</td>
+                        <td className="py-3 px-3 border border-slate-300"></td>
+                      </tr>
+                    )}
+                  </tbody>
+                </>
               )}
-            </tbody>
-          </table>
+            </table>
+          </div>
         </div>
-      </div>
       )}
 
       {isConfirmingClear && (

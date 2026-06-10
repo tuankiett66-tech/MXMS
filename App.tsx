@@ -459,7 +459,7 @@ export default function App() {
           )}
           {activeTab === 'invoices' && <Invoices students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent} bulkPrintClass={bulkPrintClass} setBulkPrintClass={setBulkPrintClass} />}
           {activeTab === 'mealRefund' && <MealRefund students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} onUpdateAbsentDays={handleUpdateAbsentDays} />}
-          {activeTab === 'students' && <Students students={students} onAdd={addStudent} onUpdate={updateStudent} onDelete={deleteStudent} onImport={importStudents} onClearAll={clearAllStudents} />}
+          {activeTab === 'students' && <Students students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} onAdd={addStudent} onUpdate={updateStudent} onDelete={deleteStudent} onImport={importStudents} onClearAll={clearAllStudents} />}
           {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} onManualSave={handleManualSave} onNextMonth={handleNextMonth} onLoadData={loadData} syncing={syncing} />}
         </main>
 
