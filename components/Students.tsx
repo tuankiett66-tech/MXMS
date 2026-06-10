@@ -471,7 +471,7 @@ export const Students = ({
   onClearAll 
 }: StudentsProps) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeClassTab, setActiveClassTab] = useState<'preschool' | 'nursery'>('preschool');
+  const [activeClassTab, setActiveClassTab] = useState<'preschool' | 'nursery' | 'paused'>('preschool');
   const [showModal, setShowModal] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [shouldUpdateAdmission, setShouldUpdateAdmission] = useState(true);
@@ -621,8 +621,9 @@ export const Students = ({
                          s.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
     
-    if (activeClassTab === 'nursery') return matchesSearch && isNurseryClass(s.className);
-    if (activeClassTab === 'preschool') return matchesSearch && isPreschoolClass(s.className);
+    if (activeClassTab === 'nursery') return matchesSearch && isNurseryClass(s.className) && s.status !== 'Tạm nghỉ';
+    if (activeClassTab === 'preschool') return matchesSearch && isPreschoolClass(s.className) && s.status !== 'Tạm nghỉ';
+    if (activeClassTab === 'paused') return matchesSearch && s.status === 'Tạm nghỉ';
     return matchesSearch;
   });
 
@@ -770,7 +771,7 @@ export const Students = ({
             >
               <span>🟢 Lớp Mẫu Giáo</span>
               <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'preschool' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                {students.filter(s => isPreschoolClass(s.className)).length} bé
+                {students.filter(s => s.status !== 'Tạm nghỉ' && isPreschoolClass(s.className)).length} bé
               </span>
             </button>
             <button 
@@ -783,7 +784,20 @@ export const Students = ({
             >
               <span>🔵 Lớp Nhà Trẻ</span>
               <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'nursery' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                {students.filter(s => isNurseryClass(s.className)).length} bé
+                {students.filter(s => s.status !== 'Tạm nghỉ' && isNurseryClass(s.className)).length} bé
+              </span>
+            </button>
+            <button 
+              onClick={() => setActiveClassTab('paused')} 
+              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
+                activeClassTab === 'paused' 
+                  ? 'bg-amber-600 text-white shadow-md' 
+                  : 'text-slate-600 hover:bg-slate-200/50'
+              }`}
+            >
+              <span>🟡 Tạm nghỉ / Hè</span>
+              <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'paused' ? 'bg-white/20 text-white' : 'bg-amber-200 text-amber-800'}`}>
+                {students.filter(s => s.status === 'Tạm nghỉ').length} bé
               </span>
             </button>
           </div>
@@ -838,7 +852,7 @@ export const Students = ({
 
           <div className="w-full max-h-[calc(100vh-280px)] min-h-[420px] overflow-auto rounded-[30px] border-2 border-slate-200/80 bg-white shadow-md scrollbar-thin">
             <table className="w-full text-left border-collapse border border-slate-200">
-              {isPreschool ? (
+              {activeClassTab === 'preschool' ? (
                 /* ============= 14 CỘT LỚP MẪU GIÁO ============= */
                 <>
                   <thead className="bg-[#f8fafc] sticky top-0 z-10 text-center font-bold">
@@ -907,7 +921,7 @@ export const Students = ({
                     )}
                   </tbody>
                 </>
-              ) : (
+              ) : activeClassTab === 'nursery' ? (
                 /* ============= 12 CỘT LỚP NHÀ TRẺ ============= */
                 <>
                   <thead className="bg-[#f8fafc] sticky top-0 z-10 text-center font-bold">
@@ -968,6 +982,102 @@ export const Students = ({
                         <td className="py-3 px-3 border border-slate-300 text-center font-bold text-red-700">{sumAbsent} ngày</td>
                         <td className="py-3 px-3 border border-[#f43f5e]/30 text-right font-black text-rose-600 bg-rose-100/30">{formatCurrency(sumGrandTotal)}</td>
                         <td className="py-3 px-3 border border-slate-300"></td>
+                      </tr>
+                    )}
+                  </tbody>
+                </>
+              ) : (
+                /* ============= 8 CỘT TẠM NGHỈ ============= */
+                <>
+                  <thead className="bg-[#f8fafc] sticky top-0 z-10 text-center font-bold">
+                    <tr className="bg-[#fff2cc] border border-[#f8cbad]">
+                      <th colSpan={8} className="py-3 px-4 border border-[#f8cbad] text-center text-sm font-black uppercase text-[#bd5115]">
+                        DANH SÁCH BÉ ĐANG TẠM NGHỈ / BẢO LƯU HÈ
+                      </th>
+                    </tr>
+                    <tr className="bg-slate-100 font-bold text-slate-700 text-[11px] uppercase tracking-wider">
+                      <th className="py-2.5 px-2 border border-slate-200 text-center w-[55px] select-none">STT</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left pl-4 min-w-[200px]">Họ và tên</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[130px]">Ngày sinh</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[140px]">Lớp trước khi nghỉ</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left min-w-[125px]">Số điện thoại</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[110px]">Trạng thái</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left min-w-[220px]">Ghi chú</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[185px]">Thao tác</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {filteredStudents.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-24 text-center font-black uppercase text-xs tracking-wider text-slate-400 bg-slate-50/20 italic">
+                          Không có bé nào đang tạm nghỉ
+                        </td>
+                      </tr>
+                    ) : (
+                      filteredStudents.map((student, idx) => (
+                        <tr key={student.id} className="hover:bg-amber-50/20 bg-white transition-all text-xs border-b border-slate-200 group">
+                          <td 
+                            onClick={() => handleOpenModal(student)}
+                            className="py-2.5 px-2 text-center text-slate-500 font-bold bg-slate-50/50 w-[55px] font-mono select-none border-r border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors"
+                            title="Bấm để chỉnh sửa chi tiết hồ sơ bé"
+                          >
+                            {idx + 1}
+                          </td>
+                          <td className="py-2.5 px-3 font-extrabold text-slate-900 border-r border-slate-200 uppercase">
+                            <button onClick={() => handleOpenModal(student)} className="hover:text-emerald-700 transition-colors text-left font-black">
+                              {student.name}
+                            </button>
+                          </td>
+                          <td className="py-2.5 px-3 text-center text-slate-700 border-r border-slate-200 font-medium">
+                            {student.dob ? formatDateToDMY(student.dob) : ''}
+                          </td>
+                          <td className="py-2.5 px-3 text-center text-slate-700 border-r border-slate-200 font-bold">
+                            {student.className}
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600 border-r border-slate-200 font-mono">
+                            {student.phoneNumber || '—'}
+                          </td>
+                          <td className="py-2.5 px-3 text-center border-r border-slate-200">
+                            <span className="px-2.5 py-1 bg-amber-100 text-amber-800 rounded-full font-bold text-[10px] uppercase">
+                              Tạm nghỉ
+                            </span>
+                          </td>
+                          <td className="py-2.5 px-3 text-slate-600 border-r border-slate-200" title={student.notes}>
+                            {student.notes || '—'}
+                          </td>
+                          <td className="py-2.5 px-3 text-center">
+                            <div className="flex items-center justify-center gap-2">
+                              <button 
+                                onClick={() => {
+                                  onUpdate({ ...student, status: 'Đang học' });
+                                  alert(`Đã khôi phục bé ${student.name.toUpperCase()} vào trạng thái Đang học thành công!`);
+                                }}
+                                className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-[10px] font-black uppercase hover:bg-emerald-700 active:scale-95 transition-all shadow-sm"
+                              >
+                                Khôi phục
+                              </button>
+                              <button 
+                                onClick={() => handleOpenModal(student)}
+                                className="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-lg text-[10px] font-black uppercase hover:bg-blue-100 active:scale-95 transition-all"
+                              >
+                                Sửa
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(student.id, student.name)}
+                                className="px-3 py-1.5 bg-red-50 text-red-600 border border-red-100 rounded-lg text-[10px] font-black uppercase hover:bg-red-100 active:scale-95 transition-all"
+                              >
+                                Xóa
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                    {filteredStudents.length > 0 && (
+                      <tr className="bg-amber-50/40 text-xs text-amber-800 font-black border-t border-slate-300">
+                        <td colSpan={8} className="py-3 px-4 text-center font-extrabold uppercase text-slate-700">
+                          TỔNG CỘNG CÓ {filteredStudents.length} BÉ ĐANG TẠM NGHỈ / BẢO LƯU HÈ
+                        </td>
                       </tr>
                     )}
                   </tbody>

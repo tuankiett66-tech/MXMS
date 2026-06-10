@@ -86,8 +86,6 @@ export default function App() {
         }
       };
       autoLoad();
-    } else if (config.scriptUrl) {
-      loadData();
     }
   }, []);
 
