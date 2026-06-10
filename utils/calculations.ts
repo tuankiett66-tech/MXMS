@@ -222,21 +222,28 @@ export const calculateInvoice = (
   // Tiền ăn tính theo tháng hiện tại
   const absentDays = currentAttendance ? currentAttendance.absentDays : 0;
   
-  // LOGIC MỚI: Nếu là bé mới và nhập học trong tháng này, tính lại số ngày ăn tiêu chuẩn
+  // Đảm bảo "Ngày học chuẩn" luôn đúng theo cài đặt trên ứng dụng của bạn cho học sinh cũ.
+  // CHỈ điều chỉnh thông minh (prorate) cho "Bé mới" (student.isNewStudent === true) nhập học giữa chừng trong tháng hiện tại.
   let effectiveStandardDays = config.standardDays;
-  const admission = new Date(student.admissionDate);
-  if (admission.getMonth() + 1 === currentMonth && admission.getFullYear() === currentYear) {
-    // Đếm số ngày làm việc (Thứ 2 - Thứ 6) TRƯỚC ngày nhập học trong tháng
-    let missedDays = 0;
-    const tempDate = new Date(currentYear, currentMonth - 1, 1);
-    while (tempDate < admission) {
-      const dayOfWeek = tempDate.getDay();
-      if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Không phải CN (0) hoặc T7 (6)
-        missedDays++;
+  if (student.isNewStudent && student.admissionDate) {
+    const admission = new Date(student.admissionDate);
+    if (!isNaN(admission.getTime())) {
+      const admissionMonth = admission.getMonth() + 1;
+      const admissionYear = admission.getFullYear();
+      if (admissionMonth === currentMonth && admissionYear === currentYear) {
+        // Đếm số ngày làm việc (Thứ 2 - Thứ 6) TRƯỚC ngày nhập học trong tháng
+        let missedDays = 0;
+        const tempDate = new Date(currentYear, currentMonth - 1, 1);
+        while (tempDate < admission) {
+          const dayOfWeek = tempDate.getDay();
+          if (dayOfWeek !== 0 && dayOfWeek !== 6) { // Không phải CN (0) hoặc T7 (6)
+            missedDays++;
+          }
+          tempDate.setDate(tempDate.getDate() + 1);
+        }
+        effectiveStandardDays = Math.max(0, config.standardDays - missedDays);
       }
-      tempDate.setDate(tempDate.getDate() + 1);
     }
-    effectiveStandardDays = Math.max(0, config.standardDays - missedDays);
   }
 
   const mealFee = (effectiveStandardDays * config.mealFeePerDay) - (absentDays * config.mealFeePerDay);
