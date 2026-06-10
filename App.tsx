@@ -453,6 +453,7 @@ export default function App() {
               onToggleGifted={toggleGiftedSubject}
               onToggleNew={toggleNewStudent}
               onViewInvoice={(s) => { setSelectedStudent(s); setBulkPrintClass(null); setActiveTab('invoices'); }}
+              onUpdateStudent={updateStudent}
             />
           )}
           {activeTab === 'invoices' && <Invoices students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent} bulkPrintClass={bulkPrintClass} setBulkPrintClass={setBulkPrintClass} />}
