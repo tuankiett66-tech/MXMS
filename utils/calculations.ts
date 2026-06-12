@@ -285,7 +285,9 @@ export const calculateInvoice = (
 export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year: number, config: GlobalConfig): string => {
   const { student, total, tuition, extraFee, csvcFee, materialFee, calculationInfo, discountType } = invoice;
   const formattedDOB = formatDateToDMY(student.dob);
-  const fullMealFee = calculationInfo.effectiveStandardDays * config.mealFeePerDay;
+  const lateEnrollmentDays = calculationInfo.lateEnrollmentDays || 0;
+  const activeMealDays = calculationInfo.effectiveStandardDays - lateEnrollmentDays;
+  const fullMealFee = activeMealDays * config.mealFeePerDay;
   const absentDeduction = calculationInfo.absentDays * config.mealFeePerDay;
 
   let msg = `GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG ${month} NĂM ${year}.\n\n`;
@@ -296,7 +298,7 @@ export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year:
   if (discountType === '50%') tuitionLabel += ` (Giảm 50% - Nửa tháng)`;
 
   msg += `- ${tuitionLabel} : ${formatCurrency(tuition)} đồng.\n`;
-  msg += `- Tiền ăn trong tháng (${calculationInfo.effectiveStandardDays} ngày x ${formatCurrency(config.mealFeePerDay)}) : ${formatCurrency(fullMealFee)} đồng.\n`;
+  msg += `- Tiền ăn trong tháng (${activeMealDays} ngày x ${formatCurrency(config.mealFeePerDay)}) : ${formatCurrency(fullMealFee)} đồng.\n`;
   
   calculationInfo.giftedBreakdown.forEach(item => {
     msg += `- ${item}\n`;
@@ -308,11 +310,6 @@ export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year:
   if (materialFee > 0) msg += `- Học phẩm (${calculationInfo.monthsRemaining} tháng) : ${formatCurrency(materialFee)} đồng.\n`;
 
   msg += `- Số ngày nghỉ có phép trong tháng : ${calculationInfo.absentDays} ngày . Trừ lại : ${formatCurrency(absentDeduction)} đồng.\n`;
-  
-  if (calculationInfo.lateEnrollmentDays && calculationInfo.lateEnrollmentDays > 0) {
-    const lateDeduction = calculationInfo.lateEnrollmentDays * config.mealFeePerDay;
-    msg += `- Số ngày nhập học muộn : ${calculationInfo.lateEnrollmentDays} ngày . Trừ lại tiền ăn : ${formatCurrency(lateDeduction)} đồng.\n`;
-  }
   
   msg += `\n`;
   

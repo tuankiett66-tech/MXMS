@@ -180,6 +180,8 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
           {classStudents.map((student) => {
             const inv = calculateInvoice(student, config, attendance, currentMonth, currentYear);
             const dob = formatDateToDMY(student.dob);
+            const activeMealDays = inv.calculationInfo.effectiveStandardDays - (inv.calculationInfo.lateEnrollmentDays || 0);
+            const fullMealFee = activeMealDays * config.mealFeePerDay;
             return (
               <div key={student.id} className="invoice-print-item bg-white p-8 border border-slate-200 rounded-lg relative">
                 <div className="text-center mb-4">
@@ -193,9 +195,9 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                     <span className="invoice-value">{formatCurrency(inv.tuition)} đồng.</span>
                   </div>
                   <div className="invoice-line">
-                    <span className="invoice-label">- Tiền ăn trong tháng ({inv.calculationInfo.effectiveStandardDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
+                    <span className="invoice-label">- Tiền ăn trong tháng ({activeMealDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
                     <span className="invoice-dots">:</span>
-                    <span className="invoice-value">{formatCurrency(inv.calculationInfo.effectiveStandardDays * config.mealFeePerDay)} đồng.</span>
+                    <span className="invoice-value">{formatCurrency(fullMealFee)} đồng.</span>
                   </div>
                   {inv.calculationInfo.giftedBreakdown.map((b, i) => {
                     const parts = b.split(':');
@@ -231,13 +233,6 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                     <span className="invoice-dots">:</span>
                     <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
                   </div>
-                  {inv.calculationInfo.lateEnrollmentDays !== undefined && inv.calculationInfo.lateEnrollmentDays > 0 && (
-                    <div className="invoice-line">
-                      <span className="invoice-label">- Số ngày nhập học muộn : {inv.calculationInfo.lateEnrollmentDays} ngày. Trừ lại</span>
-                      <span className="invoice-dots">:</span>
-                      <span className="invoice-value">{formatCurrency(inv.calculationInfo.lateEnrollmentDays * config.mealFeePerDay)} đồng.</span>
-                    </div>
-                  )}
                 </div>
                 <div className="text-center py-2 border-y-2 border-black my-2">
                   <h2 className="text-xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} ĐỒNG.</h2>
@@ -264,6 +259,8 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
   const inv = calculateInvoice(selectedStudent, config, attendance, currentMonth, currentYear);
   const zaloMsg = generateZaloMessage(inv, currentMonth, currentYear, config);
   const formattedDOB = formatDateToDMY(selectedStudent.dob);
+  const activeMealDays = inv.calculationInfo.effectiveStandardDays - (inv.calculationInfo.lateEnrollmentDays || 0);
+  const fullMealFee = activeMealDays * config.mealFeePerDay;
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -348,9 +345,9 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
             </div>
 
             <div className="invoice-line">
-              <span className="invoice-label">- Tiền ăn trong tháng ({inv.calculationInfo.effectiveStandardDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
+              <span className="invoice-label">- Tiền ăn trong tháng ({activeMealDays} ngày x {formatCurrency(config.mealFeePerDay)})</span>
               <span className="invoice-dots">:</span>
-              <span className="invoice-value">{formatCurrency(inv.calculationInfo.effectiveStandardDays * config.mealFeePerDay)} đồng.</span>
+              <span className="invoice-value">{formatCurrency(fullMealFee)} đồng.</span>
             </div>
 
             {inv.calculationInfo.giftedBreakdown.map((b, i) => {
@@ -391,13 +388,6 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               <span className="invoice-dots">:</span>
               <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
             </div>
-            {inv.calculationInfo.lateEnrollmentDays !== undefined && inv.calculationInfo.lateEnrollmentDays > 0 && (
-              <div className="invoice-line">
-                <span className="invoice-label">- Số ngày nhập học muộn : {inv.calculationInfo.lateEnrollmentDays} ngày. Trừ lại</span>
-                <span className="invoice-dots">:</span>
-                <span className="invoice-value">{formatCurrency(inv.calculationInfo.lateEnrollmentDays * config.mealFeePerDay)} đồng.</span>
-              </div>
-            )}
           </div>
 
           <div className="text-center py-2 border-y-2 border-black my-2">
