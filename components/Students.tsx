@@ -641,6 +641,7 @@ export const Students = ({
         classEntryDate: student.classEntryDate || student.admissionDate,
         isHalfDiscount: student.isHalfDiscount || false,
         isFullDiscount: student.isFullDiscount || false,
+        lateEnrollmentDays: student.lateEnrollmentDays || 0,
       });
     } else {
       setEditingStudent(null);
@@ -658,6 +659,7 @@ export const Students = ({
         classEntryDate: getTodayYMD(),
         isHalfDiscount: false,
         isFullDiscount: false,
+        lateEnrollmentDays: 0,
       });
     }
     setShowModal(true);
@@ -1137,8 +1139,25 @@ export const Students = ({
                   <input type="text" value={formData.phoneNumber} onChange={(e) => setFormData({...formData, phoneNumber: e.target.value})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-4 font-bold text-slate-800 outline-none focus:border-emerald-500" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Ngày nhập học</label>
-                  <DateInput value={formData.admissionDate || ''} onChange={(val) => setFormData({...formData, admissionDate: val})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 pl-4 pr-12 font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all" />
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Ngày nhập học &amp; ngày muộn</label>
+                  <div className="flex gap-2">
+                    <div className="flex-1">
+                      <DateInput value={formData.admissionDate || ''} onChange={(val) => setFormData({...formData, admissionDate: val})} className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 pl-4 pr-12 font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all" />
+                    </div>
+                    <div className="w-[100px] shrink-0 relative">
+                      <input 
+                        type="number" 
+                        min="0"
+                        max="30"
+                        placeholder="0"
+                        value={formData.lateEnrollmentDays || 0} 
+                        onChange={(e) => setFormData({...formData, lateEnrollmentDays: parseInt(e.target.value) || 0})}
+                        className="w-full bg-slate-50 border-2 border-slate-200 rounded-2xl py-3 px-2 text-center font-bold text-slate-800 outline-none focus:border-emerald-500 transition-all font-mono"
+                        title="Số ngày nhập học muộn (để tự động trừ tiền ăn tương ứng)"
+                      />
+                      <span className="absolute -top-2 right-2 bg-amber-500 text-white font-extrabold text-[8px] rounded px-1.5 py-0.5 uppercase tracking-wider leading-none shadow-sm">Muộn</span>
+                    </div>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1">Trạng thái học tập</label>

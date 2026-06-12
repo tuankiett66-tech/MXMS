@@ -221,12 +221,15 @@ export const calculateInvoice = (
 
   // Tiền ăn tính theo tháng hiện tại
   const absentDays = currentAttendance ? currentAttendance.absentDays : 0;
+  const lateEnrollmentDays = student.lateEnrollmentDays || 0;
   
   // Đảm bảo "Ngày học chuẩn" luôn đúng theo cài đặt trên ứng dụng của bạn cho tất cả học sinh (bao gồm cả bé mới).
   // Số ngày học chuẩn sẽ không tự động điều chỉnh nhảy ngày để người dùng có toàn quyền kiểm soát tiền ăn.
   const effectiveStandardDays = config.standardDays;
 
-  const mealFee = (effectiveStandardDays * config.mealFeePerDay) - (absentDays * config.mealFeePerDay);
+  const lateEnrollmentDeduction = lateEnrollmentDays * config.mealFeePerDay;
+  let mealFee = (effectiveStandardDays * config.mealFeePerDay) - (absentDays * config.mealFeePerDay) - lateEnrollmentDeduction;
+  if (mealFee < 0) mealFee = 0;
 
   let giftedTotal = 0;
   const giftedBreakdown: string[] = [];
@@ -273,7 +276,8 @@ export const calculateInvoice = (
       absentDays: absentDays,
       effectiveStandardDays,
       monthsRemaining,
-      giftedBreakdown
+      giftedBreakdown,
+      lateEnrollmentDays
     }
   };
 };
@@ -303,7 +307,14 @@ export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year:
   if (csvcFee > 0) msg += `- Cơ sở vật chất (${calculationInfo.monthsRemaining} tháng) : ${formatCurrency(csvcFee)} đồng.\n`;
   if (materialFee > 0) msg += `- Học phẩm (${calculationInfo.monthsRemaining} tháng) : ${formatCurrency(materialFee)} đồng.\n`;
 
-  msg += `- Số ngày nghỉ có phép trong tháng : ${calculationInfo.absentDays} ngày . Trừ lại : ${formatCurrency(absentDeduction)} đồng.\n\n`;
+  msg += `- Số ngày nghỉ có phép trong tháng : ${calculationInfo.absentDays} ngày . Trừ lại : ${formatCurrency(absentDeduction)} đồng.\n`;
+  
+  if (calculationInfo.lateEnrollmentDays && calculationInfo.lateEnrollmentDays > 0) {
+    const lateDeduction = calculationInfo.lateEnrollmentDays * config.mealFeePerDay;
+    msg += `- Số ngày nhập học muộn : ${calculationInfo.lateEnrollmentDays} ngày . Trừ lại tiền ăn : ${formatCurrency(lateDeduction)} đồng.\n`;
+  }
+  
+  msg += `\n`;
   
   msg += `TỔNG CỘNG : ${formatCurrency(total)} đồng.\n\n`;
   msg += `Thông tin chuyển khoản: Tên thụ hưởng: TRẦN THỊ TRÚC GIANG\n`;

@@ -231,6 +231,13 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                     <span className="invoice-dots">:</span>
                     <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
                   </div>
+                  {inv.calculationInfo.lateEnrollmentDays !== undefined && inv.calculationInfo.lateEnrollmentDays > 0 && (
+                    <div className="invoice-line">
+                      <span className="invoice-label">- Số ngày nhập học muộn : {inv.calculationInfo.lateEnrollmentDays} ngày. Trừ lại</span>
+                      <span className="invoice-dots">:</span>
+                      <span className="invoice-value">{formatCurrency(inv.calculationInfo.lateEnrollmentDays * config.mealFeePerDay)} đồng.</span>
+                    </div>
+                  )}
                 </div>
                 <div className="text-center py-2 border-y-2 border-black my-2">
                   <h2 className="text-xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} ĐỒNG.</h2>
@@ -384,6 +391,13 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               <span className="invoice-dots">:</span>
               <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
             </div>
+            {inv.calculationInfo.lateEnrollmentDays !== undefined && inv.calculationInfo.lateEnrollmentDays > 0 && (
+              <div className="invoice-line">
+                <span className="invoice-label">- Số ngày nhập học muộn : {inv.calculationInfo.lateEnrollmentDays} ngày. Trừ lại</span>
+                <span className="invoice-dots">:</span>
+                <span className="invoice-value">{formatCurrency(inv.calculationInfo.lateEnrollmentDays * config.mealFeePerDay)} đồng.</span>
+              </div>
+            )}
           </div>
 
           <div className="text-center py-2 border-y-2 border-black my-2">

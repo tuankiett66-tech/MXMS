@@ -19,6 +19,7 @@ export interface Student {
   classEntryDate?: string;
   isHalfDiscount?: boolean; // Giảm 50%
   isFullDiscount?: boolean; // Giảm 100%
+  lateEnrollmentDays?: number;
 }
 
 export interface Attendance {
@@ -63,5 +64,6 @@ export interface InvoiceDetail {
     effectiveStandardDays: number;
     monthsRemaining: number;
     giftedBreakdown: string[];
+    lateEnrollmentDays?: number;
   };
 }
