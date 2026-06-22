@@ -19,6 +19,7 @@ export interface Student {
   classEntryDate?: string;
   isHalfDiscount?: boolean; // Giảm 50%
   isFullDiscount?: boolean; // Giảm 100%
+  tuitionDiscountAmount?: number; // Giảm học phí theo số tiền nhập vào
   lateEnrollmentDays?: number;
 }
 
@@ -29,6 +30,7 @@ export interface Attendance {
   absentDays: number;
   isHalfDiscount?: boolean; // Giảm 50%
   isFullDiscount?: boolean; // Giảm 100%
+  tuitionDiscountAmount?: number; // Giảm học phí theo số tiền nhập vào
 }
 
 export interface GlobalConfig {
@@ -57,7 +59,7 @@ export interface InvoiceDetail {
   materialFee: number;
   extraFee: number;
   total: number;
-  discountType: 'none' | '50%' | '100%'; 
+  discountType: 'none' | '50%' | '100%' | 'custom'; 
   calculationInfo: {
     ageInMonths: number;
     absentDays: number;

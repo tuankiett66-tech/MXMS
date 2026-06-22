@@ -297,8 +297,11 @@ export default function App() {
     // 1. Cập nhật thuộc tính bền vững trên đối tượng Student để lưu giữ khi đổi tháng
     setStudents(prev => prev.map(s => {
       if (s.id === studentId) {
-        if (type === '50%') return { ...s, isHalfDiscount: !s.isHalfDiscount, isFullDiscount: false };
-        if (type === '100%') return { ...s, isFullDiscount: !s.isFullDiscount, isHalfDiscount: false };
+        if (type === '50%') return { ...s, isHalfDiscount: !s.isHalfDiscount, isFullDiscount: false, tuitionDiscountAmount: 0 };
+        if (type === '100%') {
+          const nextVal = !s.isFullDiscount;
+          return { ...s, isFullDiscount: nextVal, isHalfDiscount: false, tuitionDiscountAmount: nextVal ? 0 : s.tuitionDiscountAmount };
+        }
       }
       return s;
     }));
@@ -309,15 +312,19 @@ export default function App() {
       if (existing) {
         return prev.map(a => {
           if (a.studentId === studentId && a.month === currentMonth && a.year === currentYear) {
-            if (type === '50%') return { ...a, isHalfDiscount: !a.isHalfDiscount, isFullDiscount: false };
-            if (type === '100%') return { ...a, isFullDiscount: !a.isFullDiscount, isHalfDiscount: false };
+            if (type === '50%') return { ...a, isHalfDiscount: !a.isHalfDiscount, isFullDiscount: false, tuitionDiscountAmount: 0 };
+            if (type === '100%') {
+              const nextVal = !a.isFullDiscount;
+              return { ...a, isFullDiscount: nextVal, isHalfDiscount: false, tuitionDiscountAmount: nextVal ? 0 : a.tuitionDiscountAmount };
+            }
           }
           return a;
         });
       }
       return [...prev, { 
         studentId, month: currentMonth, year: currentYear, absentDays: 0, 
-        isHalfDiscount: type === '50%', isFullDiscount: type === '100%' 
+        isHalfDiscount: type === '50%', isFullDiscount: type === '100%',
+        tuitionDiscountAmount: 0
       }];
     });
   };

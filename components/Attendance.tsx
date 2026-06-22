@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, X, Pencil } from 'lucide-react';
 import { Card } from './Common';
 import { Student, Attendance, GiftedSubjects } from '../types';
-import { sortStudents, isPreschoolClass, isNurseryClass, formatDateToDMY } from '../utils/calculations';
+import { sortStudents, isPreschoolClass, isNurseryClass, formatDateToDMY, formatCurrency } from '../utils/calculations';
 
 interface DateInputProps {
   value: string;
@@ -232,7 +232,7 @@ export const AttendanceTable = ({
               <th className="pb-4 text-center">Vẽ</th>
               <th className="pb-4 text-center">N.Điệu</th>
               <th className="pb-4 text-center text-orange-600">Giảm HP 100%</th>
-              <th className="pb-4 text-center text-blue-600">Giảm HP 50%</th>
+              <th className="pb-4 text-center text-blue-600">Giảm tiền HP</th>
               <th className="pb-4 text-center">Vắng</th>
               <th className="pb-4 text-right pr-2">Thao tác</th>
             </tr>
@@ -281,14 +281,25 @@ export const AttendanceTable = ({
                       />
                     </div>
                   </td>
-                  <td className={`py-4 transition-colors ${isEven ? 'bg-blue-50/70' : 'bg-blue-50/30'} group-hover:bg-blue-100/50`}>
+                  <td className={`py-4 transition-colors ${isEven ? 'bg-blue-50/70' : 'bg-blue-50/30'} group-hover:bg-blue-100/50 text-center font-bold`}>
                     <div className="flex justify-center">
-                      <input 
-                        type="checkbox" 
-                        checked={student.isHalfDiscount !== undefined ? !!student.isHalfDiscount : !!att?.isHalfDiscount} 
-                        onChange={() => onToggleDiscount(student.id, '50%')} 
-                        className="w-7 h-7 accent-blue-600 rounded-lg cursor-pointer border-2 border-blue-200 hover:scale-110 transition-transform"
-                      />
+                      {student.tuitionDiscountAmount && student.tuitionDiscountAmount > 0 ? (
+                        <button 
+                          onClick={() => handleOpenEditModal(student)}
+                          className="px-2 py-1 bg-sky-100 text-sky-800 text-[11px] font-extrabold rounded-lg hover:bg-sky-200 border border-sky-200 transition-all font-mono"
+                          title="Bấm để sửa số tiền giảm học phí"
+                        >
+                          -{formatCurrency(student.tuitionDiscountAmount)}
+                        </button>
+                      ) : (
+                        <button 
+                          onClick={() => handleOpenEditModal(student)}
+                          className="text-slate-400 hover:text-emerald-700 font-extrabold text-[11px] transition-colors flex items-center justify-center gap-0.5"
+                          title="Bấm để nhập mức giảm học phí"
+                        >
+                          <span className="text-sm font-semibold">+</span>0đ
+                        </button>
+                      )}
                     </div>
                   </td>
                   
@@ -405,19 +416,23 @@ export const AttendanceTable = ({
                   <input type="checkbox" id="isNewAtt" checked={!!formData.isNewStudent} onChange={(e) => setFormData({...formData, isNewStudent: e.target.checked})} className="w-5 h-5 accent-emerald-600" />
                   <label htmlFor="isNewAtt" className="text-xs font-bold text-emerald-800">Bé Mới (Tính phí CSVC & Học phẩm)</label>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <div className="flex flex-col gap-1 p-3 bg-amber-50 rounded-2xl border border-amber-100 justify-center">
+                  <label htmlFor="tuitionDiscAtt" className="text-[10px] font-black text-amber-800 uppercase tracking-widest pl-1">Mức giảm học phí (VND)</label>
                   <input 
-                    type="checkbox" 
-                    id="isHalfDiscAtt" 
-                    checked={!!formData.isHalfDiscount} 
-                    onChange={(e) => setFormData({
-                      ...formData, 
-                      isHalfDiscount: e.target.checked, 
-                      isFullDiscount: e.target.checked ? false : !!formData.isFullDiscount
-                    })} 
-                    className="w-5 h-5 accent-amber-600 cursor-pointer" 
+                    type="number" 
+                    id="tuitionDiscAtt"
+                    placeholder="Nhập số tiền..."
+                    value={formData.tuitionDiscountAmount || ''} 
+                    onChange={(e) => {
+                      const amount = Math.max(0, parseInt(e.target.value) || 0);
+                      setFormData({
+                        ...formData, 
+                        tuitionDiscountAmount: amount,
+                        isFullDiscount: amount > 0 ? false : !!formData.isFullDiscount
+                      });
+                    }}
+                    className="w-full bg-white border border-amber-250 rounded-xl py-1.5 px-3 font-bold text-amber-950 outline-none focus:border-amber-500 text-xs transition-all font-mono" 
                   />
-                  <label htmlFor="isHalfDiscAtt" className="text-xs font-bold text-amber-850 cursor-pointer">Giảm học phí 50%</label>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-red-50 rounded-2xl border border-red-100">
                   <input 
@@ -427,7 +442,8 @@ export const AttendanceTable = ({
                     onChange={(e) => setFormData({
                       ...formData, 
                       isFullDiscount: e.target.checked, 
-                      isHalfDiscount: e.target.checked ? false : !!formData.isHalfDiscount
+                      isHalfDiscount: e.target.checked ? false : !!formData.isHalfDiscount,
+                      tuitionDiscountAmount: e.target.checked ? 0 : formData.tuitionDiscountAmount
                     })} 
                     className="w-5 h-5 accent-red-600 cursor-pointer" 
                   />

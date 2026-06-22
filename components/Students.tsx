@@ -247,12 +247,12 @@ const StudentRow = ({
   };
 
   const cycleDiscount = () => {
-    if (!student.isHalfDiscount && !student.isFullDiscount) {
-      onUpdate({ ...student, isHalfDiscount: true, isFullDiscount: false });
-    } else if (student.isHalfDiscount) {
-      onUpdate({ ...student, isHalfDiscount: false, isFullDiscount: true });
+    // Nếu chưa giảm gì cả -> chuyển sang Miễn học phí 100% (vì giảm tiền cần người dùng chủ động điền trong Modal)
+    if (!student.isFullDiscount && (!student.tuitionDiscountAmount || student.tuitionDiscountAmount === 0)) {
+      onUpdate({ ...student, isFullDiscount: true, isHalfDiscount: false, tuitionDiscountAmount: 0 });
     } else {
-      onUpdate({ ...student, isHalfDiscount: false, isFullDiscount: false });
+      // Nếu đang được miễn 100% hoặc đang giảm tiền -> chuyển về Không giảm học phí
+      onUpdate({ ...student, isFullDiscount: false, isHalfDiscount: false, tuitionDiscountAmount: 0 });
     }
   };
 
@@ -307,6 +307,9 @@ const StudentRow = ({
           <span>{formatCurrency(tuition)}</span>
           {discountType === '50%' && (
             <span className="text-[9px] bg-amber-100 text-amber-800 px-1 rounded font-bold font-sans mt-0.5 animate-in fade-in duration-200">Giảm 50%</span>
+          )}
+          {discountType === 'custom' && student.tuitionDiscountAmount && (
+            <span className="text-[10px] bg-sky-100 text-sky-800 px-1 rounded font-extrabold font-sans mt-0.5 animate-in fade-in duration-200">Giảm {formatCurrency(student.tuitionDiscountAmount)}đ</span>
           )}
           {discountType === '100%' && (
             <span className="text-[9px] bg-rose-100 text-rose-800 px-1 rounded font-bold font-sans mt-0.5 animate-in fade-in duration-200">Miễn 100%</span>
@@ -489,7 +492,8 @@ export const Students = ({
     status: 'Đang học',
     notes: '',
     isHalfDiscount: false,
-    isFullDiscount: false
+    isFullDiscount: false,
+    tuitionDiscountAmount: 0
   });
 
   const formatToInputDate = (dateStr: any) => {
@@ -642,6 +646,7 @@ export const Students = ({
         isHalfDiscount: student.isHalfDiscount || false,
         isFullDiscount: student.isFullDiscount || false,
         lateEnrollmentDays: student.lateEnrollmentDays || 0,
+        tuitionDiscountAmount: student.tuitionDiscountAmount || 0,
       });
     } else {
       setEditingStudent(null);
@@ -660,6 +665,7 @@ export const Students = ({
         isHalfDiscount: false,
         isFullDiscount: false,
         lateEnrollmentDays: 0,
+        tuitionDiscountAmount: 0,
       });
     }
     setShowModal(true);
@@ -1200,19 +1206,23 @@ export const Students = ({
                   <input type="checkbox" id="isNew" checked={formData.isNewStudent} onChange={(e) => setFormData({...formData, isNewStudent: e.target.checked})} className="w-5 h-5 accent-emerald-600" />
                   <label htmlFor="isNew" className="text-xs font-bold text-emerald-800">Bé Mới (Tính phí CSVC & Học phẩm)</label>
                 </div>
-                <div className="flex items-center gap-3 p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <div className="flex flex-col gap-1 p-3 bg-amber-50 rounded-2xl border border-amber-100 justify-center">
+                  <label htmlFor="tuitionDisc" className="text-[10px] font-black text-amber-800 uppercase tracking-widest pl-1">Mức giảm học phí (VND)</label>
                   <input 
-                    type="checkbox" 
-                    id="isHalfDisc" 
-                    checked={formData.isHalfDiscount || false} 
-                    onChange={(e) => setFormData({
-                      ...formData, 
-                      isHalfDiscount: e.target.checked, 
-                      isFullDiscount: e.target.checked ? false : !!formData.isFullDiscount
-                    })} 
-                    className="w-5 h-5 accent-amber-600 cursor-pointer" 
+                    type="number" 
+                    id="tuitionDisc"
+                    placeholder="Nhập số tiền..."
+                    value={formData.tuitionDiscountAmount || ''} 
+                    onChange={(e) => {
+                      const amount = Math.max(0, parseInt(e.target.value) || 0);
+                      setFormData({
+                        ...formData, 
+                        tuitionDiscountAmount: amount,
+                        isFullDiscount: amount > 0 ? false : !!formData.isFullDiscount
+                      });
+                    }}
+                    className="w-full bg-white border border-amber-250 rounded-xl py-1.5 px-3 font-bold text-amber-950 outline-none focus:border-amber-500 text-xs transition-all font-mono" 
                   />
-                  <label htmlFor="isHalfDisc" className="text-xs font-bold text-amber-850 cursor-pointer">Giảm học phí 50%</label>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-red-50 rounded-2xl border border-red-100">
                   <input 
@@ -1222,7 +1232,8 @@ export const Students = ({
                     onChange={(e) => setFormData({
                       ...formData, 
                       isFullDiscount: e.target.checked, 
-                      isHalfDiscount: e.target.checked ? false : !!formData.isHalfDiscount
+                      isHalfDiscount: e.target.checked ? false : !!formData.isHalfDiscount,
+                      tuitionDiscountAmount: e.target.checked ? 0 : formData.tuitionDiscountAmount
                     })} 
                     className="w-5 h-5 accent-red-600 cursor-pointer" 
                   />

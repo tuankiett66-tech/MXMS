@@ -190,7 +190,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                 <div className="space-y-1 mb-2 font-medium text-black">
                   <p className="mb-2 text-[12pt]">- Họ và tên trẻ : <span className="font-bold uppercase">{student.name}</span> SN {dob}-{inv.calculationInfo.ageInMonths} tháng.</p>
                   <div className="invoice-line">
-                    <span className="invoice-label">- Tiền học phí trong tháng {inv.discountType === '100%' ? '(Miễn 100%)' : inv.discountType === '50%' ? '(Giảm 50% - Nửa tháng)' : ''}</span>
+                    <span className="invoice-label">- Tiền học phí trong tháng {inv.discountType === '100%' ? '(Miễn 100%)' : inv.discountType === '50%' ? '(Giảm 50% - Nửa tháng)' : inv.discountType === 'custom' && student.tuitionDiscountAmount ? `(Giảm ${formatCurrency(student.tuitionDiscountAmount)}đ)` : ''}</span>
                     <span className="invoice-dots">:</span>
                     <span className="invoice-value">{formatCurrency(inv.tuition)} đồng.</span>
                   </div>
@@ -233,6 +233,11 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                     <span className="invoice-dots">:</span>
                     <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
                   </div>
+                  {student.notes && (
+                    <div className="text-[10pt] text-red-600 font-bold italic mt-2 leading-tight">
+                      * Ghi chú: {student.notes}
+                    </div>
+                  )}
                 </div>
                 <div className="text-center py-2 border-y-2 border-black my-2">
                   <h2 className="text-xl font-bold uppercase text-black">TỔNG CỘNG : {formatCurrency(inv.total)} ĐỒNG.</h2>
@@ -339,7 +344,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
             <p className="mb-2 text-[12pt]">- Họ và tên trẻ : <span className="font-bold uppercase">{selectedStudent.name}</span> SN {formattedDOB}-{inv.calculationInfo.ageInMonths} tháng.</p>
             
             <div className="invoice-line">
-              <span className="invoice-label">- Tiền học phí trong tháng {inv.discountType === '100%' ? '(Miễn 100%)' : inv.discountType === '50%' ? '(Giảm 50% - Nửa tháng)' : ''}</span>
+              <span className="invoice-label">- Tiền học phí trong tháng {inv.discountType === '100%' ? '(Miễn 100%)' : inv.discountType === '50%' ? '(Giảm 50% - Nửa tháng)' : inv.discountType === 'custom' && selectedStudent.tuitionDiscountAmount ? `(Giảm ${formatCurrency(selectedStudent.tuitionDiscountAmount)}đ)` : ''}</span>
               <span className="invoice-dots">:</span>
               <span className="invoice-value">{formatCurrency(inv.tuition)} đồng.</span>
             </div>
@@ -388,6 +393,12 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               <span className="invoice-dots">:</span>
               <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
             </div>
+
+            {selectedStudent.notes && (
+              <div className="text-[10pt] text-red-600 font-bold italic mt-2 leading-tight">
+                * Ghi chú: {selectedStudent.notes}
+              </div>
+            )}
           </div>
 
           <div className="text-center py-2 border-y-2 border-black my-2">

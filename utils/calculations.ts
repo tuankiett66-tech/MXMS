@@ -204,16 +204,20 @@ export const calculateInvoice = (
 
   const isFull = student.isFullDiscount !== undefined ? !!student.isFullDiscount : !!currentAttendance?.isFullDiscount;
   const isHalf = student.isHalfDiscount !== undefined ? !!student.isHalfDiscount : !!currentAttendance?.isHalfDiscount;
+  const discountAmount = student.tuitionDiscountAmount !== undefined ? student.tuitionDiscountAmount : currentAttendance?.tuitionDiscountAmount;
 
   // 1. Lấy giá gốc dựa trên tuổi
   let baseTuition = ageMonths >= 36 ? config.tuitionOver36 : config.tuitionUnder36;
   let finalTuition = baseTuition;
 
   // 2. Ô giảm phí CHỈ áp dụng cho Học phí chính
-  let discountType: 'none' | '50%' | '100%' = 'none';
+  let discountType: 'none' | '50%' | '100%' | 'custom' = 'none';
   if (isFull) {
     finalTuition = 0;
     discountType = '100%';
+  } else if (discountAmount !== undefined && discountAmount > 0) {
+    finalTuition = Math.max(0, baseTuition - discountAmount);
+    discountType = 'custom';
   } else if (isHalf) {
     finalTuition = baseTuition / 2;
     discountType = '50%';
@@ -296,6 +300,8 @@ export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year:
   let tuitionLabel = `Tiền học phí trong tháng`;
   if (discountType === '100%') tuitionLabel += ` (Miễn 100%)`;
   if (discountType === '50%') tuitionLabel += ` (Giảm 50% - Nửa tháng)`;
+  const customDisc = student.tuitionDiscountAmount !== undefined ? student.tuitionDiscountAmount : 0;
+  if (discountType === 'custom' && customDisc > 0) tuitionLabel += ` (Giảm ${formatCurrency(customDisc)}đ)`;
 
   msg += `- ${tuitionLabel} : ${formatCurrency(tuition)} đồng.\n`;
   msg += `- Tiền ăn trong tháng (${activeMealDays} ngày x ${formatCurrency(config.mealFeePerDay)}) : ${formatCurrency(fullMealFee)} đồng.\n`;
@@ -310,6 +316,10 @@ export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year:
   if (materialFee > 0) msg += `- Học phẩm (${calculationInfo.monthsRemaining} tháng) : ${formatCurrency(materialFee)} đồng.\n`;
 
   msg += `- Số ngày nghỉ có phép trong tháng : ${calculationInfo.absentDays} ngày . Trừ lại : ${formatCurrency(absentDeduction)} đồng.\n`;
+  
+  if (student.notes) {
+    msg += `* Ghi chú: ${student.notes}\n`;
+  }
   
   msg += `\n`;
   
