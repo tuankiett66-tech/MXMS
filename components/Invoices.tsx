@@ -92,15 +92,41 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
             </div>
           </div>
         </div>
-        <div className={selectionMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" : "space-y-2"}>
-          {activeStudents.map(s => (
-            <div key={s.id} onClick={() => setSelectedStudent(s)} className={`p-6 rounded-[32px] bg-white border-2 border-slate-100 hover:border-emerald-500 cursor-pointer transition-all shadow-sm flex flex-col items-start`}>
-              <Badge color={s.isNewStudent ? 'emerald' : 'slate'}>{s.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
-              <span className="font-black text-slate-900 text-lg uppercase mt-3">{s.name}</span>
-              <p className="text-[10px] text-slate-400 font-bold uppercase">{s.className}</p>
-            </div>
-          ))}
-        </div>
+        {selectionMode === 'grid' ? (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+            {activeStudents.map(s => (
+              <div 
+                key={s.id} 
+                onClick={() => setSelectedStudent(s)} 
+                className="p-3 bg-white border-2 border-slate-100 hover:border-emerald-500 hover:shadow-md cursor-pointer transition-all shadow-sm rounded-2xl flex flex-col justify-between h-full min-h-[90px] hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <div className="flex items-center justify-between w-full gap-2">
+                  <span className="text-[9px] text-slate-400 font-bold uppercase truncate">{s.className}</span>
+                  <Badge color={s.isNewStudent ? 'emerald' : 'slate'}>{s.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
+                </div>
+                <span className="font-black text-slate-800 text-xs sm:text-sm uppercase mt-2 line-clamp-1" title={s.name}>
+                  {s.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-1.5 max-w-4xl">
+            {activeStudents.map(s => (
+              <div 
+                key={s.id} 
+                onClick={() => setSelectedStudent(s)} 
+                className="p-2 px-4 bg-white border border-slate-150 hover:border-emerald-500 hover:bg-emerald-50/20 cursor-pointer transition-all shadow-sm rounded-xl flex items-center justify-between gap-4"
+              >
+                <div className="flex items-center gap-4 min-w-0">
+                  <span className="font-bold text-slate-800 text-sm uppercase truncate">{s.name}</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase bg-slate-100 px-2.5 py-1 rounded-lg shrink-0">{s.className}</span>
+                </div>
+                <Badge color={s.isNewStudent ? 'emerald' : 'slate'}>{s.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   }
