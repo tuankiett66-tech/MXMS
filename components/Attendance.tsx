@@ -185,16 +185,16 @@ export const AttendanceTable = ({
           <p className="text-[10px] font-black uppercase text-slate-500">Tổng cộng ngày phép: <span className="text-emerald-700 text-sm">{totalAbsentDays} ngày</span></p>
         </div>
         
-        <div className="flex flex-col sm:flex-row items-center gap-4 flex-1 max-w-2xl justify-end">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-4 flex-1 max-w-2xl justify-end">
           {/* Tìm kiếm */}
-          <div className="relative w-full sm:max-w-xs">
+          <div className="relative w-full sm:min-w-[240px] sm:max-w-xs">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <input 
               type="text" 
               placeholder="Tìm bé điểm danh..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-bold text-xs text-slate-700 shadow-inner"
+              className="w-full pl-10 pr-9 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-bold text-xs text-slate-800 shadow-inner"
             />
             {searchTerm && (
               <button 

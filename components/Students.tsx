@@ -747,15 +747,15 @@ export const Students = ({
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-        <div className="flex flex-col md:flex-row gap-4 flex-1">
-          <div className="relative flex-1 max-w-md">
+        <div className="flex flex-col md:flex-row md:flex-wrap lg:flex-nowrap gap-4 flex-1 items-stretch md:items-center">
+          <div className="relative flex-1 min-w-[280px] max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
               placeholder="Tìm tên bé hoặc ghi chú..." 
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-medium shadow-sm"
+              className="w-full pl-12 pr-10 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 transition-all outline-none font-bold text-sm text-slate-800 shadow-sm"
             />
             {searchTerm && (
               <button 
