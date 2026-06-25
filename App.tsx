@@ -169,31 +169,37 @@ export default function App() {
 
       const preschoolRows = sortedActiveStudents
         .filter(s => isPreschoolClass(s.className))
-        .map((s, i) => {
+        .map((s) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
           const formattedDOB = s.dob ? formatDateToDMY(s.dob) : "";
           return [
-            i + 1, s.name.toUpperCase(), formattedDOB, 
+            s.id, s.name.toUpperCase(), formattedDOB, 
             formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
             formatCurrency(s.giftedSubjects.english ? config.giftedFees.english : 0),
             formatCurrency(s.giftedSubjects.drawing ? config.giftedFees.drawing : 0),
             formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
             formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
-            inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || ""
+            inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || "",
+            s.isNewStudent ? "X" : "",
+            s.isHalfDiscount ? "X" : "",
+            s.isFullDiscount ? "X" : ""
           ];
         });
 
       const nurseryRows = sortedActiveStudents
         .filter(s => isNurseryClass(s.className))
-        .map((s, i) => {
+        .map((s) => {
           const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
           const formattedDOB = s.dob ? formatDateToDMY(s.dob) : "";
           return [
-            i + 1, s.name.toUpperCase(), formattedDOB, 
+            s.id, s.name.toUpperCase(), formattedDOB, 
             formatCurrency(inv.tuition), formatCurrency(inv.mealFee),
             formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
             formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
-            inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || ""
+            inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || "",
+            s.isNewStudent ? "X" : "",
+            s.isHalfDiscount ? "X" : "",
+            s.isFullDiscount ? "X" : ""
           ];
         });
 

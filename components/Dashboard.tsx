@@ -54,21 +54,17 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
 
       const title = `THU HỌC PHÍ THÁNG ${currentMonth}/${currentYear} LỚP ${groupName.toUpperCase()}`;
       const headers = isPreschool 
-        ? ["STT", "MÃ HS", "HỌ VÀ TÊN", "NGÀY SINH", "BÉ MỚI", "GIẢM 50%", "GIẢM 100%", "HỌC PHÍ", "TIỀN ĂN", "ANH VĂN", "VẼ", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"]
-        : ["STT", "MÃ HS", "HỌ VÀ TÊN", "NGÀY SINH", "BÉ MỚI", "GIẢM 50%", "GIẢM 100%", "HỌC PHÍ", "TIỀN ĂN", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ"];
+        ? ["MÃ HS", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "ANH VĂN", "VẼ", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ", "BÉ MỚI", "GIẢM 50%", "GIẢM 100%"]
+        : ["MÃ HS", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ", "BÉ MỚI", "GIẢM 50%", "GIẢM 100%"];
 
-      const rows = filteredStudents.map((s, index) => {
+      const rows = filteredStudents.map((s) => {
         const inv = calculateInvoice(s, config, attendance, currentMonth, currentYear);
         const formattedDOB = s.dob ? s.dob : ""; // Dạng yyyy-mm-dd chuẩn ngày như của người dùng trong ảnh
         
         return isPreschool ? [
-          index + 1,
           s.id,
           s.name.toUpperCase(), 
           formattedDOB, 
-          s.isNewStudent ? "X" : "",
-          s.isHalfDiscount ? "X" : "",
-          s.isFullDiscount ? "X" : "",
           inv.tuition, 
           inv.mealFee,
           s.giftedSubjects.english ? config.giftedFees.english : 0,
@@ -79,15 +75,14 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
           inv.materialFee,
           inv.calculationInfo.absentDays, 
           inv.total, 
-          s.notes || ""
+          s.notes || "",
+          s.isNewStudent ? "X" : "",
+          s.isHalfDiscount ? "X" : "",
+          s.isFullDiscount ? "X" : ""
         ] : [
-          index + 1,
           s.id,
           s.name.toUpperCase(), 
           formattedDOB, 
-          s.isNewStudent ? "X" : "",
-          s.isHalfDiscount ? "X" : "",
-          s.isFullDiscount ? "X" : "",
           inv.tuition, 
           inv.mealFee,
           s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0,
@@ -96,7 +91,10 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
           inv.materialFee,
           inv.calculationInfo.absentDays, 
           inv.total, 
-          s.notes || ""
+          s.notes || "",
+          s.isNewStudent ? "X" : "",
+          s.isHalfDiscount ? "X" : "",
+          s.isFullDiscount ? "X" : ""
         ];
       });
 
@@ -155,65 +153,75 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
           } else {
             // [Thông tin học sinh]
             if (C === 0) {
-              // Cột STT
-              cell.s.alignment = { horizontal: "center", vertical: "center" };
-            } else if (C === 1) {
               // Cột MÃ HS
               cell.s.alignment = { horizontal: "center", vertical: "center" };
-              cell.s.font = { name: "Arial", sz: 9, color: { rgb: "64748B" } }; // Màu chữ xám nhạt, cỡ chữ nhỏ hơn cho ID
-            } else if (C === 2) {
+              cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "15803d" } }; // Màu xanh lá in đậm nổi bật
+            } else if (C === 1) {
               // Cột Họ và tên (Căn trái, tên viết hoa)
               cell.s.alignment = { horizontal: "left", vertical: "center" };
-            } else if (C === 3) {
+              cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
+            } else if (C === 2) {
               // Cột Ngày sinh
               cell.s.alignment = { horizontal: "center", vertical: "center" };
-            } else if (C === 4 || C === 5 || C === 6) {
-              // Bé mới, Giảm 50%, Giảm 100%
-              cell.s.alignment = { horizontal: "center", vertical: "center" };
-              cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
-              if (C === 5 && cell.v === "X") {
-                cell.s.fill = { fgColor: { rgb: "FEF3C7" } }; // Nền hổ phách nhạt cho 50%
-                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "B45309" } };
-              } else if (C === 6 && cell.v === "X") {
-                cell.s.fill = { fgColor: { rgb: "FEE2E2" } }; // Nền đỏ nhạt cho 100%
-                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "B91C1C" } };
-              } else if (C === 4 && cell.v === "X") {
-                cell.s.fill = { fgColor: { rgb: "D1FAE5" } }; // Nền lục nhạt cho Bé mới
-                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "047857" } };
-              }
             } else if (isPreschool) {
               // Khối Mẫu Giáo
-              // Điểm số & tiền: 7 -> 14, Phép: 15, Thành tiền: 16 (Bold), Ghi chú: 17
-              if (C >= 7 && C <= 14) {
+              // Tiền: 3 -> 10, Phép: 11, Thành tiền: 12 (Bold), Ghi chú: 13, Bé mới: 14, Giảm 50%: 15, Giảm 100%: 16
+              if (C >= 3 && C <= 10) {
                 cell.t = 'n';
                 cell.z = '#,##0';
                 cell.s.alignment = { horizontal: "right", vertical: "center" };
-              } else if (C === 15) {
+              } else if (C === 11) {
                 cell.s.alignment = { horizontal: "center", vertical: "center" };
-              } else if (C === 16) {
+              } else if (C === 12) {
                 cell.t = 'n';
                 cell.z = '#,##0';
                 cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
                 cell.s.alignment = { horizontal: "right", vertical: "center" };
-              } else {
+              } else if (C === 13) {
                 cell.s.alignment = { horizontal: "left", vertical: "center" };
+              } else if (C === 14 || C === 15 || C === 16) {
+                cell.s.alignment = { horizontal: "center", vertical: "center" };
+                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
+                if (C === 14 && cell.v === "X") {
+                  cell.s.fill = { fgColor: { rgb: "D1FAE5" } }; // Nền lục nhạt cho Bé mới
+                  cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "047857" } };
+                } else if (C === 15 && cell.v === "X") {
+                  cell.s.fill = { fgColor: { rgb: "FEF3C7" } }; // Nền hổ phách nhạt cho 50%
+                  cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "B45309" } };
+                } else if (C === 16 && cell.v === "X") {
+                  cell.s.fill = { fgColor: { rgb: "FEE2E2" } }; // Nền đỏ nhạt cho 100%
+                  cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "B91C1C" } };
+                }
               }
             } else {
               // Khối Nhà Trẻ
-              // Điểm số & tiền: 7 -> 12, Phép: 13, Thành tiền: 14 (Bold), Ghi chú: 15
-              if (C >= 7 && C <= 12) {
+              // Tiền: 3 -> 8, Phép: 9, Thành tiền: 10 (Bold), Ghi chú: 11, Bé mới: 12, Giảm 50%: 13, Giảm 100%: 14
+              if (C >= 3 && C <= 8) {
                 cell.t = 'n';
                 cell.z = '#,##0';
                 cell.s.alignment = { horizontal: "right", vertical: "center" };
-              } else if (C === 13) {
+              } else if (C === 9) {
                 cell.s.alignment = { horizontal: "center", vertical: "center" };
-              } else if (C === 14) {
+              } else if (C === 10) {
                 cell.t = 'n';
                 cell.z = '#,##0';
                 cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
                 cell.s.alignment = { horizontal: "right", vertical: "center" };
-              } else {
+              } else if (C === 11) {
                 cell.s.alignment = { horizontal: "left", vertical: "center" };
+              } else if (C === 12 || C === 13 || C === 14) {
+                cell.s.alignment = { horizontal: "center", vertical: "center" };
+                cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "000000" } };
+                if (C === 12 && cell.v === "X") {
+                  cell.s.fill = { fgColor: { rgb: "D1FAE5" } }; // Nền lục nhạt cho Bé mới
+                  cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "047857" } };
+                } else if (C === 13 && cell.v === "X") {
+                  cell.s.fill = { fgColor: { rgb: "FEF3C7" } }; // Nền hổ phách nhạt cho 50%
+                  cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "B45309" } };
+                } else if (C === 14 && cell.v === "X") {
+                  cell.s.fill = { fgColor: { rgb: "FEE2E2" } }; // Nền đỏ nhạt cho 100%
+                  cell.s.font = { name: "Arial", sz: 11, bold: true, color: { rgb: "B91C1C" } };
+                }
               }
             }
           }
@@ -221,7 +229,15 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
       }
 
       ws['!merges'] = [{ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } }];
-      ws['!cols'] = headers.map((h, i) => i === 2 ? { wch: 28 } : i === 0 ? { wch: 6 } : i === 1 ? { wch: 14 } : i === 3 ? { wch: 14 } : (i === 4 || i === 5 || i === 6) ? { wch: 10 } : { wch: 13 });
+      ws['!cols'] = headers.map((h, i) => {
+        if (i === 0) return { wch: 10 }; // Mã HS
+        if (i === 1) return { wch: 28 }; // Họ và tên
+        if (i === 2) return { wch: 14 }; // Ngày sinh
+        const lastThreeIndex = headers.length - 3;
+        if (i >= lastThreeIndex) return { wch: 10 }; // Bé mới, Giảm 50%, Giảm 100%
+        if (h === "GHI CHÚ") return { wch: 18 };
+        return { wch: 13 }; // Các cột còn lại
+      });
 
       XLSX.utils.book_append_sheet(wb, ws, groupName);
     });
