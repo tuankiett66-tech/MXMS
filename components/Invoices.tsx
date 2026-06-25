@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FileText, Printer, Phone, Share2, ArrowLeft, ChevronLeft, ChevronRight, LayoutGrid, List, MessageCircle, FileDown, Loader2 } from 'lucide-react';
 import { Card, Badge } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
-import { calculateInvoice, formatCurrency, generateZaloMessage, sortStudents, formatDateToDMY } from '../utils/calculations';
+import { calculateInvoice, formatCurrency, generateZaloMessage, sortStudents, formatDateToDMY, isPreschoolClass, isNurseryClass } from '../utils/calculations';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
@@ -65,6 +65,12 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
 
   const classStudents = useMemo(() => {
     if (!bulkPrintClass) return [];
+    if (bulkPrintClass === "Khối Mẫu Giáo") {
+      return activeStudents.filter(s => isPreschoolClass(s.className));
+    }
+    if (bulkPrintClass === "Khối Nhà Trẻ") {
+      return activeStudents.filter(s => isNurseryClass(s.className));
+    }
     return activeStudents.filter(s => (s.className.trim() || "Chưa phân lớp") === bulkPrintClass);
   }, [activeStudents, bulkPrintClass]);
 
@@ -74,15 +80,15 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-2">
            <h3 className="text-xl font-black text-slate-800 uppercase italic">Chọn bé lập phiếu</h3>
            <div className="flex flex-wrap gap-2 no-print">
-             {classes.map(cls => (
+             {["Khối Mẫu Giáo", "Khối Nhà Trẻ"].map(group => (
                <button 
-                key={cls}
+                key={group}
                 onClick={() => {
-                  setBulkPrintClass(cls);
+                  setBulkPrintClass(group);
                 }}
                 className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-slate-100 rounded-xl text-[10px] font-black uppercase text-slate-600 hover:border-emerald-500 hover:text-emerald-600 transition-all shadow-sm"
                >
-                 <Printer size={14} /> Xử lý lớp {cls}
+                 <Printer size={14} /> Xử lý {group}
                </button>
              ))}
              <div className="w-px h-8 bg-slate-200 mx-2 hidden md:block"></div>

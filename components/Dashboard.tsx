@@ -262,13 +262,13 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
           </button>
           
           <div className="flex gap-2 w-full sm:w-auto">
-            {classes.map(cls => (
+            {["Khối Mẫu Giáo", "Khối Nhà Trẻ"].map(group => (
                <button 
-                key={cls}
-                onClick={() => onBulkPrint(cls)}
+                key={group}
+                onClick={() => onBulkPrint(group)}
                 className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-white border-2 border-slate-100 rounded-2xl text-[10px] font-black uppercase text-slate-600 hover:border-red-500 hover:text-red-600 transition-all shadow-md"
                >
-                 <Download size={16} /> Xuất PDF {cls}
+                 <Download size={16} /> Xuất PDF {group}
                </button>
             ))}
           </div>
