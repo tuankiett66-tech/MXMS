@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, X, Pencil } from 'lucide-react';
 import { Card } from './Common';
 import { Student, Attendance, GiftedSubjects } from '../types';
-import { sortStudents, isPreschoolClass, isNurseryClass, formatDateToDMY, formatCurrency } from '../utils/calculations';
+import { sortStudents, isPreschoolClass, isNurseryClass, formatDateToDMY, formatCurrency, removeVietnameseTones } from '../utils/calculations';
 
 interface DateInputProps {
   value: string;
@@ -166,9 +166,14 @@ export const AttendanceTable = ({
     const isClassMatch = activeClassTab === 'all' || 
                          (activeClassTab === 'nursery' && isNurseryClass(s.className)) ||
                          (activeClassTab === 'preschool' && isPreschoolClass(s.className));
-    const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          s.className.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          s.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchNorm = removeVietnameseTones(searchTerm).toLowerCase();
+    const nameNorm = removeVietnameseTones(s.name).toLowerCase();
+    const classNorm = removeVietnameseTones(s.className).toLowerCase();
+    const idNorm = removeVietnameseTones(s.id).toLowerCase();
+
+    const matchesSearch = nameNorm.includes(searchNorm) || 
+                          classNorm.includes(searchNorm) || 
+                          idNorm.includes(searchNorm);
     return isClassMatch && matchesSearch;
   });
 

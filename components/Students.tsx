@@ -12,7 +12,8 @@ import {
   normalizeToYMD, 
   formatDateToVietnamYMD,
   calculateInvoice,
-  formatCurrency
+  formatCurrency,
+  removeVietnameseTones
 } from '../utils/calculations';
 
 interface DateInputProps {
@@ -621,9 +622,14 @@ export const Students = ({
   const sortedAndFiltered = sortStudents(students);
 
   const filteredStudents = sortedAndFiltered.filter(s => {
-    const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         s.className.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         s.id.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchNorm = removeVietnameseTones(searchTerm).toLowerCase();
+    const nameNorm = removeVietnameseTones(s.name).toLowerCase();
+    const classNorm = removeVietnameseTones(s.className).toLowerCase();
+    const idNorm = removeVietnameseTones(s.id).toLowerCase();
+
+    const matchesSearch = nameNorm.includes(searchNorm) || 
+                          classNorm.includes(searchNorm) ||
+                          idNorm.includes(searchNorm);
     
     if (activeClassTab === 'nursery') return matchesSearch && isNurseryClass(s.className) && s.status !== 'Tạm nghỉ';
     if (activeClassTab === 'preschool') return matchesSearch && isPreschoolClass(s.className) && s.status !== 'Tạm nghỉ';

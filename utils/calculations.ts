@@ -332,3 +332,12 @@ export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year:
 
   return msg;
 };
+
+export function removeVietnameseTones(str: string): string {
+  if (!str) return '';
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/Đ/g, "D");
+}
