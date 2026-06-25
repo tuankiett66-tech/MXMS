@@ -414,14 +414,14 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-50 border-y border-slate-200 text-slate-750 text-[10px] md:text-xs font-black uppercase tracking-wider">
-                <th className="py-4 px-3 text-center border border-slate-200 w-12 text-slate-900">STT</th>
-                <th className="py-4 px-4 border border-slate-200 text-slate-900">HỌ VÀ TÊN BÉ</th>
-                <th className="py-4 px-3 text-center border border-slate-200 w-28 text-slate-900">TỔNG SỐ NGÀY<br/>TRONG THÁNG</th>
-                <th className="py-4 px-3 text-center border border-slate-200 w-28 text-slate-900">SỐ NGÀY<br/>ĐI HỌC</th>
-                <th className="py-4 px-3 text-center border border-slate-200 w-28 text-slate-900">SỐ NGÀY<br/>NGHỈ HỌC</th>
-                <th className="py-4 px-4 text-right border border-slate-200 w-36 text-slate-900">SỐ TIỀN ĂN<br/>/NGÀY (VNĐ)</th>
-                <th className="py-4 px-4 text-right border border-slate-200 w-36 text-slate-900">SỐ TIỀN<br/>HOÀN LẠI (VNĐ)</th>
-                <th className="py-4 px-4 text-center border border-slate-200 w-32 text-slate-900">KÝ NHẬN</th>
+                <th className="py-4 px-2 text-center border border-slate-200 w-10 text-slate-900">STT</th>
+                <th className="py-4 px-4 border border-slate-200 min-w-[220px] md:min-w-[260px] w-auto text-slate-900">HỌ VÀ TÊN BÉ</th>
+                <th className="py-4 px-2 text-center border border-slate-200 w-24 text-slate-900">TỔNG SỐ NGÀY<br/>TRONG THÁNG</th>
+                <th className="py-4 px-2 text-center border border-slate-200 w-20 text-slate-900">SỐ NGÀY<br/>ĐI HỌC</th>
+                <th className="py-4 px-2 text-center border border-slate-200 w-20 text-slate-900">SỐ NGÀY<br/>NGHỈ HỌC</th>
+                <th className="py-4 px-3 text-right border border-slate-200 w-28 text-slate-900">SỐ TIỀN ĂN<br/>/NGÀY (VNĐ)</th>
+                <th className="py-4 px-3 text-right border border-slate-200 w-28 text-slate-900">SỐ TIỀN<br/>HOÀN LẠI (VNĐ)</th>
+                <th className="py-4 px-3 text-center border border-slate-200 w-24 text-slate-900">KÝ NHẬN</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-xs md:text-sm text-slate-800 font-bold">
@@ -437,19 +437,19 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
               ) : (
                 tableData.map((row) => (
                   <tr key={row.studentId} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3 px-3 text-center border border-slate-150 font-mono text-slate-455">{row.stt}</td>
-                    <td className="py-3 px-4 border border-slate-150 font-extrabold uppercase text-slate-900 tracking-tight">
+                    <td className="py-3 px-2 text-center border border-slate-150 font-mono text-slate-455">{row.stt}</td>
+                    <td className="py-3 px-4 border border-slate-150 font-extrabold uppercase text-slate-900 tracking-tight whitespace-nowrap">
                       {row.fullNameAndDob}
                     </td>
-                    <td className="py-3 px-3 text-center border border-slate-150 text-slate-600 font-mono">
+                    <td className="py-3 px-2 text-center border border-slate-150 text-slate-600 font-mono">
                       {calendarDays}
                     </td>
-                    <td className="py-3 px-3 text-center border border-slate-150 text-emerald-700 font-black font-mono">
+                    <td className="py-3 px-2 text-center border border-slate-150 text-emerald-700 font-black font-mono">
                       {row.scheduledDays}
                     </td>
                     
                     {/* Interactive Input with high contrast, elegant state handling */}
-                    <td className="py-1 px-2 text-center border border-slate-150 font-black font-mono">
+                    <td className="py-1 px-1 text-center border border-slate-150 font-black font-mono">
                       <div className="flex justify-center items-center">
                         <input
                           type="number"
@@ -465,13 +465,13 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
                       </div>
                     </td>
 
-                    <td className="py-3 px-4 text-right border border-slate-150 font-mono text-slate-650">
+                    <td className="py-3 px-3 text-right border border-slate-150 font-mono text-slate-650">
                       {formatCurrency(row.mealFeePerDay)}
                     </td>
-                    <td className="py-3 px-4 text-right border border-slate-150 font-black text-rose-600 font-mono bg-rose-50/10">
+                    <td className="py-3 px-3 text-right border border-slate-150 font-black text-rose-600 font-mono bg-rose-50/10">
                       {row.refundAmount > 0 ? formatCurrency(row.refundAmount) : '0'}
                     </td>
-                    <td className="py-3 px-4 border border-slate-150 text-center text-slate-300">
+                    <td className="py-3 px-3 border border-slate-150 text-center text-slate-300">
                       {/* Blank cell for signature on print */}
                       <span className="opacity-0">Ký nhận</span>
                     </td>
