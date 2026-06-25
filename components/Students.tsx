@@ -746,9 +746,12 @@ export const Students = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-        <div className="flex flex-col md:flex-row md:flex-wrap gap-4 flex-1 items-stretch md:items-center">
-          <div className="relative flex-1 min-w-[260px] max-w-md">
+      {/* BỐ CỤC KHU VỰC ĐIỀU KHIỂN - CHIA LÀM 2 DÒNG RÕ RÀNG TỐI ƯU CHO MÀN HÌNH VUÔNG */}
+      <div className="space-y-4">
+        {/* DÒNG 1: Ô TÌM KIẾM - BÉ MỚI - LÀM SẠCH - NẠP EXCEL */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Ô Tìm Kiếm - Chiếm hết khoảng trống còn lại để tránh lãng phí diện tích */}
+          <div className="relative flex-1 min-w-[240px]">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
@@ -767,75 +770,82 @@ export const Students = ({
               </button>
             )}
           </div>
-          
-          <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar">
-            <button 
-              onClick={() => setActiveClassTab('preschool')} 
-              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
-                activeClassTab === 'preschool' 
-                  ? 'bg-[#385723] text-white shadow-md' 
-                  : 'text-slate-600 hover:bg-slate-200/50'
-              }`}
-            >
-              <span>🟢 Lớp Mẫu Giáo</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'preschool' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                {students.filter(s => s.status !== 'Tạm nghỉ' && isPreschoolClass(s.className)).length} bé
-              </span>
-            </button>
-            <button 
-              onClick={() => setActiveClassTab('nursery')} 
-              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
-                activeClassTab === 'nursery' 
-                  ? 'bg-[#1f4e78] text-white shadow-md' 
-                  : 'text-slate-600 hover:bg-slate-200/50'
-              }`}
-            >
-              <span>🔵 Lớp Nhà Trẻ</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'nursery' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
-                {students.filter(s => s.status !== 'Tạm nghỉ' && isNurseryClass(s.className)).length} bé
-              </span>
-            </button>
-            <button 
-              onClick={() => setActiveClassTab('paused')} 
-              className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
-                activeClassTab === 'paused' 
-                  ? 'bg-amber-600 text-white shadow-md' 
-                  : 'text-slate-600 hover:bg-slate-200/50'
-              }`}
-            >
-              <span>🟡 Tạm nghỉ / Hè</span>
-              <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'paused' ? 'bg-white/20 text-white' : 'bg-amber-200 text-amber-800'}`}>
-                {students.filter(s => s.status === 'Tạm nghỉ').length} bé
-              </span>
-            </button>
-          </div>
-        </div>
 
-        <div className="flex flex-wrap items-center gap-3 shrink-0">
           <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xlsx, .xls" className="hidden" />
-          
+
+          {/* Nút Bé Mới */}
           <button 
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-3 bg-blue-50 text-blue-600 border border-blue-100 rounded-2xl font-bold text-xs uppercase hover:bg-blue-100 transition-all shadow-sm whitespace-nowrap"
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-1.5 px-5 py-3 bg-emerald-600 text-white rounded-2xl font-bold text-xs uppercase shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"
+            title="Tiếp nhận bé mới"
           >
-            <FileUp size={18} />
-            Nạp file Excel
+            <Plus size={18} />
+            Bé mới
           </button>
 
+          {/* Nút Làm Sạch */}
           <button 
             onClick={() => setIsConfirmingClear(true)}
-            className="flex items-center gap-2 px-4 py-3 bg-red-50 text-red-600 border border-red-100 rounded-2xl font-bold text-xs uppercase hover:bg-red-100 transition-all shadow-sm whitespace-nowrap"
+            className="flex items-center gap-1.5 px-4 py-3 bg-red-50 text-red-600 border border-red-100 rounded-2xl font-bold text-xs uppercase hover:bg-red-100 transition-all shadow-sm whitespace-nowrap"
+            title="Xóa sạch dữ liệu"
           >
             <Trash2 size={18} />
             Làm sạch
           </button>
 
+          {/* Nút Nạp Excel */}
           <button 
-            onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-2xl font-bold text-xs uppercase shadow-lg shadow-emerald-100 hover:bg-emerald-700 transition-all active:scale-95 whitespace-nowrap"
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-1.5 px-4 py-3 bg-blue-50 text-blue-600 border border-blue-100 rounded-2xl font-bold text-xs uppercase hover:bg-blue-100 transition-all shadow-sm whitespace-nowrap"
+            title="Nạp dữ liệu từ file Excel"
           >
-            <Plus size={18} />
-            Tiếp nhận bé mới
+            <FileUp size={18} />
+            Nạp Excel
+          </button>
+        </div>
+
+        {/* DÒNG 2: CÁC NÚT PHÂN LOẠI LỚP (MẪU GIÁO - NHÀ TRẺ - TẠM NGHỈ) */}
+        <div className="flex bg-slate-100/80 p-1 rounded-2xl border border-slate-200 shadow-sm overflow-x-auto no-scrollbar w-max max-w-full">
+          <button 
+            onClick={() => setActiveClassTab('preschool')} 
+            className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeClassTab === 'preschool' 
+                ? 'bg-[#385723] text-white shadow-md' 
+                : 'text-slate-600 hover:bg-slate-200/50'
+            }`}
+          >
+            <span>🟢 Lớp Mẫu Giáo</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'preschool' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+              {students.filter(s => s.status !== 'Tạm nghỉ' && isPreschoolClass(s.className)).length} bé
+            </span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveClassTab('nursery')} 
+            className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeClassTab === 'nursery' 
+                ? 'bg-[#1f4e78] text-white shadow-md' 
+                : 'text-slate-600 hover:bg-slate-200/50'
+            }`}
+          >
+            <span>🔵 Lớp Nhà Trẻ</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'nursery' ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'}`}>
+              {students.filter(s => s.status !== 'Tạm nghỉ' && isNurseryClass(s.className)).length} bé
+            </span>
+          </button>
+
+          <button 
+            onClick={() => setActiveClassTab('paused')} 
+            className={`px-5 py-2 rounded-xl text-xs font-black uppercase transition-all whitespace-nowrap flex items-center gap-2 ${
+              activeClassTab === 'paused' 
+                ? 'bg-amber-600 text-white shadow-md' 
+                : 'text-slate-600 hover:bg-slate-200/50'
+            }`}
+          >
+            <span>🟡 Tạm nghỉ / Hè</span>
+            <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeClassTab === 'paused' ? 'bg-white/20 text-white' : 'bg-amber-200 text-amber-800'}`}>
+              {students.filter(s => s.status === 'Tạm nghỉ').length} bé
+            </span>
           </button>
         </div>
       </div>
@@ -851,13 +861,6 @@ export const Students = ({
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="flex items-start md:items-center gap-2.5 px-5 py-3.5 bg-emerald-50/60 border border-emerald-100 rounded-[20px] text-[11px] text-emerald-800 font-bold shadow-sm animate-in fade-in slide-in-from-top-1 duration-300">
-            <span className="text-sm select-none">💡</span>
-            <span className="leading-snug">
-              <strong>Mẹo thao tác trực tiếp trên bảng Excel:</strong> Nhấp đúp (Double-click) dòng hoặc nhấp vào Họ Tên để Sửa hồ sơ chi tiết. Có thể nhấp chuột trực tiếp vào các phí: <strong>Học phí (Đóng/Giảm/Miễn)</strong>, các môn phụ <strong>(Anh văn, Vẽ, Nhịp điệu)</strong>, hoặc <strong>CSVC/Học phẩm (Bé mới)</strong> để thay đổi chính sách đóng phí cực nhanh của bé đó!
-            </span>
-          </div>
-
           <div className="w-full max-h-[calc(100vh-280px)] min-h-[420px] overflow-auto rounded-[30px] border-2 border-slate-200/80 bg-white shadow-md scrollbar-thin">
             <table className="w-full text-left border-collapse border border-slate-200">
               {activeClassTab === 'preschool' ? (
@@ -1092,6 +1095,14 @@ export const Students = ({
                 </>
               )}
             </table>
+          </div>
+
+          {/* Ô HƯỚNG DẪN ĐƯỢC CHUYỂN XUỐNG DƯỚI CÙNG THEO YÊU CẦU CỦA NGƯỜI DÙNG */}
+          <div className="flex items-start md:items-center gap-2.5 px-5 py-3.5 bg-emerald-50/60 border border-emerald-100 rounded-[20px] text-[11px] text-emerald-800 font-bold shadow-sm animate-in fade-in duration-300">
+            <span className="text-sm select-none">💡</span>
+            <span className="leading-snug">
+              <strong>Mẹo thao tác trực tiếp trên bảng Excel:</strong> Nhấp đúp (Double-click) dòng hoặc nhấp vào Họ Tên để Sửa hồ sơ chi tiết. Có thể nhấp chuột trực tiếp vào các phí: <strong>Học phí (Đóng/Giảm/Miễn)</strong>, các môn phụ <strong>(Anh văn, Vẽ, Nhịp điệu)</strong>, hoặc <strong>CSVC/Học phẩm (Bé mới)</strong> để thay đổi chính sách đóng phí cực nhanh của bé đó!
+            </span>
           </div>
         </div>
       )}
