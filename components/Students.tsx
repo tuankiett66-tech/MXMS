@@ -746,9 +746,9 @@ export const Students = ({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
-        <div className="flex flex-col md:flex-row md:flex-wrap lg:flex-nowrap gap-4 flex-1 items-stretch md:items-center">
-          <div className="relative flex-1 min-w-[280px] max-w-md">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="flex flex-col md:flex-row md:flex-wrap gap-4 flex-1 items-stretch md:items-center">
+          <div className="relative flex-1 min-w-[260px] max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
             <input 
               type="text" 
@@ -811,7 +811,7 @@ export const Students = ({
           </div>
         </div>
 
-        <div className="flex items-center gap-3 overflow-x-auto pb-2 md:pb-0 no-scrollbar">
+        <div className="flex flex-wrap items-center gap-3 shrink-0">
           <input type="file" ref={fileInputRef} onChange={handleFileUpload} accept=".xlsx, .xls" className="hidden" />
           
           <button 
