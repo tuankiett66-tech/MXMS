@@ -263,13 +263,16 @@ const StudentRow = ({
 
   return (
     <tr className="hover:bg-slate-50/80 bg-white transition-all text-xs border-b border-slate-200 group">
-      {/* 1. STT */}
+      {/* 1. STT & Mã HS */}
       <td 
         onClick={() => onOpenModal(student)}
-        className="py-2.5 px-2 text-center text-slate-500 font-bold bg-slate-50/50 w-[55px] font-mono select-none border-r border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors"
+        className="py-2 px-1 text-center bg-slate-50/50 w-[70px] select-none border-r border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors"
         title="Bấm để chỉnh sửa chi tiết hồ sơ bé"
       >
-        {index + 1}
+        <div className="flex flex-col items-center justify-center gap-0.5 leading-none">
+          <span className="text-[9px] text-slate-400 font-bold">#{index + 1}</span>
+          <span className="text-[11px] font-black text-emerald-700 font-mono tracking-tight bg-emerald-50 px-1 py-0.5 rounded border border-emerald-100">{student.id}</span>
+        </div>
       </td>
 
       {/* 2. Họ và tên bé */}
@@ -1035,10 +1038,13 @@ export const Students = ({
                         <tr key={student.id} className="hover:bg-amber-50/20 bg-white transition-all text-xs border-b border-slate-200 group">
                           <td 
                             onClick={() => handleOpenModal(student)}
-                            className="py-2.5 px-2 text-center text-slate-500 font-bold bg-slate-50/50 w-[55px] font-mono select-none border-r border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors"
+                            className="py-2 px-1 text-center bg-slate-50/50 w-[70px] select-none border-r border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors"
                             title="Bấm để chỉnh sửa chi tiết hồ sơ bé"
                           >
-                            {idx + 1}
+                            <div className="flex flex-col items-center justify-center gap-0.5 leading-none">
+                              <span className="text-[9px] text-slate-400 font-bold">#{idx + 1}</span>
+                              <span className="text-[11px] font-black text-amber-700 font-mono tracking-tight bg-amber-50 px-1 py-0.5 rounded border border-amber-200">{student.id}</span>
+                            </div>
                           </td>
                           <td className="py-2.5 px-3 font-extrabold text-slate-900 border-r border-slate-200 uppercase">
                             <button onClick={() => handleOpenModal(student)} className="hover:text-emerald-700 transition-colors text-left font-black">

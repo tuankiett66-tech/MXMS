@@ -144,6 +144,34 @@ export const isPreschoolClass = (className: string): boolean => {
 
 export const sortStudents = (list: Student[]): Student[] => {
   return [...list].sort((a, b) => {
+    // 1. Sắp xếp theo trạng thái: Đang học trước, Tạm nghỉ sau
+    const statusA = a.status === 'Tạm nghỉ' ? 1 : 0;
+    const statusB = b.status === 'Tạm nghỉ' ? 1 : 0;
+    if (statusA !== statusB) {
+      return statusA - statusB;
+    }
+
+    // 2. Phân loại lớp: Lớp Mẫu giáo xếp trước, Lớp Nhà trẻ xếp sau
+    const isNurseryA = isNurseryClass(a.className) ? 1 : 0;
+    const isNurseryB = isNurseryClass(b.className) ? 1 : 0;
+    if (isNurseryA !== isNurseryB) {
+      return isNurseryA - isNurseryB;
+    }
+
+    // 3. Sắp xếp theo mã số số thứ tự phía sau (M1, M2... N1, N2... T1, T2...)
+    const getNum = (id: string) => {
+      const match = id.match(/\d+/);
+      return match ? parseInt(match[0], 10) : 0;
+    };
+
+    const isCustomIDA = a.id.startsWith('M') || a.id.startsWith('N') || a.id.startsWith('T');
+    const isCustomIDB = b.id.startsWith('M') || b.id.startsWith('N') || b.id.startsWith('T');
+
+    if (isCustomIDA && isCustomIDB) {
+      return getNum(a.id) - getNum(b.id);
+    }
+
+    // Dự phòng khi chưa đồng bộ mã số: Sắp xếp theo ngày nhập học / ngày lập dòng và tên
     const parseDate = (valArr: (string | undefined)[]) => {
       for (const val of valArr) {
         if (!val) continue;
@@ -341,3 +369,88 @@ export function removeVietnameseTones(str: string): string {
     .replace(/đ/g, "d")
     .replace(/Đ/g, "D");
 }
+
+export const syncStudentIdsAndAttendance = (
+  studentsList: Student[],
+  attendanceList: Attendance[]
+): { students: Student[]; attendance: Attendance[] } => {
+  const compareByDateAndName = (a: Student, b: Student) => {
+    const parseDate = (valArr: (string | undefined)[]) => {
+      for (const val of valArr) {
+        if (!val) continue;
+        const time = new Date(val).getTime();
+        if (!isNaN(time)) return time;
+      }
+      return 0;
+    };
+    const dateA = parseDate([a.classEntryDate, a.admissionDate]);
+    const dateB = parseDate([b.classEntryDate, b.admissionDate]);
+    
+    if (dateA !== dateB) {
+      return dateA - dateB;
+    }
+    return a.name.localeCompare(b.name, 'vi');
+  };
+
+  // 1. Phân chia học sinh đang học và tạm nghỉ
+  const activePreschool = studentsList
+    .filter(s => s.status !== 'Tạm nghỉ' && isPreschoolClass(s.className))
+    .sort(compareByDateAndName);
+
+  const activeNursery = studentsList
+    .filter(s => s.status !== 'Tạm nghỉ' && isNurseryClass(s.className))
+    .sort(compareByDateAndName);
+
+  const paused = studentsList
+    .filter(s => s.status === 'Tạm nghỉ')
+    .sort(compareByDateAndName);
+
+  const newStudents: Student[] = [];
+  const idMap: Record<string, string> = {};
+
+  // Gán M1, M2... cho Lớp Mẫu giáo
+  activePreschool.forEach((student, index) => {
+    const newId = `M${index + 1}`;
+    idMap[student.id] = newId;
+    newStudents.push({
+      ...student,
+      id: newId
+    });
+  });
+
+  // Gán N1, N2... cho Lớp Nhà trẻ
+  activeNursery.forEach((student, index) => {
+    const newId = `N${index + 1}`;
+    idMap[student.id] = newId;
+    newStudents.push({
+      ...student,
+      id: newId
+    });
+  });
+
+  // Gán T1, T2... cho nhóm Tạm nghỉ
+  paused.forEach((student, index) => {
+    const newId = `T${index + 1}`;
+    idMap[student.id] = newId;
+    newStudents.push({
+      ...student,
+      id: newId
+    });
+  });
+
+  // 2. Cập nhật danh sách điểm danh theo mã định danh mới
+  const newAttendance = attendanceList.map(att => {
+    if (idMap[att.studentId]) {
+      return {
+        ...att,
+        studentId: idMap[att.studentId]
+      };
+    }
+    return att;
+  });
+
+  return {
+    students: newStudents,
+    attendance: newAttendance
+  };
+};

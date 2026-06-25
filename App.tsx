@@ -10,23 +10,26 @@ import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
 import { MealRefund } from './components/MealRefund.tsx';
 import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2, Utensils, Download } from 'lucide-react';
-import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, ensureClassEntryDates, formatDateToDMY } from './utils/calculations.ts';
+import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, ensureClassEntryDates, formatDateToDMY, syncStudentIdsAndAttendance } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   
-  // Khởi tạo state từ LocalStorage hoặc mặc định
-  const [students, setStudents] = useState<Student[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_STUDENTS`);
-    return saved ? ensureClassEntryDates(JSON.parse(saved)) : [];
-  });
-  
-  const [attendance, setAttendance] = useState<Attendance[]>(() => {
-    const saved = localStorage.getItem(`${STORAGE_KEY}_ATTENDANCE`);
-    return saved ? JSON.parse(saved) : [];
-  });
+  // Khởi tạo state từ LocalStorage và chuẩn hóa đồng bộ mã HS ngay từ đầu
+  const initialData = (() => {
+    const savedStudents = localStorage.getItem(`${STORAGE_KEY}_STUDENTS`);
+    const savedAttendance = localStorage.getItem(`${STORAGE_KEY}_ATTENDANCE`);
+    
+    const initialStudents = savedStudents ? ensureClassEntryDates(JSON.parse(savedStudents)) : [];
+    const initialAttendance = savedAttendance ? JSON.parse(savedAttendance) : [];
+    
+    return syncStudentIdsAndAttendance(initialStudents, initialAttendance);
+  })();
+
+  const [students, setStudents] = useState<Student[]>(initialData.students);
+  const [attendance, setAttendance] = useState<Attendance[]>(initialData.attendance);
   
   const [config, setConfig] = useState<GlobalConfig>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_CONFIG`);
@@ -69,8 +72,13 @@ export default function App() {
             throw new Error(`HTTP error! status: ${response.status}`);
           }
           const data = await response.json();
-          if (data.students) setStudents(ensureClassEntryDates(data.students));
-          if (data.attendance) setAttendance(data.attendance);
+          if (data.students) {
+            const initialStudents = ensureClassEntryDates(data.students);
+            const initialAttendance = data.attendance || [];
+            const synced = syncStudentIdsAndAttendance(initialStudents, initialAttendance);
+            setStudents(synced.students);
+            setAttendance(synced.attendance);
+          }
           if (data.config) setConfig(data.config);
           if (data.month) setCurrentMonth(data.month);
           if (data.year) setCurrentYear(data.year);
@@ -111,8 +119,13 @@ export default function App() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
-      if (data.students) setStudents(ensureClassEntryDates(data.students));
-      if (data.attendance) setAttendance(data.attendance);
+      if (data.students) {
+        const initialStudents = ensureClassEntryDates(data.students);
+        const initialAttendance = data.attendance || [];
+        const synced = syncStudentIdsAndAttendance(initialStudents, initialAttendance);
+        setStudents(synced.students);
+        setAttendance(synced.attendance);
+      }
       if (data.config) setConfig(data.config);
       if (data.month) setCurrentMonth(data.month);
       if (data.year) setCurrentYear(data.year);
@@ -345,9 +358,24 @@ export default function App() {
     setStudents(prev => prev.map(s => s.id === studentId ? { ...s, isNewStudent: !s.isNewStudent } : s));
   };
 
-  const addStudent = (newStudent: Student) => setStudents(prev => [...prev, newStudent]);
-  const updateStudent = (updated: Student) => setStudents(prev => prev.map(s => s.id === updated.id ? updated : s));
-  const deleteStudent = (id: string) => setStudents(prev => prev.filter(s => s.id !== id));
+  const updateStudentsAndAttendance = (newStudentsList: Student[], newAttendanceList: Attendance[] = attendance) => {
+    const synced = syncStudentIdsAndAttendance(newStudentsList, newAttendanceList);
+    setStudents(synced.students);
+    setAttendance(synced.attendance);
+  };
+
+  const addStudent = (newStudent: Student) => {
+    updateStudentsAndAttendance([...students, newStudent]);
+  };
+
+  const updateStudent = (updated: Student) => {
+    updateStudentsAndAttendance(students.map(s => s.id === updated.id ? updated : s));
+  };
+
+  const deleteStudent = (id: string) => {
+    updateStudentsAndAttendance(students.filter(s => s.id !== id));
+  };
+
   const clearAllStudents = () => { 
     if(window.confirm("Bạn có chắc chắn muốn xóa toàn bộ dữ liệu không?")) {
       setStudents([]); 
@@ -359,45 +387,44 @@ export default function App() {
   };
   
   const importStudents = (newStudents: Student[]) => {
-    setStudents(prev => {
-      const idMap = new Map(prev.map(s => [s.id, s]));
-      const nameMap = new Map(prev.map(s => [s.name.trim().toLowerCase(), s]));
-      const updatedList = [...prev];
+    const idMap = new Map(students.map(s => [s.id, s]));
+    const nameMap = new Map(students.map(s => [s.name.trim().toLowerCase(), s]));
+    const updatedList = [...students];
 
-      newStudents.forEach(newS => {
-        const keyId = newS.id;
-        const keyName = newS.name.trim().toLowerCase();
+    newStudents.forEach(newS => {
+      const keyId = newS.id;
+      const keyName = newS.name.trim().toLowerCase();
 
-        // Match first by ID, if match not found, try by trimmed name (case-insensitive)
-        const matched = idMap.get(keyId) || nameMap.get(keyName);
+      // Match first by ID, if match not found, try by trimmed name (case-insensitive)
+      const matched = idMap.get(keyId) || nameMap.get(keyName);
 
-        if (matched) {
-          const idx = updatedList.findIndex(s => s.id === matched.id);
-          if (idx !== -1) {
-            updatedList[idx] = {
-              ...updatedList[idx],
-              name: newS.name || updatedList[idx].name,
-              dob: newS.dob || updatedList[idx].dob,
-              className: newS.className || updatedList[idx].className,
-              phoneNumber: newS.phoneNumber || updatedList[idx].phoneNumber,
-              notes: newS.notes || updatedList[idx].notes,
-              status: newS.status || updatedList[idx].status,
-              isNewStudent: newS.isNewStudent !== undefined ? newS.isNewStudent : updatedList[idx].isNewStudent,
-              isHalfDiscount: newS.isHalfDiscount !== undefined ? newS.isHalfDiscount : updatedList[idx].isHalfDiscount,
-              isFullDiscount: newS.isFullDiscount !== undefined ? newS.isFullDiscount : updatedList[idx].isFullDiscount,
-              giftedSubjects: {
-                english: newS.giftedSubjects?.english !== undefined ? newS.giftedSubjects.english : updatedList[idx].giftedSubjects?.english,
-                drawing: newS.giftedSubjects?.drawing !== undefined ? newS.giftedSubjects.drawing : updatedList[idx].giftedSubjects?.drawing,
-                rhythm: newS.giftedSubjects?.rhythm !== undefined ? newS.giftedSubjects.rhythm : updatedList[idx].giftedSubjects?.rhythm,
-              }
-            };
-          }
-        } else {
-          updatedList.push(newS);
+      if (matched) {
+        const idx = updatedList.findIndex(s => s.id === matched.id);
+        if (idx !== -1) {
+          updatedList[idx] = {
+            ...updatedList[idx],
+            name: newS.name || updatedList[idx].name,
+            dob: newS.dob || updatedList[idx].dob,
+            className: newS.className || updatedList[idx].className,
+            phoneNumber: newS.phoneNumber || updatedList[idx].phoneNumber,
+            notes: newS.notes || updatedList[idx].notes,
+            status: newS.status || updatedList[idx].status,
+            isNewStudent: newS.isNewStudent !== undefined ? newS.isNewStudent : updatedList[idx].isNewStudent,
+            isHalfDiscount: newS.isHalfDiscount !== undefined ? newS.isHalfDiscount : updatedList[idx].isHalfDiscount,
+            isFullDiscount: newS.isFullDiscount !== undefined ? newS.isFullDiscount : updatedList[idx].isFullDiscount,
+            giftedSubjects: {
+              english: newS.giftedSubjects?.english !== undefined ? newS.giftedSubjects.english : updatedList[idx].giftedSubjects?.english,
+              drawing: newS.giftedSubjects?.drawing !== undefined ? newS.giftedSubjects.drawing : updatedList[idx].giftedSubjects?.drawing,
+              rhythm: newS.giftedSubjects?.rhythm !== undefined ? newS.giftedSubjects.rhythm : updatedList[idx].giftedSubjects?.rhythm,
+            }
+          };
         }
-      });
-      return updatedList;
+      } else {
+        updatedList.push(newS);
+      }
     });
+
+    updateStudentsAndAttendance(updatedList);
   };
 
   return (
