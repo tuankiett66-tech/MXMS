@@ -331,9 +331,9 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
             ) : (
               students.filter(s => s.isNewStudent).map(s => (
                 <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/50 border border-emerald-100">
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-3 min-w-0 flex-1">
                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[10px] font-black text-emerald-600 shadow-sm uppercase">{s.name.split(' ').pop()?.charAt(0)}</div>
-                    <span className="text-[10px] md:text-xs font-black text-slate-800 uppercase truncate max-w-[120px]">{s.name}</span>
+                    <span className="text-[10px] md:text-xs font-black text-slate-800 uppercase whitespace-normal break-words leading-tight flex-1">{s.name}</span>
                   </div>
                 </div>
               ))

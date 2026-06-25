@@ -113,7 +113,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                     <Badge color={s.isNewStudent ? 'emerald' : 'slate'}>{s.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
                   </div>
                 </div>
-                <span className="font-black text-slate-800 text-xs sm:text-sm uppercase mt-2 line-clamp-1" title={s.name}>
+                <span className="font-black text-slate-800 text-xs sm:text-sm uppercase mt-2 whitespace-normal break-words leading-tight" title={s.name}>
                   {s.name}
                 </span>
               </div>
@@ -129,7 +129,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               >
                 <div className="flex items-center gap-4 min-w-0">
                   <span className="text-xs bg-emerald-50 text-emerald-700 border border-emerald-100 px-2 py-0.5 rounded font-black font-mono shrink-0">{s.id}</span>
-                  <span className="font-bold text-slate-800 text-sm uppercase truncate">{s.name}</span>
+                  <span className="font-bold text-slate-800 text-sm uppercase whitespace-normal break-words leading-tight">{s.name}</span>
                   <span className="text-[10px] text-slate-400 font-bold uppercase bg-slate-100 px-2.5 py-1 rounded-lg shrink-0">{s.className}</span>
                 </div>
                 <Badge color={s.isNewStudent ? 'emerald' : 'slate'}>{s.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
