@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
-import { FileText, Printer, Phone, Share2, ArrowLeft, ChevronLeft, ChevronRight, LayoutGrid, List, MessageCircle, FileDown, Loader2 } from 'lucide-react';
+import { FileText, Printer, Phone, Share2, ArrowLeft, ChevronLeft, ChevronRight, LayoutGrid, List, MessageCircle, FileDown, Loader2, Search, X } from 'lucide-react';
 import { Card, Badge } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
 import { calculateInvoice, formatCurrency, generateZaloMessage, sortStudents, formatDateToDMY, isPreschoolClass, isNurseryClass } from '../utils/calculations';
@@ -19,11 +19,34 @@ interface InvoicesProps {
   setBulkPrintClass: (s: string | null) => void;
 }
 
+const removeAccents = (str: string) => {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D');
+};
+
 export const Invoices = ({ students, config, attendance, currentMonth, currentYear, selectedStudent, setSelectedStudent, bulkPrintClass, setBulkPrintClass }: InvoicesProps) => {
   const [targetPhone, setTargetPhone] = useState('');
   const [selectionMode, setSelectionMode] = useState<'grid' | 'list'>('grid');
   const [isExporting, setIsExporting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchContainerRef = useRef<HTMLDivElement>(null);
   const printRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (selectedStudent) setTargetPhone(selectedStudent.phoneNumber || '');
@@ -36,6 +59,18 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
   const classes = useMemo(() => Array.from(new Set(activeStudents.map(s => s.className.trim() || "Chưa phân lớp"))), [activeStudents]);
 
   const currentIndex = useMemo(() => selectedStudent ? activeStudents.findIndex(s => s.id === selectedStudent.id) : -1, [selectedStudent, activeStudents]);
+  
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim()) return [];
+    const queryClean = removeAccents(searchQuery.toLowerCase().trim());
+    return activeStudents.filter(s => {
+      const nameClean = removeAccents(s.name.toLowerCase());
+      const idClean = s.id ? removeAccents(s.id.toLowerCase()) : '';
+      const classClean = s.className ? removeAccents(s.className.toLowerCase()) : '';
+      return nameClean.includes(queryClean) || idClean.includes(queryClean) || classClean.includes(queryClean);
+    }).slice(0, 8);
+  }, [searchQuery, activeStudents]);
+
   const goToNext = () => currentIndex < activeStudents.length - 1 && setSelectedStudent(activeStudents[currentIndex + 1]);
   const goToPrev = () => currentIndex > 0 && setSelectedStudent(activeStudents[currentIndex - 1]);
 
@@ -305,16 +340,83 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 no-print bg-white p-3 rounded-[24px] border border-slate-200 shadow-sm">
-        <button onClick={() => setSelectedStudent(null)} className="flex items-center gap-2 px-5 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl font-black text-[11px] uppercase tracking-wider"><ArrowLeft size={18} /> Quay lại</button>
-        <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-200">
-          <button onClick={goToPrev} disabled={currentIndex === 0} className="p-2 text-slate-600 hover:bg-white rounded-lg disabled:opacity-30"><ChevronLeft size={20} /></button>
-          <div className="px-6 border-x border-slate-200 text-center min-w-[200px]">
-            <p className="text-sm font-black text-emerald-700 uppercase">{selectedStudent.name}</p>
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 no-print bg-white p-3 rounded-[24px] border border-slate-200 shadow-sm">
+        {/* Nút Quay lại */}
+        <button onClick={() => setSelectedStudent(null)} className="flex items-center gap-2 px-5 py-2.5 text-slate-600 hover:text-slate-900 rounded-xl font-black text-[11px] uppercase tracking-wider shrink-0">
+          <ArrowLeft size={18} /> Quay lại
+        </button>
+
+        {/* Ô Tìm nhanh học sinh */}
+        <div ref={searchContainerRef} className="relative w-full md:max-w-xs">
+          <div className="relative">
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Tìm nhanh học sinh..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setIsSearchFocused(true);
+              }}
+              onFocus={() => setIsSearchFocused(true)}
+              className="w-full pl-9 pr-8 py-2.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-xs font-bold text-slate-800 placeholder:text-slate-400 outline-none focus:border-emerald-500 focus:bg-white transition-all shadow-inner"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
-          <button onClick={goToNext} disabled={currentIndex === students.length - 1} className="p-2 text-slate-600 hover:bg-white rounded-lg disabled:opacity-30"><ChevronRight size={20} /></button>
+
+          {/* Dropdown kết quả gợi ý */}
+          {isSearchFocused && searchQuery.trim() !== '' && (
+            <div className="absolute left-0 right-0 mt-2 bg-white border border-slate-200 rounded-xl shadow-xl z-50 max-h-60 overflow-y-auto divide-y divide-slate-100">
+              {searchResults.length > 0 ? (
+                searchResults.map((student) => (
+                  <button
+                    key={student.id}
+                    onClick={() => {
+                      setSelectedStudent(student);
+                      setSearchQuery('');
+                      setIsSearchFocused(false);
+                    }}
+                    className="w-full px-4 py-2.5 text-left hover:bg-emerald-50/50 transition-colors flex items-center justify-between gap-2"
+                  >
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-black text-slate-800 uppercase truncate">{student.name}</p>
+                      <p className="text-[10px] text-slate-400 font-bold">{student.id} • {student.className}</p>
+                    </div>
+                    <span className="text-[9px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-black uppercase shrink-0">
+                      {student.isNewStudent ? 'Mới' : 'Cũ'}
+                    </span>
+                  </button>
+                ))
+              ) : (
+                <div className="p-4 text-center text-[11px] font-bold text-slate-400">
+                  Không tìm thấy bé nào
+                </div>
+              )}
+            </div>
+          )}
         </div>
-        <div className="hidden sm:block w-[140px]"></div>
+
+        {/* Bộ điều hướng học sinh Trước/Sau */}
+        <div className="flex items-center bg-slate-50 rounded-xl p-1 border border-slate-200 shrink-0 w-full md:w-auto justify-between md:justify-start">
+          <button onClick={goToPrev} disabled={currentIndex === 0} className="p-2 text-slate-600 hover:bg-white rounded-lg disabled:opacity-30">
+            <ChevronLeft size={20} />
+          </button>
+          <div className="px-6 border-x border-slate-200 text-center flex-1 md:flex-initial min-w-[180px] max-w-[240px]">
+            <p className="text-xs sm:text-sm font-black text-emerald-700 uppercase truncate" title={selectedStudent.name}>
+              {selectedStudent.name}
+            </p>
+          </div>
+          <button onClick={goToNext} disabled={currentIndex === activeStudents.length - 1} className="p-2 text-slate-600 hover:bg-white rounded-lg disabled:opacity-30">
+            <ChevronRight size={20} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
