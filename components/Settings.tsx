@@ -23,102 +23,21 @@ export const Settings = ({ config, setConfig, onManualSave, onNextMonth, onLoadD
     var data = JSON.parse(e.postData.contents);
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     
-    // --- 1. GHI DỮ LIỆU KHỐI MẪU GIÁO (Lớp Mẫu Giáo) ---
-    var sheetPreschool = ss.getSheetByName("Lớp Mẫu Giáo") || ss.insertSheet("Lớp Mẫu Giáo");
-    
-    // Ghi tiêu đề danh sách ở Dòng 1 (17 cột: MÃ HS -> GIẢM 100%)
-    sheetPreschool.getRange(1, 1).setValue("THU HỌC PHÍ THÁNG " + data.month + "/" + data.year + " LỚP MẪU GIÁO");
-    var titleRangePre = sheetPreschool.getRange(1, 1, 1, 17);
-    titleRangePre.merge();
-    titleRangePre.setFontWeight("bold");
-    titleRangePre.setFontSize(14);
-    titleRangePre.setHorizontalAlignment("center");
-    titleRangePre.setVerticalAlignment("middle");
-    titleRangePre.setBackground("#d1e7dd"); // xanh lá nhạt dịu mát
-    sheetPreschool.setRowHeight(1, 40);
-
-    // Ghi tiêu đề các cột ở Dòng 2 (Bỏ STT, dồn Bé mới, Giảm 50%, Giảm 100% ra phía sau Ghi chú)
     var headersPre = ["MÃ HS", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "ANH VĂN", "VẼ", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ", "BÉ MỚI", "GIẢM 50%", "GIẢM 100%"];
-    sheetPreschool.getRange(2, 1, 1, 17).setValues([headersPre]);
-    var headerRangePre = sheetPreschool.getRange(2, 1, 1, 17);
-    headerRangePre.setFontWeight("bold");
-    headerRangePre.setHorizontalAlignment("center");
-    headerRangePre.setVerticalAlignment("middle");
-    headerRangePre.setBackground("#f1f5f9");
-    headerRangePre.setBorder(true, true, true, true, true, true, "#94a3b8", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
-    sheetPreschool.setRowHeight(2, 28);
-
-    // Xóa sạch nội dung và định dạng viền (Borders) cũ từ dòng thứ 3 trở đi
-    var lastRowPre = sheetPreschool.getLastRow();
-    if (lastRowPre >= 3) {
-      var clearRangePre = sheetPreschool.getRange(3, 1, lastRowPre - 2, 26); // xóa rộng ra 26 cột đề phòng rác
-      clearRangePre.clearContent();
-      clearRangePre.setBorder(false, false, false, false, false, false);
-    }
-    
-    // Xóa triệt để các cột dư thừa từ cột R (cột 18) trở đi trong bảng tính
-    var maxColsPre = sheetPreschool.getMaxColumns();
-    if (maxColsPre >= 18) {
-      sheetPreschool.getRange(1, 18, sheetPreschool.getMaxRows(), maxColsPre - 17).clear();
-    }
-
-    // Ghi dữ liệu Khối Mẫu Giáo mới vào Sheet từ Dòng 3
-    if (data.formattedPreschool && data.formattedPreschool.length > 0) {
-      var rangePre = sheetPreschool.getRange(3, 1, data.formattedPreschool.length, 17);
-      rangePre.setValues(data.formattedPreschool);
-      // Chỉ kẻ khung viền mỏng cho các ô có dữ liệu học sinh thực tế (màu xám nhạt #cccccc)
-      rangePre.setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
-      rangePre.setVerticalAlignment("middle");
-    }
-    
-    // --- 2. GHI DỮ LIỆU KHỐI NHÀ TRẺ (Lớp Nhà Trẻ) ---
-    var sheetNursery = ss.getSheetByName("Lớp Nhà Trẻ") || ss.insertSheet("Lớp Nhà Trẻ");
-    
-    // Ghi tiêu đề danh sách ở Dòng 1 (15 cột)
-    sheetNursery.getRange(1, 1).setValue("THU HỌC PHÍ THÁNG " + data.month + "/" + data.year + " LỚP NHÀ TRẺ");
-    var titleRangeNur = sheetNursery.getRange(1, 1, 1, 15);
-    titleRangeNur.merge();
-    titleRangeNur.setFontWeight("bold");
-    titleRangeNur.setFontSize(14);
-    titleRangeNur.setHorizontalAlignment("center");
-    titleRangeNur.setVerticalAlignment("middle");
-    titleRangeNur.setBackground("#e0f2fe"); // xanh dương nhạt dịu mát
-    sheetNursery.setRowHeight(1, 40);
-
-    // Ghi tiêu đề các cột ở Dòng 2 (Bỏ STT, dồn Bé mới, Giảm 50%, Giảm 100% ra phía sau Ghi chú)
     var headersNur = ["MÃ HS", "HỌ VÀ TÊN", "NGÀY SINH", "HỌC PHÍ", "TIỀN ĂN", "NHỊP ĐIỆU", "PHỤ PHÍ", "CSVC", "HỌC PHẨM", "NGÀY PHÉP", "THÀNH TIỀN", "GHI CHÚ", "BÉ MỚI", "GIẢM 50%", "GIẢM 100%"];
-    sheetNursery.getRange(2, 1, 1, 15).setValues([headersNur]);
-    var headerRangeNur = sheetNursery.getRange(2, 1, 1, 15);
-    headerRangeNur.setFontWeight("bold");
-    headerRangeNur.setHorizontalAlignment("center");
-    headerRangeNur.setVerticalAlignment("middle");
-    headerRangeNur.setBackground("#f1f5f9");
-    headerRangeNur.setBorder(true, true, true, true, true, true, "#94a3b8", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
-    sheetNursery.setRowHeight(2, 28);
 
-    // Xóa sạch nội dung và định dạng viền (Borders) cũ từ dòng thứ 3 trở đi
-    var lastRowNur = sheetNursery.getLastRow();
-    if (lastRowNur >= 3) {
-      var clearRangeNur = sheetNursery.getRange(3, 1, lastRowNur - 2, 24); // xóa dư ra 24 cột đề phòng trước đó còn rác
-      clearRangeNur.clearContent();
-      clearRangeNur.setBorder(false, false, false, false, false, false);
-    }
-    
-    // Xóa triệt để các cột dư thừa từ cột P (cột 16) trở đi trong bảng tính
-    var maxColsNur = sheetNursery.getMaxColumns();
-    if (maxColsNur >= 16) {
-      sheetNursery.getRange(1, 16, sheetNursery.getMaxRows(), maxColsNur - 15).clear();
-    }
+    // 1. Ghi vào các sheet chính hiện tại
+    writeSheetData(ss, "Lớp Mẫu Giáo", "THU HỌC PHÍ THÁNG " + data.month + "/" + data.year + " LỚP MẪU GIÁO", headersPre, data.formattedPreschool, "#d1e7dd");
+    writeSheetData(ss, "Lớp Nhà Trẻ", "THU HỌC PHÍ THÁNG " + data.month + "/" + data.year + " LỚP NHÀ TRẺ", headersNur, data.formattedNursery, "#e0f2fe");
 
-    // Ghi dữ liệu Khối Nhà Trẻ mới vào Sheet từ Dòng 3
-    if (data.formattedNursery && data.formattedNursery.length > 0) {
-      var rangeNur = sheetNursery.getRange(3, 1, data.formattedNursery.length, 15);
-      rangeNur.setValues(data.formattedNursery);
-      // Chỉ kẻ khung viền mỏng cho các ô có dữ liệu học sinh thực tế
-      rangeNur.setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
-      rangeNur.setVerticalAlignment("middle");
-    }
+    // 2. Tự động lưu trữ lịch sử riêng theo từng tháng để tra cứu sau này
+    var formattedMonth = data.month < 10 ? "0" + data.month : data.month;
+    var archivePreName = "MG_Thang_" + formattedMonth + "_" + data.year;
+    var archiveNurName = "NT_Thang_" + formattedMonth + "_" + data.year;
     
+    writeSheetData(ss, archivePreName, "LỊCH SỬ THU HỌC PHÍ THÁNG " + data.month + "/" + data.year + " LỚP MẪU GIÁO", headersPre, data.formattedPreschool, "#d1e7dd");
+    writeSheetData(ss, archiveNurName, "LỊCH SỬ THU HỌC PHÍ THÁNG " + data.month + "/" + data.year + " LỚP NHÀ TRẺ", headersNur, data.formattedNursery, "#e0f2fe");
+
     // --- 3. GHI TOÀN BỘ CHÈN DỮ LIỆU THÔ PHỤC VỤ DOWNLOAD ---
     var cacheSheet = ss.getSheetByName("RAW_DATA") || ss.insertSheet("RAW_DATA");
     cacheSheet.clear();
@@ -135,6 +54,57 @@ export const Settings = ({ config, setConfig, onManualSave, onNextMonth, onLoadD
   } catch (error) {
     return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
       .setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+/**
+ * Hàm hỗ trợ ghi dữ liệu và định dạng thống nhất cho bất kỳ Sheet nào (Sheet chính lẫn Sheet Lưu Trữ lịch sử)
+ */
+function writeSheetData(ss, sheetName, titleText, headers, formattedData, titleBgColor) {
+  var sheet = ss.getSheetByName(sheetName) || ss.insertSheet(sheetName);
+  
+  // Ghi tiêu đề danh sách ở Dòng 1
+  sheet.getRange(1, 1).setValue(titleText);
+  var numCols = headers.length;
+  var titleRange = sheet.getRange(1, 1, 1, numCols);
+  titleRange.merge();
+  titleRange.setFontWeight("bold");
+  titleRange.setFontSize(14);
+  titleRange.setHorizontalAlignment("center");
+  titleRange.setVerticalAlignment("middle");
+  titleRange.setBackground(titleBgColor);
+  sheet.setRowHeight(1, 40);
+
+  // Ghi tiêu đề các cột ở Dòng 2
+  sheet.getRange(2, 1, 1, numCols).setValues([headers]);
+  var headerRange = sheet.getRange(2, 1, 1, numCols);
+  headerRange.setFontWeight("bold");
+  headerRange.setHorizontalAlignment("center");
+  headerRange.setVerticalAlignment("middle");
+  headerRange.setBackground("#f1f5f9");
+  headerRange.setBorder(true, true, true, true, true, true, "#94a3b8", SpreadsheetApp.BorderStyle.SOLID_MEDIUM);
+  sheet.setRowHeight(2, 28);
+
+  // Xóa sạch nội dung và định dạng viền cũ từ dòng thứ 3 trở đi
+  var lastRow = sheet.getLastRow();
+  if (lastRow >= 3) {
+    var clearRange = sheet.getRange(3, 1, lastRow - 2, numCols + 9); // xóa rộng ra 9 cột đề phòng rác cũ
+    clearRange.clearContent();
+    clearRange.setBorder(false, false, false, false, false, false);
+  }
+  
+  // Xóa triệt để các cột dư thừa từ cột numCols + 1 trở đi
+  var maxCols = sheet.getMaxColumns();
+  if (maxCols >= numCols + 1) {
+    sheet.getRange(1, numCols + 1, sheet.getMaxRows(), maxCols - numCols).clear();
+  }
+
+  // Ghi dữ liệu mới vào Sheet từ Dòng 3
+  if (formattedData && formattedData.length > 0) {
+    var range = sheet.getRange(3, 1, formattedData.length, numCols);
+    range.setValues(formattedData);
+    range.setBorder(true, true, true, true, true, true, "#cccccc", SpreadsheetApp.BorderStyle.SOLID);
+    range.setVerticalAlignment("middle");
   }
 }
 
