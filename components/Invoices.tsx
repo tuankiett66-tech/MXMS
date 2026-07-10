@@ -246,6 +246,25 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
 
               .space-y-8, .p-8 { margin: 0 !important; padding: 0 !important; }
             }
+
+            .invoice-print-item {
+              font-family: 'Times New Roman', Times, serif !important;
+              color: #000 !important;
+              background-color: #fff !important;
+            }
+
+            .invoice-line { 
+              display: flex !important;
+              align-items: flex-end !important;
+              gap: 4px !important;
+              margin-bottom: 2px !important;
+              width: 100% !important;
+              color: #000 !important;
+              font-size: 12pt !important;
+            }
+            .invoice-label { flex-grow: 1 !important; border-bottom: 1px dotted #000 !important; padding-bottom: 1px !important; }
+            .invoice-dots { border-bottom: 1px dotted #000 !important; flex-grow: 0 !important; padding-bottom: 1px !important; font-weight: bold !important; }
+            .invoice-value { font-weight: bold !important; min-width: 120px !important; text-align: right !important; border-bottom: 1px dotted #000 !important; padding-bottom: 1px !important; }
           `}</style>
           <div className="print-container-wrapper">
           {classStudents.map((student) => {
