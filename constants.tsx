@@ -15,6 +15,8 @@ export const DEFAULT_CONFIG: GlobalConfig = {
   unitMaterialLon: 33000,
   unitMaterialNho: 29000,
   standardDays: 22,
+  startMonth: 8,
+  endMonth: 7,
   scriptUrl: '',
 };
 

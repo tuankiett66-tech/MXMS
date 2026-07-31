@@ -47,6 +47,8 @@ export interface GlobalConfig {
   unitMaterialLon: number;
   unitMaterialNho: number;
   standardDays: number;
+  startMonth?: number;
+  endMonth?: number;
   scriptUrl?: string;
 }
 

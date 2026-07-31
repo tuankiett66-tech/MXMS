@@ -212,8 +212,20 @@ export const ensureClassEntryDates = (list: Student[]): Student[] => {
   });
 };
 
-export const calculateMonthsRemaining = (month: number): number => {
-  return ((8 - month) % 12 + 12) % 12 + 1;
+export const getSchoolYearLabel = (currentMonth: number, currentYear: number, startMonth: number = 8): string => {
+  let startYear = currentYear;
+  if (currentMonth < startMonth && !(currentMonth === startMonth - 1 && currentYear === new Date().getFullYear())) {
+    startYear = currentYear - 1;
+  }
+  return `${startYear}-${startYear + 1}`;
+};
+
+export const calculateMonthsRemaining = (month: number, startMonth: number = 8, endMonth: number = 7): number => {
+  const remaining = ((endMonth - month) % 12 + 12) % 12 + 1;
+  const maxMonths = endMonth >= startMonth
+    ? endMonth - startMonth + 1
+    : (12 - startMonth + 1) + endMonth;
+  return remaining <= maxMonths ? remaining : maxMonths;
 };
 
 export const calculateInvoice = (
@@ -224,7 +236,7 @@ export const calculateInvoice = (
   currentYear: number
 ): InvoiceDetail => {
   const ageMonths = calculateAgeInMonths(student.dob);
-  const monthsRemaining = calculateMonthsRemaining(currentMonth);
+  const monthsRemaining = calculateMonthsRemaining(currentMonth, config.startMonth || 8, config.endMonth || 7);
   
   const currentAttendance = attendanceData.find(
     a => a.studentId === student.id && a.month === currentMonth && a.year === currentYear

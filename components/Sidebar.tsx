@@ -2,7 +2,7 @@
 import React from 'react';
 import { LayoutDashboard, Users, CalendarCheck, FileText, Settings, Calendar, Save, Utensils, Download, Loader2 } from 'lucide-react';
 import { GlobalConfig } from '../types';
-import { calculateMonthsRemaining } from '../utils/calculations';
+import { calculateMonthsRemaining, getSchoolYearLabel } from '../utils/calculations';
 
 interface SidebarProps {
   activeTab: string;
@@ -106,7 +106,7 @@ export const Sidebar = ({
         <div className="pt-2 border-t border-slate-200">
            <div className="flex justify-between text-[10px] mb-3">
              <span className="text-slate-500 font-bold uppercase">Niên học còn:</span>
-             <span className="text-emerald-700 font-black">{calculateMonthsRemaining(currentMonth)} tháng</span>
+             <span className="text-emerald-700 font-black">{calculateMonthsRemaining(currentMonth, config.startMonth || 8, config.endMonth || 7)} tháng</span>
            </div>
            <div className="space-y-2">
              <button 
@@ -140,7 +140,7 @@ export const Sidebar = ({
       </nav>
 
       <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-        <p className="text-[10px] text-emerald-800 leading-relaxed font-bold">Niên học: 2025-2026</p>
+        <p className="text-[10px] text-emerald-800 leading-relaxed font-bold">Niên học: {getSchoolYearLabel(currentMonth, currentYear, config.startMonth || 8)}</p>
       </div>
     </div>
   );

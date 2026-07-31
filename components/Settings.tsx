@@ -349,7 +349,33 @@ function doGet(e) {
             <BookOpen size={18} className="text-orange-600" />
             Định mức Phụ phí & Vật tư
           </h5>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                Tháng bắt đầu thu CSVC & HP
+              </label>
+              <input 
+                type="number"
+                min={1}
+                max={12}
+                value={config.startMonth || 8}
+                onChange={(e) => handleChange('startMonth', parseInt(e.target.value) || 8)}
+                className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-orange-500"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                Tháng kết thúc năm học
+              </label>
+              <input 
+                type="number"
+                min={1}
+                max={12}
+                value={config.endMonth || 5}
+                onChange={(e) => handleChange('endMonth', parseInt(e.target.value) || 5)}
+                className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-orange-500"
+              />
+            </div>
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
                 Tiền ăn/Ngày

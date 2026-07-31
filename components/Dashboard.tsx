@@ -299,7 +299,7 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
         <Card className="flex items-center justify-between border-l-4 border-l-orange-500 p-4 md:p-6 sm:col-span-2 lg:col-span-1">
           <div>
             <p className="text-[10px] md:text-xs text-slate-500 font-bold uppercase">Niên học còn lại</p>
-            <h3 className="text-xl md:text-2xl font-black text-slate-800 mt-1">{calculateMonthsRemaining(currentMonth)} tháng</h3>
+            <h3 className="text-xl md:text-2xl font-black text-slate-800 mt-1">{calculateMonthsRemaining(currentMonth, config.startMonth || 8, config.endMonth || 7)} tháng</h3>
           </div>
           <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-100 text-orange-600 rounded-full flex items-center justify-center shrink-0">
             <Calendar size={20} />

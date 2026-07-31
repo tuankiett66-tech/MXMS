@@ -33,7 +33,16 @@ export default function App() {
   
   const [config, setConfig] = useState<GlobalConfig>(() => {
     const saved = localStorage.getItem(`${STORAGE_KEY}_CONFIG`);
-    return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...DEFAULT_CONFIG,
+        ...parsed,
+        startMonth: parsed.startMonth || 8,
+        endMonth: parsed.endMonth === 5 ? 7 : (parsed.endMonth || 7),
+      };
+    }
+    return DEFAULT_CONFIG;
   });
 
   const [currentMonth, setCurrentMonth] = useState(() => {
