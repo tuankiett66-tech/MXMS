@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { FileText, Printer, Phone, Share2, ArrowLeft, ChevronLeft, ChevronRight, LayoutGrid, List, MessageCircle, FileDown, Loader2, Search, X } from 'lucide-react';
 import { Card, Badge } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
-import { calculateInvoice, formatCurrency, generateZaloMessage, sortStudents, formatDateToDMY, isPreschoolClass, isNurseryClass } from '../utils/calculations';
+import { calculateInvoice, formatCurrency, generateZaloMessage, sortStudents, formatDateToDMY, isPreschoolClass, isNurseryClass, isStudentNew } from '../utils/calculations';
 // @ts-ignore
 import html2pdf from 'html2pdf.js';
 
@@ -145,7 +145,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                   <span className="text-[9px] text-slate-400 font-bold uppercase truncate">{s.className}</span>
                   <div className="flex items-center gap-1 shrink-0">
                     <span className="text-[9px] bg-emerald-50 text-emerald-700 border border-emerald-100 px-1 rounded font-black font-mono">{s.id}</span>
-                    <Badge color={s.isNewStudent ? 'emerald' : 'slate'}>{s.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
+                    <Badge color={isStudentNew(s, currentMonth, config) ? 'emerald' : 'slate'}>{isStudentNew(s, currentMonth, config) ? 'Mới' : 'Cũ'}</Badge>
                   </div>
                 </div>
                 <span className="font-black text-slate-800 text-xs sm:text-sm uppercase mt-2 whitespace-normal break-words leading-tight" title={s.name}>
@@ -167,7 +167,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                   <span className="font-bold text-slate-800 text-sm uppercase whitespace-normal break-words leading-tight">{s.name}</span>
                   <span className="text-[10px] text-slate-400 font-bold uppercase bg-slate-100 px-2.5 py-1 rounded-lg shrink-0">{s.className}</span>
                 </div>
-                <Badge color={s.isNewStudent ? 'emerald' : 'slate'}>{s.isNewStudent ? 'Mới' : 'Cũ'}</Badge>
+                <Badge color={isStudentNew(s, currentMonth, config) ? 'emerald' : 'slate'}>{isStudentNew(s, currentMonth, config) ? 'Mới' : 'Cũ'}</Badge>
               </div>
             ))}
           </div>
@@ -409,7 +409,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                       <p className="text-[10px] text-slate-400 font-bold">{student.id} • {student.className}</p>
                     </div>
                     <span className="text-[9px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-black uppercase shrink-0">
-                      {student.isNewStudent ? 'Mới' : 'Cũ'}
+                      {isStudentNew(student, currentMonth, config) ? 'Mới' : 'Cũ'}
                     </span>
                   </button>
                 ))

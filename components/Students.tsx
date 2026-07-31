@@ -13,7 +13,8 @@ import {
   formatDateToVietnamYMD,
   calculateInvoice,
   formatCurrency,
-  removeVietnameseTones
+  removeVietnameseTones,
+  isStudentNew
 } from '../utils/calculations';
 
 interface DateInputProps {
@@ -378,26 +379,26 @@ const StudentRow = ({
       <td 
         onClick={toggleNewStudent}
         className={`py-1 px-3 min-w-[100px] text-right font-bold border-r border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-all select-none ${
-          student.isNewStudent 
+          isStudentNew(student, currentMonth, config)
             ? 'text-teal-700 bg-teal-50/30 font-extrabold' 
             : 'text-slate-400 font-normal'
         }`}
         title="Bấm nhấp để bật/tắt trạng thái Bé Mới (Phí CSVN & Học Phẩm)"
       >
-        {student.isNewStudent ? formatCurrency(csvcFee) : '0'}
+        {isStudentNew(student, currentMonth, config) ? formatCurrency(csvcFee) : '0'}
       </td>
 
       {/* HỌC PHẨM */}
       <td 
         onClick={toggleNewStudent}
         className={`py-1 px-3 min-w-[100px] text-right font-bold border-r border-slate-200 cursor-pointer hover:bg-slate-100/80 transition-all select-none ${
-          student.isNewStudent 
+          isStudentNew(student, currentMonth, config)
             ? 'text-cyan-700 bg-cyan-50/30 font-extrabold' 
             : 'text-slate-400 font-normal'
         }`}
         title="Bấm nhấp để bật/tắt trạng thái Bé Mới (Phí CSVN & Học Phẩm)"
       >
-        {student.isNewStudent ? formatCurrency(materialFee) : '0'}
+        {isStudentNew(student, currentMonth, config) ? formatCurrency(materialFee) : '0'}
       </td>
 
       {/* NGÀY PHÉP */}

@@ -213,11 +213,16 @@ export const ensureClassEntryDates = (list: Student[]): Student[] => {
 };
 
 export const getSchoolYearLabel = (currentMonth: number, currentYear: number, startMonth: number = 8): string => {
-  let startYear = currentYear;
-  if (currentMonth < startMonth && !(currentMonth === startMonth - 1 && currentYear === new Date().getFullYear())) {
-    startYear = currentYear - 1;
-  }
+  const startYear = currentMonth >= startMonth ? currentYear : currentYear - 1;
   return `${startYear}-${startYear + 1}`;
+};
+
+export const isStudentNew = (
+  student: { isNewStudent?: boolean },
+  currentMonth: number,
+  config: { startMonth?: number }
+): boolean => {
+  return !!student.isNewStudent || currentMonth === (config.startMonth || 8);
 };
 
 export const calculateMonthsRemaining = (month: number, startMonth: number = 8, endMonth: number = 7): number => {
@@ -297,7 +302,7 @@ export const calculateInvoice = (
 
   let csvcFee = 0;
   let materialFee = 0;
-  if (student.isNewStudent) {
+  if (isStudentNew(student, currentMonth, config)) {
     csvcFee = monthsRemaining * config.unitCSVC;
     const matUnitPrice = ageMonths >= 36 ? config.unitMaterialLon : config.unitMaterialNho;
     materialFee = monthsRemaining * matUnitPrice;

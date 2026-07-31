@@ -10,7 +10,7 @@ import { Students } from './components/Students.tsx';
 import { Settings } from './components/Settings.tsx';
 import { MealRefund } from './components/MealRefund.tsx';
 import { LayoutDashboard, CalendarCheck, FileText, Users, Settings as SettingsIcon, RefreshCw, Loader2, Utensils, Download } from 'lucide-react';
-import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, ensureClassEntryDates, formatDateToDMY, syncStudentIdsAndAttendance } from './utils/calculations.ts';
+import { calculateInvoice, formatCurrency, sortStudents, isPreschoolClass, isNurseryClass, ensureClassEntryDates, formatDateToDMY, syncStudentIdsAndAttendance, isStudentNew } from './utils/calculations.ts';
 
 const STORAGE_KEY = 'MXMS_APP_DATA';
 
@@ -189,7 +189,7 @@ export default function App() {
             formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
             formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
             inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || "",
-            s.isNewStudent ? "X" : "",
+            isStudentNew(s, currentMonth, config) ? "X" : "",
             s.isHalfDiscount ? "X" : "",
             s.isFullDiscount ? "X" : ""
           ];
@@ -206,7 +206,7 @@ export default function App() {
             formatCurrency(s.giftedSubjects.rhythm ? config.giftedFees.rhythm : 0),
             formatCurrency(inv.extraFee), formatCurrency(inv.csvcFee), formatCurrency(inv.materialFee),
             inv.calculationInfo.absentDays, formatCurrency(inv.total), s.notes || "",
-            s.isNewStudent ? "X" : "",
+            isStudentNew(s, currentMonth, config) ? "X" : "",
             s.isHalfDiscount ? "X" : "",
             s.isFullDiscount ? "X" : ""
           ];

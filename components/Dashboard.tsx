@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import * as XLSX from 'xlsx-js-style';
 import { Card } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
-import { calculateInvoice, formatCurrency, calculateMonthsRemaining, sortStudents } from '../utils/calculations';
+import { calculateInvoice, formatCurrency, calculateMonthsRemaining, sortStudents, isStudentNew } from '../utils/calculations';
 
 interface DashboardProps {
   students: Student[];
@@ -24,7 +24,7 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
     return {
       totalRevenue,
       studentCount: activeStudents.length,
-      newCount: activeStudents.filter(s => s.isNewStudent).length
+      newCount: activeStudents.filter(s => isStudentNew(s, currentMonth, config)).length
     };
   }, [students, config, attendance, currentMonth, currentYear]);
 
@@ -76,7 +76,7 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
           inv.calculationInfo.absentDays, 
           inv.total, 
           s.notes || "",
-          s.isNewStudent ? "X" : "",
+          isStudentNew(s, currentMonth, config) ? "X" : "",
           s.isHalfDiscount ? "X" : "",
           s.isFullDiscount ? "X" : ""
         ] : [
@@ -92,7 +92,7 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
           inv.calculationInfo.absentDays, 
           inv.total, 
           s.notes || "",
-          s.isNewStudent ? "X" : "",
+          isStudentNew(s, currentMonth, config) ? "X" : "",
           s.isHalfDiscount ? "X" : "",
           s.isFullDiscount ? "X" : ""
         ];
@@ -326,10 +326,10 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
         <Card>
           <h4 className="font-bold text-slate-800 mb-6 uppercase text-[10px] md:text-xs tracking-widest">Học sinh mới</h4>
           <div className="space-y-3">
-            {students.filter(s => s.isNewStudent).length === 0 ? (
+            {students.filter(s => isStudentNew(s, currentMonth, config)).length === 0 ? (
               <p className="text-xs text-slate-400 italic text-center py-4">Chưa có bé mới tháng này</p>
             ) : (
-              students.filter(s => s.isNewStudent).map(s => (
+              students.filter(s => isStudentNew(s, currentMonth, config)).map(s => (
                 <div key={s.id} className="flex items-center justify-between p-3 rounded-xl bg-emerald-50/50 border border-emerald-100">
                   <div className="flex items-center space-x-3 min-w-0 flex-1">
                     <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center text-[10px] font-black text-emerald-600 shadow-sm uppercase">{s.name.split(' ').pop()?.charAt(0)}</div>
