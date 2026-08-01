@@ -49,6 +49,7 @@ export interface GlobalConfig {
   standardDays: number;
   startMonth?: number;
   endMonth?: number;
+  autoCSVCInStartMonth?: boolean;
   scriptUrl?: string;
 }
 

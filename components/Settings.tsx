@@ -350,18 +350,32 @@ function doGet(e) {
             Định mức Phụ phí & Vật tư
           </h5>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
-                Tháng bắt đầu thu CSVC & HP
-              </label>
-              <input 
-                type="number"
-                min={1}
-                max={12}
-                value={config.startMonth || 8}
-                onChange={(e) => handleChange('startMonth', parseInt(e.target.value) || 8)}
-                className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-orange-500"
-              />
+            <div className="space-y-2">
+              <div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                  Tháng bắt đầu thu CSVC & HP
+                </label>
+                <input 
+                  type="number"
+                  min={1}
+                  max={12}
+                  value={config.startMonth || 8}
+                  onChange={(e) => handleChange('startMonth', parseInt(e.target.value) || 8)}
+                  className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-orange-500"
+                />
+              </div>
+              <div className="flex items-start gap-2 pt-1">
+                <input 
+                  type="checkbox"
+                  id="autoCSVCInStartMonth"
+                  checked={config.autoCSVCInStartMonth ?? true}
+                  onChange={(e) => handleChange('autoCSVCInStartMonth', e.target.checked)}
+                  className="w-4 h-4 text-orange-600 border-slate-300 rounded focus:ring-orange-500 cursor-pointer mt-0.5 accent-orange-600"
+                />
+                <label htmlFor="autoCSVCInStartMonth" className="text-[10px] font-bold text-slate-500 uppercase leading-tight cursor-pointer select-none">
+                  Tự động thu cho cả trường trong tháng bắt đầu (bỏ tích để tự chọn thủ công)
+                </label>
+              </div>
             </div>
             <div>
               <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">

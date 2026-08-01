@@ -220,9 +220,16 @@ export const getSchoolYearLabel = (currentMonth: number, currentYear: number, st
 export const isStudentNew = (
   student: { isNewStudent?: boolean },
   currentMonth: number,
-  config: { startMonth?: number }
+  config: { startMonth?: number; autoCSVCInStartMonth?: boolean }
 ): boolean => {
-  return !!student.isNewStudent || currentMonth === (config.startMonth || 8);
+  if (currentMonth === (config.startMonth || 8)) {
+    if (config.autoCSVCInStartMonth) {
+      return student.isNewStudent !== false;
+    } else {
+      return !!student.isNewStudent;
+    }
+  }
+  return !!student.isNewStudent;
 };
 
 export const calculateMonthsRemaining = (month: number, startMonth: number = 8, endMonth: number = 7): number => {

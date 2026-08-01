@@ -273,9 +273,9 @@ export default function App() {
   };
 
   const handleNextMonth = () => {
-    if (window.confirm(`Bạn có chắc chắn muốn CHUYỂN SANG THÁNG MỚI? \n\nLưu ý: \n1. Hệ thống sẽ tự động tắt trạng thái "Bé mới" cho tất cả học sinh. \n2. Dữ liệu sẽ được đồng bộ lên Google Sheets.`)) {
-      // 1. Tắt trạng thái bé mới
-      setStudents(prev => prev.map(s => ({ ...s, isNewStudent: false })));
+    if (window.confirm(`Bạn có chắc chắn muốn CHUYỂN SANG THÁNG MỚI? \n\nLưu ý: \n1. Hệ thống sẽ tự động tắt trạng thái "Bé mới" cho tất cả học sinh. \n2. Reset số ngày nhập học trễ (muộn) về 0 để không bị trừ tiền ăn tháng mới. \n3. Dữ liệu sẽ được đồng bộ lên Google Sheets.`)) {
+      // 1. Tắt trạng thái bé mới và reset số ngày đi học muộn về 0
+      setStudents(prev => prev.map(s => ({ ...s, isNewStudent: false, lateEnrollmentDays: 0 })));
       
       // 2. Tăng tháng
       let nextMonth = currentMonth + 1;
