@@ -262,9 +262,9 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               color: #000 !important;
               font-size: 12pt !important;
             }
-            .invoice-label { flex-grow: 1 !important; border-bottom: 1px dotted #000 !important; padding-bottom: 1px !important; }
-            .invoice-dots { border-bottom: 1px dotted #000 !important; flex-grow: 0 !important; padding-bottom: 1px !important; font-weight: bold !important; }
-            .invoice-value { font-weight: bold !important; min-width: 120px !important; text-align: right !important; border-bottom: 1px dotted #000 !important; padding-bottom: 1px !important; }
+            .invoice-label { flex-grow: 1 !important; border-bottom: 1px dotted #000 !important; padding-bottom: 1px !important; color: #000 !important; }
+            .invoice-dots { border-bottom: 1px dotted #000 !important; flex-grow: 0 !important; padding-bottom: 1px !important; font-weight: 900 !important; color: #000 !important; }
+            .invoice-value { font-weight: 900 !important; min-width: 120px !important; text-align: right !important; border-bottom: 1px dotted #000 !important; padding-bottom: 1px !important; color: #000 !important; font-size: 13pt !important; }
           `}</style>
           <div className="print-container-wrapper">
           {classStudents.map((student) => {
@@ -488,9 +488,9 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
               color: #000 !important;
               font-size: 12pt;
             }
-            .invoice-label { flex-grow: 1; border-bottom: 1px dotted #000; padding-bottom: 1px; }
-            .invoice-dots { border-bottom: 1px dotted #000; flex-grow: 0; padding-bottom: 1px; font-weight: bold; }
-            .invoice-value { font-weight: bold; min-width: 120px; text-align: right; border-bottom: 1px dotted #000; padding-bottom: 1px; }
+            .invoice-label { flex-grow: 1; border-bottom: 1px dotted #000; padding-bottom: 1px; color: #000 !important; }
+            .invoice-dots { border-bottom: 1px dotted #000; flex-grow: 0; padding-bottom: 1px; font-weight: 900 !important; color: #000 !important; }
+            .invoice-value { font-weight: 900 !important; min-width: 120px; text-align: right; border-bottom: 1px dotted #000; padding-bottom: 1px; color: #000 !important; font-size: 13pt !important; }
           `}</style>
           
           <div className="text-center mb-4">

@@ -261,12 +261,22 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
   return (
     <div className="space-y-6">
       <style>{`
+        .print-only-num {
+          display: none !important;
+        }
         @media print {
           body * {
             visibility: hidden;
           }
           .no-print {
             display: none !important;
+          }
+          .print-only-num {
+            display: inline-block !important;
+            font-size: 15px !important;
+            font-weight: 900 !important;
+            color: #000 !important;
+            line-height: 1 !important;
           }
           #meal-refund-print-area, #meal-refund-print-area * {
             visibility: visible;
@@ -288,16 +298,24 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
             border-collapse: collapse !important;
             width: 100% !important;
           }
-          th, td {
+          th, td, th *, td * {
             border: 1px solid #000 !important;
             color: #000 !important;
-            padding: 6px 4px !important;
-            font-size: 11px !important;
+            padding: 7px 5px !important;
+            font-size: 13px !important;
+            font-weight: 800 !important;
+          }
+          td.print-bold-num, td.print-bold-num *, td.print-bold-num span {
+            font-size: 15px !important;
+            font-weight: 900 !important;
+            color: #000 !important;
           }
           th {
             background-color: #f1f5f9 !important;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
+            font-weight: 900 !important;
+            font-size: 11px !important;
           }
           .print-title {
             font-size: 18px !important;
@@ -437,19 +455,19 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
               ) : (
                 tableData.map((row) => (
                   <tr key={row.studentId} className="hover:bg-slate-50/50 transition-colors">
-                    <td className="py-3 px-2 text-center border border-slate-150 font-mono text-slate-455">{row.stt}</td>
+                    <td className="py-3 px-2 text-center border border-slate-150 font-mono text-slate-455 print-bold-num">{row.stt}</td>
                     <td className="py-3 px-4 border border-slate-150 font-extrabold uppercase text-slate-900 tracking-tight whitespace-nowrap">
                       {row.fullNameAndDob}
                     </td>
-                    <td className="py-3 px-2 text-center border border-slate-150 text-slate-600 font-mono">
+                    <td className="py-3 px-2 text-center border border-slate-150 text-slate-600 font-mono print-bold-num">
                       {calendarDays}
                     </td>
-                    <td className="py-3 px-2 text-center border border-slate-150 text-emerald-700 font-black font-mono">
+                    <td className="py-3 px-2 text-center border border-slate-150 text-emerald-700 font-black font-mono print-bold-num">
                       {row.scheduledDays}
                     </td>
                     
                     {/* Interactive Input with high contrast, elegant state handling */}
-                    <td className="py-1 px-1 text-center border border-slate-150 font-black font-mono">
+                    <td className="py-1 px-1 text-center border border-slate-150 font-black font-mono print-bold-num">
                       <div className="flex justify-center items-center">
                         <input
                           type="number"
@@ -459,16 +477,16 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
                           onChange={(e) => onUpdateAbsentDays(row.studentId, parseInt(e.target.value) || 0)}
                           className="no-print w-16 px-2 py-1 text-center bg-slate-50 hover:bg-slate-100 focus:bg-amber-50 focus:border-amber-500 border border-slate-250 rounded-xl font-black text-amber-700 outline-none transition-all duration-150"
                         />
-                        <span className="hidden print:inline text-amber-600 font-black">
+                        <span className="print-only-num">
                           {row.absentDays > 0 ? row.absentDays : '0'}
                         </span>
                       </div>
                     </td>
 
-                    <td className="py-3 px-3 text-right border border-slate-150 font-mono text-slate-650">
+                    <td className="py-3 px-3 text-right border border-slate-150 font-mono text-slate-650 print-bold-num">
                       {formatCurrency(row.mealFeePerDay)}
                     </td>
-                    <td className="py-3 px-3 text-right border border-slate-150 font-black text-rose-600 font-mono bg-rose-50/10">
+                    <td className="py-3 px-3 text-right border border-slate-150 font-black text-rose-600 font-mono bg-rose-50/10 print-bold-num">
                       {row.refundAmount > 0 ? formatCurrency(row.refundAmount) : '0'}
                     </td>
                     <td className="py-3 px-3 border border-slate-150 text-center text-slate-300">
@@ -480,14 +498,14 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
               )}
               {tableData.length > 0 && (
                 <tr className="bg-slate-50 font-black text-xs md:text-sm text-slate-900">
-                  <td colSpan={4} className="py-4 px-4 text-right border border-slate-200 font-black uppercase tracking-wide">
+                  <td colSpan={4} className="py-4 px-4 text-right border border-slate-200 font-black uppercase tracking-wide print-bold-num">
                     TỔNG CỘNG HOÀN LẠI:
                   </td>
-                  <td className="py-4 px-3 text-center border border-slate-200 text-amber-700 font-mono">
+                  <td className="py-4 px-3 text-center border border-slate-200 text-amber-700 font-mono print-bold-num">
                     {totals.absentDays} ngày nghỉ
                   </td>
                   <td className="py-4 px-4 border border-slate-200"></td>
-                  <td className="py-4 px-4 text-right border border-slate-200 text-rose-700 font-mono bg-rose-50/50">
+                  <td className="py-4 px-4 text-right border border-slate-200 text-rose-700 font-mono bg-rose-50/50 print-bold-num">
                     {formatCurrency(totals.refundAmount)} đ
                   </td>
                   <td className="py-4 px-4 border border-slate-200"></td>
