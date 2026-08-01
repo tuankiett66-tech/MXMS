@@ -304,7 +304,11 @@ export const calculateInvoice = (
   let materialFee = 0;
   if (isStudentNew(student, currentMonth, config)) {
     csvcFee = monthsRemaining * config.unitCSVC;
-    const matUnitPrice = ageMonths >= 36 ? config.unitMaterialLon : config.unitMaterialNho;
+    const isNursery = isNurseryClass(student.className);
+    const isPreschool = isPreschoolClass(student.className);
+    const matUnitPrice = isNursery 
+      ? config.unitMaterialNho 
+      : (isPreschool ? config.unitMaterialLon : (ageMonths >= 36 ? config.unitMaterialLon : config.unitMaterialNho));
     materialFee = monthsRemaining * matUnitPrice;
   }
 

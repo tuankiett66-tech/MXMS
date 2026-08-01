@@ -18,10 +18,9 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
   const [activeGroup, setActiveGroup] = useState<'preschool' | 'nursery'>('preschool');
   const [onlyWithAbsents, setOnlyWithAbsents] = useState<boolean>(true);
 
-  // Filter students by active status (skip suspended students) and by selected group
+  // Filter students by selected group (including all students even if status is 'Tạm nghỉ')
   const filteredStudents = useMemo(() => {
-    const activeStudents = students.filter(s => s.status !== 'Tạm nghỉ');
-    const sorted = sortStudents(activeStudents);
+    const sorted = sortStudents(students);
     const inGroup = sorted.filter(s => {
       if (activeGroup === 'preschool') {
         return isPreschoolClass(s.className);
@@ -42,10 +41,9 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
     return inGroup;
   }, [students, activeGroup, onlyWithAbsents, attendance, currentMonth, currentYear]);
 
-  // Children in current group who have exactly 0 absent days (used for the quick-add list)
+  // Children in current group who have exactly 0 absent days (used for the quick-add list, including temporarily absent students)
   const studentsWithNoAbsents = useMemo(() => {
-    const activeStudents = students.filter(s => s.status !== 'Tạm nghỉ');
-    const sorted = sortStudents(activeStudents);
+    const sorted = sortStudents(students);
     const inGroup = sorted.filter(s => {
       if (activeGroup === 'preschool') {
         return isPreschoolClass(s.className);
@@ -391,7 +389,7 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
               ) : (
                 studentsWithNoAbsents.map(s => (
                   <option key={s.id} value={s.id}>
-                    {s.name.toUpperCase()} ({s.className})
+                    {s.name.toUpperCase()} ({s.className}){s.status === 'Tạm nghỉ' ? ' - Tạm nghỉ' : ''}
                   </option>
                 ))
               )}
