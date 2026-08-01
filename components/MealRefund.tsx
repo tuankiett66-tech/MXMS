@@ -272,11 +272,11 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
             display: none !important;
           }
           .print-only-num {
-            display: inline-block !important;
+            display: inline !important;
             font-size: 15px !important;
             font-weight: 900 !important;
             color: #000 !important;
-            line-height: 1 !important;
+            border: none !important;
           }
           #meal-refund-print-area, #meal-refund-print-area * {
             visibility: visible;
@@ -298,14 +298,14 @@ export const MealRefund = ({ students, config, attendance, currentMonth, current
             border-collapse: collapse !important;
             width: 100% !important;
           }
-          th, td, th *, td * {
+          th, td {
             border: 1px solid #000 !important;
             color: #000 !important;
             padding: 7px 5px !important;
             font-size: 13px !important;
             font-weight: 800 !important;
           }
-          td.print-bold-num, td.print-bold-num *, td.print-bold-num span {
+          td.print-bold-num, td.print-bold-num span {
             font-size: 15px !important;
             font-weight: 900 !important;
             color: #000 !important;
