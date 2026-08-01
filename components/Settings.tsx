@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Save, RefreshCw, DollarSign, Calendar, BookOpen, Link, ArrowRightCircle, Share2, Download, Loader2, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 import { Card } from './Common';
-import { GlobalConfig } from '../types';
+import { GlobalConfig, Student } from '../types';
 import { formatCurrency } from '../utils/calculations';
 
 interface SettingsProps {
@@ -12,9 +12,14 @@ interface SettingsProps {
   onNextMonth: () => void;
   onLoadData?: () => void;
   syncing?: boolean;
+  students?: Student[];
+  setStudents?: React.Dispatch<React.SetStateAction<Student[]>>;
+  currentMonth?: number;
 }
 
-export const Settings = ({ config, setConfig, onManualSave, onNextMonth, onLoadData, syncing }: SettingsProps) => {
+export const Settings = ({ 
+  config, setConfig, onManualSave, onNextMonth, onLoadData, syncing, students, setStudents, currentMonth 
+}: SettingsProps) => {
   const [showScriptCode, setShowScriptCode] = useState(false);
   const [copiedScript, setCopiedScript] = useState(false);
 
@@ -128,6 +133,30 @@ function doGet(e) {
 
   const handleChange = (field: string, value: any) => {
     setConfig({ ...config, [field]: value });
+    
+    if (field === 'autoCSVCInStartMonth') {
+      const isStartMonth = currentMonth === (config.startMonth || 8);
+      if (isStartMonth && setStudents) {
+        if (value === true) {
+          if (window.confirm("Bạn vừa BẬT tính năng tự động thu CSVC. Hệ thống sẽ tích chọn 'Bé mới' cho TẤT CẢ học sinh để thu phí CSVC & Học phẩm trong tháng hiện tại. Bạn có đồng ý?")) {
+            setStudents(prev => prev.map(s => ({ ...s, isNewStudent: true })));
+          }
+        } else if (value === false) {
+          if (window.confirm("Bạn vừa TẮT tính năng tự động thu CSVC. Hệ thống sẽ bỏ tích chọn 'Bé mới' cho TẤT CẢ học sinh trong tháng hiện tại. Bạn có đồng ý?")) {
+            setStudents(prev => prev.map(s => ({ ...s, isNewStudent: false })));
+          }
+        }
+      }
+    }
+
+    if (field === 'startMonth') {
+      const isStartMonth = currentMonth === value;
+      if (isStartMonth && (config.autoCSVCInStartMonth ?? true) && setStudents) {
+        if (window.confirm(`Tháng ${value} trùng với tháng hiện tại và cấu hình Tự động thu đang bật. Hệ thống sẽ tự động tích chọn 'Bé mới' cho TẤT CẢ học sinh để chuẩn bị thu phí CSVC & Học phẩm. Bạn có đồng ý?`)) {
+          setStudents(prev => prev.map(s => ({ ...s, isNewStudent: true })));
+        }
+      }
+    }
   };
 
   const handleGiftedChange = (field: string, value: number) => {

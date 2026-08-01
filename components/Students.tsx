@@ -1227,7 +1227,7 @@ export const Students = ({
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex items-center gap-3 p-4 bg-emerald-50 rounded-2xl border border-emerald-100">
-                  <input type="checkbox" id="isNew" checked={formData.isNewStudent} onChange={(e) => setFormData({...formData, isNewStudent: e.target.checked})} className="w-5 h-5 accent-emerald-600" />
+                  <input type="checkbox" id="isNew" checked={isStudentNew(formData as any, currentMonth, config)} onChange={(e) => setFormData({...formData, isNewStudent: e.target.checked})} className="w-5 h-5 accent-emerald-600" />
                   <label htmlFor="isNew" className="text-xs font-bold text-emerald-800">Bé Mới (Tính phí CSVC & Học phẩm)</label>
                 </div>
                 <div className="flex flex-col gap-1 p-3 bg-amber-50 rounded-2xl border border-amber-100 justify-center">

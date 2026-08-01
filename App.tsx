@@ -273,18 +273,27 @@ export default function App() {
   };
 
   const handleNextMonth = () => {
-    if (window.confirm(`Bạn có chắc chắn muốn CHUYỂN SANG THÁNG MỚI? \n\nLưu ý: \n1. Hệ thống sẽ tự động tắt trạng thái "Bé mới" cho tất cả học sinh. \n2. Reset số ngày nhập học trễ (muộn) về 0 để không bị trừ tiền ăn tháng mới. \n3. Dữ liệu sẽ được đồng bộ lên Google Sheets.`)) {
-      // 1. Tắt trạng thái bé mới và reset số ngày đi học muộn về 0
-      setStudents(prev => prev.map(s => ({ ...s, isNewStudent: false, lateEnrollmentDays: 0 })));
+    let nextMonth = currentMonth + 1;
+    let nextYear = currentYear;
+    if (nextMonth > 12) {
+      nextMonth = 1;
+      nextYear += 1;
+    }
+
+    const isNextMonthStart = nextMonth === (config.startMonth || 8);
+    const shouldSetAllNew = isNextMonthStart && (config.autoCSVCInStartMonth ?? true);
+
+    const message = `Bạn có chắc chắn muốn CHUYỂN SANG THÁNG MỚI? \n\nLưu ý: \n1. Hệ thống sẽ tự động ${shouldSetAllNew ? 'BẬT (tích chọn) trạng thái "Bé mới" cho tất cả học sinh để chuẩn bị thu phí CSVC & HP đầu năm (Tháng bắt đầu thu)' : 'TẮT trạng thái "Bé mới" cho tất cả học sinh'}. \n2. Reset số ngày nhập học trễ (muộn) về 0 để không bị trừ tiền ăn tháng mới. \n3. Dữ liệu sẽ được đồng bộ lên Google Sheets.`;
+
+    if (window.confirm(message)) {
+      // 1. Cập nhật trạng thái bé mới và reset số ngày đi học muộn về 0
+      setStudents(prev => prev.map(s => ({ 
+        ...s, 
+        isNewStudent: shouldSetAllNew, 
+        lateEnrollmentDays: 0 
+      })));
       
       // 2. Tăng tháng
-      let nextMonth = currentMonth + 1;
-      let nextYear = currentYear;
-      if (nextMonth > 12) {
-        nextMonth = 1;
-        nextYear += 1;
-      }
-      
       setCurrentMonth(nextMonth);
       setCurrentYear(nextYear);
       
@@ -497,6 +506,7 @@ export default function App() {
             <AttendanceTable 
               students={students} attendance={attendance} 
               currentMonth={currentMonth} currentYear={currentYear} 
+              config={config}
               onAttendanceChange={handleAttendanceChange}
               onToggleDiscount={handleToggleDiscount}
               onToggleGifted={toggleGiftedSubject}
@@ -508,7 +518,19 @@ export default function App() {
           {activeTab === 'invoices' && <Invoices students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} selectedStudent={selectedStudent} setSelectedStudent={setSelectedStudent} bulkPrintClass={bulkPrintClass} setBulkPrintClass={setBulkPrintClass} />}
           {activeTab === 'mealRefund' && <MealRefund students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} onUpdateAbsentDays={handleUpdateAbsentDays} />}
           {activeTab === 'students' && <Students students={students} config={config} attendance={attendance} currentMonth={currentMonth} currentYear={currentYear} onAdd={addStudent} onUpdate={updateStudent} onDelete={deleteStudent} onImport={importStudents} onClearAll={clearAllStudents} />}
-          {activeTab === 'settings' && <Settings config={config} setConfig={setConfig} onManualSave={handleManualSave} onNextMonth={handleNextMonth} onLoadData={loadData} syncing={syncing} />}
+          {activeTab === 'settings' && (
+            <Settings 
+              config={config} 
+              setConfig={setConfig} 
+              onManualSave={handleManualSave} 
+              onNextMonth={handleNextMonth} 
+              onLoadData={loadData} 
+              syncing={syncing} 
+              students={students}
+              setStudents={setStudents}
+              currentMonth={currentMonth}
+            />
+          )}
         </main>
 
         <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-1 py-2 flex items-center justify-around z-50 no-print shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
