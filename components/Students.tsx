@@ -267,7 +267,7 @@ const StudentRow = ({
       {/* 1. STT & Mã HS */}
       <td 
         onClick={() => onOpenModal(student)}
-        className="py-2 px-1 text-center bg-slate-50/50 w-[70px] select-none border-r border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors"
+        className="py-2 px-1 text-center bg-slate-50 w-[70px] min-w-[70px] max-w-[70px] select-none border-r border-slate-200 cursor-pointer group-hover:bg-slate-100 hover:bg-slate-200 transition-colors sticky left-0 z-10"
         title="Bấm để chỉnh sửa chi tiết hồ sơ bé"
       >
         <div className="flex flex-col items-center justify-center gap-0.5 leading-none">
@@ -277,7 +277,7 @@ const StudentRow = ({
       </td>
 
       {/* 2. Họ và tên bé */}
-      <td className="py-1 px-2 min-w-[200px] border-r border-slate-200">
+      <td className="py-1 px-2 w-[200px] min-w-[200px] max-w-[200px] border-r border-slate-200 sticky left-[70px] z-10 bg-white group-hover:bg-slate-100 transition-colors">
         <input 
           type="text"
           value={localName}
@@ -883,8 +883,8 @@ export const Students = ({
                       </th>
                     </tr>
                     <tr className="bg-slate-100 font-bold text-slate-700 text-[11px] uppercase tracking-wider">
-                      <th className="py-2.5 px-2 border border-slate-200 text-center w-[55px] select-none">STT</th>
-                      <th className="py-2.5 px-3 border border-slate-200 text-left pl-4 min-w-[200px]">Họ và tên</th>
+                      <th className="py-2.5 px-2 border border-slate-200 text-center w-[70px] min-w-[70px] max-w-[70px] select-none sticky left-0 z-20 bg-slate-100">STT</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left pl-4 w-[200px] min-w-[200px] max-w-[200px] sticky left-[70px] z-20 bg-slate-100">Họ và tên</th>
                       <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[130px]">Ngày sinh</th>
                       <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[125px]">Học phí</th>
                       <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[110px]">Tiền ăn</th>
@@ -925,8 +925,10 @@ export const Students = ({
                     )}
                     {/* Hàng tổng cộng 14 cột */}
                     {filteredStudents.length > 0 && (
-                      <tr className="bg-slate-100/90 font-black text-xs text-slate-800 border-t border-slate-300">
-                        <td colSpan={3} className="py-3 px-4 border border-slate-300 text-center font-extrabold uppercase text-slate-700">TỔNG CỘNG</td>
+                      <tr className="bg-slate-100 font-black text-xs text-slate-800 border-t border-slate-300">
+                        <td className="py-3 px-1 border border-slate-300 text-center w-[70px] min-w-[70px] max-w-[70px] sticky left-0 z-10 bg-slate-100"></td>
+                        <td className="py-3 px-3 border border-slate-300 text-center w-[200px] min-w-[200px] max-w-[200px] font-black uppercase text-slate-700 sticky left-[70px] z-10 bg-slate-100">TỔNG CỘNG</td>
+                        <td className="py-3 px-3 border border-slate-300 text-center min-w-[130px] bg-slate-100"></td>
                         <td className="py-3 px-3 border border-slate-300 text-right font-black text-slate-900">{formatCurrency(sumTuition)}</td>
                         <td className="py-3 px-3 border border-slate-300 text-right font-black text-emerald-800 bg-emerald-50/20">{formatCurrency(sumMealFee)}</td>
                         <td className="py-3 px-3 border border-slate-300 text-right font-black text-blue-800">{formatCurrency(sumEnglish)}</td>
@@ -952,8 +954,8 @@ export const Students = ({
                       </th>
                     </tr>
                     <tr className="bg-slate-100 font-bold text-slate-700 text-[11px] uppercase tracking-wider">
-                      <th className="py-2.5 px-2 border border-slate-200 text-center w-[55px] select-none">STT</th>
-                      <th className="py-2.5 px-3 border border-slate-200 text-left pl-4 min-w-[200px]">Họ và tên</th>
+                      <th className="py-2.5 px-2 border border-slate-200 text-center w-[70px] min-w-[70px] max-w-[70px] select-none sticky left-0 z-20 bg-slate-100">STT</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left pl-4 w-[200px] min-w-[200px] max-w-[200px] sticky left-[70px] z-20 bg-slate-100">Họ và tên</th>
                       <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[130px]">Ngày sinh</th>
                       <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[125px]">Học phí</th>
                       <th className="py-2.5 px-3 border border-slate-200 text-right min-w-[110px]">Tiền ăn</th>
@@ -992,8 +994,10 @@ export const Students = ({
                     )}
                     {/* Hàng tổng cộng 12 cột */}
                     {filteredStudents.length > 0 && (
-                      <tr className="bg-slate-100/90 font-black text-xs text-slate-800 border-t border-slate-300">
-                        <td colSpan={3} className="py-3 px-4 border border-slate-300 text-center font-extrabold uppercase text-slate-700">TỔNG CỘNG</td>
+                      <tr className="bg-slate-100 font-black text-xs text-slate-800 border-t border-slate-300">
+                        <td className="py-3 px-1 border border-slate-300 text-center w-[70px] min-w-[70px] max-w-[70px] sticky left-0 z-10 bg-slate-100"></td>
+                        <td className="py-3 px-3 border border-slate-300 text-center w-[200px] min-w-[200px] max-w-[200px] font-black uppercase text-slate-700 sticky left-[70px] z-10 bg-slate-100">TỔNG CỘNG</td>
+                        <td className="py-3 px-3 border border-slate-300 text-center min-w-[130px] bg-slate-100"></td>
                         <td className="py-3 px-3 border border-slate-300 text-right font-black text-slate-900">{formatCurrency(sumTuition)}</td>
                         <td className="py-3 px-3 border border-slate-300 text-right font-black text-emerald-850 bg-emerald-50/20">{formatCurrency(sumMealFee)}</td>
                         <td className="py-3 px-3 border border-slate-300 text-right font-black text-purple-800">{formatCurrency(sumRhythm)}</td>
@@ -1017,8 +1021,8 @@ export const Students = ({
                       </th>
                     </tr>
                     <tr className="bg-slate-100 font-bold text-slate-700 text-[11px] uppercase tracking-wider">
-                      <th className="py-2.5 px-2 border border-slate-200 text-center w-[55px] select-none">STT</th>
-                      <th className="py-2.5 px-3 border border-slate-200 text-left pl-4 min-w-[200px]">Họ và tên</th>
+                      <th className="py-2.5 px-2 border border-slate-200 text-center w-[70px] min-w-[70px] max-w-[70px] select-none sticky left-0 z-20 bg-slate-100">STT</th>
+                      <th className="py-2.5 px-3 border border-slate-200 text-left pl-4 w-[200px] min-w-[200px] max-w-[200px] sticky left-[70px] z-20 bg-slate-100">Họ và tên</th>
                       <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[130px]">Ngày sinh</th>
                       <th className="py-2.5 px-3 border border-slate-200 text-center min-w-[140px]">Lớp trước khi nghỉ</th>
                       <th className="py-2.5 px-3 border border-slate-200 text-left min-w-[125px]">Số điện thoại</th>
@@ -1039,7 +1043,7 @@ export const Students = ({
                         <tr key={student.id} className="hover:bg-amber-50/20 bg-white transition-all text-xs border-b border-slate-200 group">
                           <td 
                             onClick={() => handleOpenModal(student)}
-                            className="py-2 px-1 text-center bg-slate-50/50 w-[70px] select-none border-r border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors"
+                            className="py-2 px-1 text-center bg-slate-50 w-[70px] min-w-[70px] max-w-[70px] select-none border-r border-slate-200 cursor-pointer group-hover:bg-slate-100 hover:bg-slate-200 transition-colors sticky left-0 z-10"
                             title="Bấm để chỉnh sửa chi tiết hồ sơ bé"
                           >
                             <div className="flex flex-col items-center justify-center gap-0.5 leading-none">
@@ -1047,7 +1051,7 @@ export const Students = ({
                               <span className="text-[11px] font-black text-amber-700 font-mono tracking-tight bg-amber-50 px-1 py-0.5 rounded border border-amber-200">{student.id}</span>
                             </div>
                           </td>
-                          <td className="py-2.5 px-3 font-extrabold text-slate-900 border-r border-slate-200 uppercase">
+                          <td className="py-2.5 px-3 w-[200px] min-w-[200px] max-w-[200px] font-extrabold text-slate-900 border-r border-slate-200 uppercase sticky left-[70px] z-10 bg-white group-hover:bg-slate-100 transition-colors">
                             <button onClick={() => handleOpenModal(student)} className="hover:text-emerald-700 transition-colors text-left font-black">
                               {student.name}
                             </button>
