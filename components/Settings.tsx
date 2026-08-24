@@ -46,13 +46,25 @@ export const Settings = ({
     // --- 3. GHI TOÀN BỘ CHÈN DỮ LIỆU THÔ PHỤC VỤ DOWNLOAD ---
     var cacheSheet = ss.getSheetByName("RAW_DATA") || ss.insertSheet("RAW_DATA");
     cacheSheet.clear();
-    cacheSheet.getRange(1, 1).setValue(JSON.stringify({
+    
+    var fullJsonStr = JSON.stringify({
       students: data.students,
       attendance: data.attendance,
       config: data.config,
       month: data.month,
       year: data.year
-    }));
+    });
+    
+    // Tự động chia nhỏ dữ liệu thành các đoạn dưới 40000 ký tự (Giới hạn tối đa 1 ô của Google Sheets là 50000)
+    var chunkSize = 40000;
+    var chunks = [];
+    for (var i = 0; i < fullJsonStr.length; i += chunkSize) {
+      chunks.push([fullJsonStr.substring(i, i + chunkSize)]);
+    }
+    
+    if (chunks.length > 0) {
+      cacheSheet.getRange(1, 1, chunks.length, 1).setValues(chunks);
+    }
     
     return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
       .setMimeType(ContentService.MimeType.JSON);
@@ -117,9 +129,16 @@ function doGet(e) {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var cacheSheet = ss.getSheetByName("RAW_DATA");
   if (cacheSheet) {
-    var jsonStr = cacheSheet.getRange(1, 1).getValue();
-    return ContentService.createTextOutput(jsonStr)
-      .setMimeType(ContentService.MimeType.JSON);
+    var lastRow = cacheSheet.getLastRow();
+    if (lastRow > 0) {
+      var values = cacheSheet.getRange(1, 1, lastRow, 1).getValues();
+      var jsonStr = "";
+      for (var i = 0; i < values.length; i++) {
+        jsonStr += values[i][0];
+      }
+      return ContentService.createTextOutput(jsonStr)
+        .setMimeType(ContentService.MimeType.JSON);
+    }
   }
   return ContentService.createTextOutput(JSON.stringify({ error: "No data found" }))
     .setMimeType(ContentService.MimeType.JSON);
