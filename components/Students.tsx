@@ -277,16 +277,14 @@ const StudentRow = ({
       </td>
 
       {/* 2. Họ và tên bé */}
-      <td className="py-1 px-2 w-[200px] min-w-[200px] max-w-[200px] border-r border-slate-200 sticky left-[70px] z-10 bg-white group-hover:bg-slate-100 transition-colors">
-        <input 
-          type="text"
-          value={localName}
-          onChange={(e) => setLocalName(e.target.value)}
-          onBlur={handleNameBlur}
-          onKeyDown={handleKeyDown}
-          className="w-full bg-transparent hover:bg-slate-50 border border-transparent hover:border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none px-2 py-1.5 rounded-lg text-slate-900 font-extrabold uppercase transition-all text-xs tracking-tight animate-none"
-          placeholder="Họ tên của bé..."
-        />
+      <td className="py-2.5 px-3 w-[200px] min-w-[200px] max-w-[200px] border-r border-slate-200 sticky left-[70px] z-10 bg-white group-hover:bg-slate-100 transition-colors">
+        <button 
+          onClick={() => onOpenModal(student)}
+          className="w-full text-left font-extrabold text-slate-900 hover:text-emerald-700 transition-colors uppercase outline-none focus:outline-none"
+          title="Bấm để chỉnh sửa chi tiết hồ sơ bé"
+        >
+          {student.name}
+        </button>
       </td>
 
       {/* 3. Ngày sinh */}
