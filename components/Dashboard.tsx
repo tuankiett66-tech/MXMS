@@ -5,7 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import * as XLSX from 'xlsx-js-style';
 import { Card } from './Common';
 import { Student, GlobalConfig, Attendance } from '../types';
-import { calculateInvoice, formatCurrency, calculateMonthsRemaining, sortStudents, isStudentNew } from '../utils/calculations';
+import { calculateInvoice, formatCurrency, calculateMonthsRemaining, sortStudents, isStudentNew, isPreschoolClass, isNurseryClass } from '../utils/calculations';
 
 interface DashboardProps {
   students: Student[];
@@ -47,7 +47,10 @@ export const Dashboard = ({ students, config, attendance, currentMonth, currentY
       const isPreschool = groupName === 'Mẫu giáo';
       // Chỉ xuất học sinh Đang học và Học hè, loại bỏ Tạm nghỉ; đồng thời sắp xếp chuẩn theo ngày nhập học tăng dần
       const filteredStudents = sortStudents(
-        students.filter(s => s.status !== 'Tạm nghỉ' && (s.className || "").toLowerCase().includes(groupName.toLowerCase()))
+        students.filter(s => {
+          if (s.status === 'Tạm nghỉ') return false;
+          return isPreschool ? isPreschoolClass(s.className) : isNurseryClass(s.className);
+        })
       );
 
       if (filteredStudents.length === 0) return;
