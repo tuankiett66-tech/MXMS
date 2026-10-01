@@ -291,11 +291,13 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                   </div>
                   {inv.calculationInfo.giftedBreakdown.map((b, i) => {
                     const parts = b.split(':');
+                    const label = parts[0] ? parts[0].trim().replace('-', '') : '';
+                    const value = parts[1] ? parts[1].trim() : '';
                     return (
                       <div key={i} className="invoice-line">
-                        <span className="invoice-label">- {parts[0].trim().replace('-', '')}</span>
+                        <span className="invoice-label">- {label}</span>
                         <span className="invoice-dots">:</span>
-                        <span className="invoice-value">{parts[1].trim()}</span>
+                        <span className="invoice-value">{value}</span>
                       </div>
                     );
                   })}
@@ -514,11 +516,13 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
 
             {inv.calculationInfo.giftedBreakdown.map((b, i) => {
               const parts = b.split(':');
+              const label = parts[0] ? parts[0].trim().replace('-', '') : '';
+              const value = parts[1] ? parts[1].trim() : '';
               return (
                 <div key={i} className="invoice-line">
-                  <span className="invoice-label">- {parts[0].trim().replace('-', '')}</span>
+                  <span className="invoice-label">- {label}</span>
                   <span className="invoice-dots">:</span>
-                  <span className="invoice-value">{parts[1].trim()}</span>
+                  <span className="invoice-value">{value}</span>
                 </div>
               );
             })}

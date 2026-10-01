@@ -290,7 +290,7 @@ export const calculateInvoice = (
         absentDays: absentDays,
         effectiveStandardDays: saturdaysCount,
         monthsRemaining,
-        giftedBreakdown: [`Học thứ bảy (${attendedSaturdays}/${saturdaysCount} ngày x ${formatCurrency(satRate)}đ)`],
+        giftedBreakdown: [`Học thứ bảy (${attendedSaturdays}/${saturdaysCount} ngày x ${formatCurrency(satRate)}đ) : ${formatCurrency(total)} đồng.`],
         lateEnrollmentDays: 0
       }
     };
