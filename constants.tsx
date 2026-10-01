@@ -18,6 +18,7 @@ export const DEFAULT_CONFIG: GlobalConfig = {
   startMonth: 8,
   endMonth: 7,
   scriptUrl: '',
+  saturdayFeePerDay: 120000,
 };
 
 export const MOCK_STUDENTS: Student[] = [

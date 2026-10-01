@@ -307,15 +307,21 @@ const StudentRow = ({
         title="Bấm để thay đổi miễn giảm học phí (Không giảm -> Giảm 50% -> Miễn phí)"
       >
         <div className="flex flex-col items-end">
-          <span>{formatCurrency(tuition)}</span>
-          {discountType === '50%' && (
-            <span className="text-[9px] bg-amber-100 text-amber-800 px-1 rounded font-bold font-sans mt-0.5 animate-in fade-in duration-200">Giảm 50%</span>
-          )}
-          {discountType === 'custom' && student.tuitionDiscountAmount && (
-            <span className="text-[10px] bg-sky-100 text-sky-800 px-1 rounded font-extrabold font-sans mt-0.5 animate-in fade-in duration-200">Giảm {formatCurrency(student.tuitionDiscountAmount)}đ</span>
-          )}
-          {discountType === '100%' && (
-            <span className="text-[9px] bg-rose-100 text-rose-800 px-1 rounded font-bold font-sans mt-0.5 animate-in fade-in duration-200">Miễn 100%</span>
+          {student.isSaturdayOnly ? (
+            <span className="text-[10px] bg-orange-100 text-orange-800 px-1.5 py-0.5 rounded font-black font-sans uppercase animate-in fade-in duration-200">Chỉ thứ 7</span>
+          ) : (
+            <>
+              <span>{formatCurrency(tuition)}</span>
+              {discountType === '50%' && (
+                <span className="text-[9px] bg-amber-100 text-amber-800 px-1 rounded font-bold font-sans mt-0.5 animate-in fade-in duration-200">Giảm 50%</span>
+              )}
+              {discountType === 'custom' && student.tuitionDiscountAmount && (
+                <span className="text-[10px] bg-sky-100 text-sky-800 px-1 rounded font-extrabold font-sans mt-0.5 animate-in fade-in duration-200">Giảm {formatCurrency(student.tuitionDiscountAmount)}đ</span>
+              )}
+              {discountType === '100%' && (
+                <span className="text-[9px] bg-rose-100 text-rose-800 px-1 rounded font-bold font-sans mt-0.5 animate-in fade-in duration-200">Miễn 100%</span>
+              )}
+            </>
           )}
         </div>
       </td>
@@ -496,7 +502,8 @@ export const Students = ({
     notes: '',
     isHalfDiscount: false,
     isFullDiscount: false,
-    tuitionDiscountAmount: 0
+    tuitionDiscountAmount: 0,
+    isSaturdayOnly: false
   });
 
   const formatToInputDate = (dateStr: any) => {
@@ -655,6 +662,7 @@ export const Students = ({
         isFullDiscount: student.isFullDiscount || false,
         lateEnrollmentDays: student.lateEnrollmentDays || 0,
         tuitionDiscountAmount: student.tuitionDiscountAmount || 0,
+        isSaturdayOnly: student.isSaturdayOnly || false,
       });
     } else {
       setEditingStudent(null);
@@ -674,6 +682,7 @@ export const Students = ({
         isFullDiscount: false,
         lateEnrollmentDays: 0,
         tuitionDiscountAmount: 0,
+        isSaturdayOnly: false,
       });
     }
     setShowModal(true);
@@ -1259,11 +1268,30 @@ export const Students = ({
                       ...formData, 
                       isFullDiscount: e.target.checked, 
                       isHalfDiscount: e.target.checked ? false : !!formData.isHalfDiscount,
-                      tuitionDiscountAmount: e.target.checked ? 0 : formData.tuitionDiscountAmount
+                      tuitionDiscountAmount: e.target.checked ? 0 : formData.tuitionDiscountAmount,
+                      isSaturdayOnly: e.target.checked ? false : formData.isSaturdayOnly
                     })} 
                     className="w-5 h-5 accent-red-600 cursor-pointer" 
                   />
                   <label htmlFor="isFullDisc" className="text-xs font-bold text-red-800 cursor-pointer">Giảm học phí 100% (Miễn phí)</label>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-2xl border border-orange-100 col-span-1 md:col-span-2">
+                  <input 
+                    type="checkbox" 
+                    id="isSaturdayOnly" 
+                    checked={formData.isSaturdayOnly || false} 
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      isSaturdayOnly: e.target.checked,
+                      isFullDiscount: e.target.checked ? false : formData.isFullDiscount,
+                      isHalfDiscount: e.target.checked ? false : formData.isHalfDiscount,
+                      tuitionDiscountAmount: e.target.checked ? 0 : formData.tuitionDiscountAmount
+                    })} 
+                    className="w-5 h-5 accent-orange-600 cursor-pointer" 
+                  />
+                  <label htmlFor="isSaturdayOnly" className="text-xs font-black text-orange-800 cursor-pointer">
+                    Chỉ học THỨ BẢY (Thu trọn gói {formatCurrency(config.saturdayFeePerDay || 120000)}đ/ngày, đã bao gồm tất cả)
+                  </label>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
                   <input type="checkbox" id="isEnglish" checked={formData.giftedSubjects?.english} onChange={(e) => setFormData({...formData, giftedSubjects: {...formData.giftedSubjects!, english: e.target.checked}})} className="w-5 h-5 accent-blue-600" />

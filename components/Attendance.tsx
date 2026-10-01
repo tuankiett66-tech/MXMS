@@ -309,24 +309,24 @@ export const AttendanceTable = ({
                   </td>
                   
                   <td className="py-4">
-                    <div className="flex items-center justify-center space-x-1.5 bg-slate-100/40 p-1 rounded-xl max-w-[125px] mx-auto border border-slate-200/40 shadow-sm">
+                    <div className="flex items-center justify-center space-x-2 bg-slate-100/60 p-1.5 rounded-2xl max-w-[150px] mx-auto border border-slate-200/60 shadow-sm">
                       <button 
                         onClick={() => onAttendanceChange(student.id, -1)} 
-                        className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center font-black bg-white hover:bg-slate-100 active:scale-95 transition-all text-sm text-slate-500 shadow-sm cursor-pointer select-none"
+                        className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center font-black bg-white hover:bg-slate-100 active:scale-95 transition-all text-lg text-slate-600 shadow-sm cursor-pointer select-none"
                         title="Giảm 1 ngày vắng"
                       >
                         -
                       </button>
-                      <div className={`w-11 h-8 flex items-center justify-center rounded-lg transition-all border ${
+                      <div className={`w-14 h-10 flex items-center justify-center rounded-xl transition-all border-2 ${
                         (att?.absentDays || 0) > 0 
-                          ? 'bg-amber-400 border-amber-500 text-amber-950 scale-105 shadow-sm ring-2 ring-amber-400/20' 
+                          ? 'bg-amber-400 border-amber-500 text-amber-950 scale-105 shadow-md ring-4 ring-amber-400/20' 
                           : 'bg-white border-slate-200 text-slate-400'
                       }`}>
-                        <span className="font-mono font-black text-base">{att?.absentDays || 0}</span>
+                        <span className="font-mono font-black text-lg">{att?.absentDays || 0}</span>
                       </div>
                       <button 
                         onClick={() => onAttendanceChange(student.id, 1)} 
-                        className="w-8 h-8 rounded-lg border border-slate-200 flex items-center justify-center font-black bg-white hover:bg-slate-100 active:scale-95 transition-all text-sm text-slate-500 shadow-sm cursor-pointer select-none"
+                        className="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center font-black bg-white hover:bg-slate-100 active:scale-95 transition-all text-lg text-slate-600 shadow-sm cursor-pointer select-none"
                         title="Tăng 1 ngày vắng"
                       >
                         +
@@ -466,11 +466,30 @@ export const AttendanceTable = ({
                       ...formData, 
                       isFullDiscount: e.target.checked, 
                       isHalfDiscount: e.target.checked ? false : !!formData.isHalfDiscount,
-                      tuitionDiscountAmount: e.target.checked ? 0 : formData.tuitionDiscountAmount
+                      tuitionDiscountAmount: e.target.checked ? 0 : formData.tuitionDiscountAmount,
+                      isSaturdayOnly: e.target.checked ? false : formData.isSaturdayOnly
                     })} 
                     className="w-5 h-5 accent-red-600 cursor-pointer" 
                   />
                   <label htmlFor="isFullDiscAtt" className="text-xs font-bold text-red-800 cursor-pointer">Giảm học phí 100% (Miễn phí)</label>
+                </div>
+                <div className="flex items-center gap-3 p-4 bg-orange-50 rounded-2xl border border-orange-100 col-span-1 md:col-span-2">
+                  <input 
+                    type="checkbox" 
+                    id="isSaturdayOnlyAtt" 
+                    checked={!!formData.isSaturdayOnly} 
+                    onChange={(e) => setFormData({
+                      ...formData, 
+                      isSaturdayOnly: e.target.checked,
+                      isFullDiscount: e.target.checked ? false : formData.isFullDiscount,
+                      isHalfDiscount: e.target.checked ? false : formData.isHalfDiscount,
+                      tuitionDiscountAmount: e.target.checked ? 0 : formData.tuitionDiscountAmount
+                    })} 
+                    className="w-5 h-5 accent-orange-600 cursor-pointer" 
+                  />
+                  <label htmlFor="isSaturdayOnlyAtt" className="text-xs font-black text-orange-800 cursor-pointer">
+                    Chỉ học THỨ BẢY (Thu trọn gói {formatCurrency(config.saturdayFeePerDay || 120000)}đ/ngày, đã bao gồm tất cả)
+                  </label>
                 </div>
                 <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-2xl border border-blue-100">
                   <input type="checkbox" id="isEnglishAtt" checked={!!formData.giftedSubjects?.english} onChange={(e) => setFormData({...formData, giftedSubjects: {...formData.giftedSubjects!, english: e.target.checked}})} className="w-5 h-5 accent-blue-600" />

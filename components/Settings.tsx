@@ -507,6 +507,18 @@ function doGet(e) {
                 className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-orange-500"
               />
             </div>
+            <div>
+              <label className="text-[10px] font-bold text-slate-400 uppercase block mb-1">
+                Phí học Thứ 7/Ngày
+                <span className="ml-2 text-orange-600 lowercase">({formatCurrency(config.saturdayFeePerDay || 120000)} đ)</span>
+              </label>
+              <input 
+                type="number" 
+                value={config.saturdayFeePerDay || 120000}
+                onChange={(e) => handleChange('saturdayFeePerDay', parseInt(e.target.value) || 120000)}
+                className="w-full bg-slate-50 border-2 border-slate-100 rounded-xl p-3 font-bold text-slate-800 outline-none focus:border-orange-500"
+              />
+            </div>
           </div>
         </Card>
       </div>

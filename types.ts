@@ -21,6 +21,7 @@ export interface Student {
   isFullDiscount?: boolean; // Giảm 100%
   tuitionDiscountAmount?: number; // Giảm học phí theo số tiền nhập vào
   lateEnrollmentDays?: number;
+  isSaturdayOnly?: boolean; // Học thứ bảy
 }
 
 export interface Attendance {
@@ -51,6 +52,7 @@ export interface GlobalConfig {
   endMonth?: number;
   autoCSVCInStartMonth?: boolean;
   scriptUrl?: string;
+  saturdayFeePerDay?: number; // Học phí thứ bảy / ngày (bao gồm tất cả)
 }
 
 export interface InvoiceDetail {

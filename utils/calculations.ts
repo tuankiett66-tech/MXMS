@@ -122,6 +122,18 @@ export const calculateAgeInMonths = (dob: string): number => {
   return 0;
 };
 
+export const countSaturdaysInMonth = (month: number, year: number): number => {
+  let count = 0;
+  const date = new Date(year, month - 1, 1);
+  while (date.getMonth() === month - 1) {
+    if (date.getDay() === 6) { // 6 is Saturday
+      count++;
+    }
+    date.setDate(date.getDate() + 1);
+  }
+  return count;
+};
+
 export const formatCurrency = (amount: number): string => {
   return new Intl.NumberFormat('vi-VN').format(amount);
 };
@@ -254,6 +266,36 @@ export const calculateInvoice = (
     a => a.studentId === student.id && a.month === currentMonth && a.year === currentYear
   );
 
+  const absentDays = currentAttendance ? currentAttendance.absentDays : 0;
+
+  // LOGIC ĐẶC BIỆT: HỌC SINH CHỈ HỌC THỨ BẢY
+  if (student.isSaturdayOnly) {
+    const saturdaysCount = countSaturdaysInMonth(currentMonth, currentYear);
+    const satRate = config.saturdayFeePerDay || 120000;
+    const attendedSaturdays = Math.max(0, saturdaysCount - absentDays);
+    const total = attendedSaturdays * satRate;
+
+    return {
+      student,
+      tuition: 0,
+      mealFee: 0,
+      giftedTotal: 0,
+      csvcFee: 0,
+      materialFee: 0,
+      extraFee: 0,
+      total,
+      discountType: 'none',
+      calculationInfo: {
+        ageInMonths: ageMonths,
+        absentDays: absentDays,
+        effectiveStandardDays: saturdaysCount,
+        monthsRemaining,
+        giftedBreakdown: [`Học thứ bảy (${attendedSaturdays}/${saturdaysCount} ngày x ${formatCurrency(satRate)}đ)`],
+        lateEnrollmentDays: 0
+      }
+    };
+  }
+
   const isFull = student.isFullDiscount !== undefined ? !!student.isFullDiscount : !!currentAttendance?.isFullDiscount;
   const isHalf = student.isHalfDiscount !== undefined ? !!student.isHalfDiscount : !!currentAttendance?.isHalfDiscount;
   const discountAmount = student.tuitionDiscountAmount !== undefined ? student.tuitionDiscountAmount : currentAttendance?.tuitionDiscountAmount;
@@ -276,7 +318,6 @@ export const calculateInvoice = (
   }
 
   // Tiền ăn tính theo tháng hiện tại
-  const absentDays = currentAttendance ? currentAttendance.absentDays : 0;
   const lateEnrollmentDays = student.lateEnrollmentDays || 0;
   
   // Đảm bảo "Ngày học chuẩn" luôn đúng theo cài đặt trên ứng dụng của bạn cho tất cả học sinh (bao gồm cả bé mới).
@@ -345,6 +386,31 @@ export const calculateInvoice = (
 export const generateZaloMessage = (invoice: InvoiceDetail, month: number, year: number, config: GlobalConfig): string => {
   const { student, total, tuition, extraFee, csvcFee, materialFee, calculationInfo, discountType } = invoice;
   const formattedDOB = formatDateToDMY(student.dob);
+
+  if (student.isSaturdayOnly) {
+    const satCount = countSaturdaysInMonth(month, year);
+    const satRate = config.saturdayFeePerDay || 120000;
+    const attendedDays = Math.max(0, satCount - calculationInfo.absentDays);
+    
+    let msg = `GIẤY BÁO ĐÓNG TIỀN HỌC PHÍ THÁNG ${month} NĂM ${year}.\n\n`;
+    msg += `- Họ và tên trẻ : ${student.name.toUpperCase()} SN ${formattedDOB}.\n`;
+    msg += `- Chế độ: Chỉ học thứ bảy trong tháng (Trọn gói: ${formatCurrency(satRate)}đ/ngày).\n`;
+    msg += `- Tổng số ngày thứ bảy của tháng : ${satCount} ngày.\n`;
+    msg += `- Số ngày nghỉ : ${calculationInfo.absentDays} ngày.\n`;
+    msg += `- Số ngày đi học thực tế : ${attendedDays} ngày.\n`;
+    if (student.notes) {
+      msg += `* Ghi chú: ${student.notes}\n`;
+    }
+    msg += `\n`;
+    msg += `TỔNG CỘNG : ${formatCurrency(total)} đồng.\n\n`;
+    msg += `Thông tin chuyển khoản: Tên thụ hưởng: TRẦN THỊ TRÚC GIANG\n`;
+    msg += `Số tài khoản: 6350205 014046 Tại Ngân hàng Agribank Phước Kiển\n`;
+    msg += `Nội dung chuyển khoản: ${student.name}, ${student.className}.\n\n`;
+    msg += `Phụ huynh vui lòng đóng học phí từ ngày 1 đến 10 tây hàng tháng. Rất mong phụ huynh đóng học phí đúng thời gian qui định của nhà trường.\n`;
+    msg += `Xin chân thành cảm ơn!`;
+    return msg;
+  }
+
   const lateEnrollmentDays = calculationInfo.lateEnrollmentDays || 0;
   const activeMealDays = calculationInfo.effectiveStandardDays - lateEnrollmentDays;
   const fullMealFee = activeMealDays * config.mealFeePerDay;
