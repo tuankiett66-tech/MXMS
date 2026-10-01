@@ -270,8 +270,8 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
           {classStudents.map((student) => {
             const inv = calculateInvoice(student, config, attendance, currentMonth, currentYear);
             const dob = formatDateToDMY(student.dob);
-            const activeMealDays = inv.calculationInfo.effectiveStandardDays - (inv.calculationInfo.lateEnrollmentDays || 0);
-            const fullMealFee = activeMealDays * config.mealFeePerDay;
+            const activeMealDays = student.isSaturdayOnly ? 0 : (inv.calculationInfo.effectiveStandardDays - (inv.calculationInfo.lateEnrollmentDays || 0));
+            const fullMealFee = student.isSaturdayOnly ? 0 : (activeMealDays * config.mealFeePerDay);
             return (
               <div key={student.id} className="invoice-print-item bg-white p-8 border border-slate-200 rounded-lg relative">
                 <div className="text-center mb-4">
@@ -323,7 +323,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
                   <div className="invoice-line">
                     <span className="invoice-label">- Số ngày nghỉ có phép : {inv.calculationInfo.absentDays} ngày. Trừ lại</span>
                     <span className="invoice-dots">:</span>
-                    <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
+                    <span className="invoice-value">{formatCurrency(student.isSaturdayOnly ? 0 : (inv.calculationInfo.absentDays * config.mealFeePerDay))} đồng.</span>
                   </div>
                   {student.notes && (
                     <div className="text-[10pt] text-red-600 font-bold italic mt-2 leading-tight">
@@ -356,8 +356,8 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
   const inv = calculateInvoice(selectedStudent, config, attendance, currentMonth, currentYear);
   const zaloMsg = generateZaloMessage(inv, currentMonth, currentYear, config);
   const formattedDOB = formatDateToDMY(selectedStudent.dob);
-  const activeMealDays = inv.calculationInfo.effectiveStandardDays - (inv.calculationInfo.lateEnrollmentDays || 0);
-  const fullMealFee = activeMealDays * config.mealFeePerDay;
+  const activeMealDays = selectedStudent.isSaturdayOnly ? 0 : (inv.calculationInfo.effectiveStandardDays - (inv.calculationInfo.lateEnrollmentDays || 0));
+  const fullMealFee = selectedStudent.isSaturdayOnly ? 0 : (activeMealDays * config.mealFeePerDay);
 
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
@@ -552,7 +552,7 @@ export const Invoices = ({ students, config, attendance, currentMonth, currentYe
             <div className="invoice-line">
               <span className="invoice-label">- Số ngày nghỉ có phép : {inv.calculationInfo.absentDays} ngày. Trừ lại</span>
               <span className="invoice-dots">:</span>
-              <span className="invoice-value">{formatCurrency(inv.calculationInfo.absentDays * config.mealFeePerDay)} đồng.</span>
+              <span className="invoice-value">{formatCurrency(selectedStudent.isSaturdayOnly ? 0 : (inv.calculationInfo.absentDays * config.mealFeePerDay))} đồng.</span>
             </div>
 
             {selectedStudent.notes && (
